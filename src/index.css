@@ -1,0 +1,210 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Microsoft Intune Dashboard Design System */
+
+@layer base {
+  :root {
+    /* Base colors */
+    --background: 0 0% 98%;
+    --foreground: 222.2 84% 4.9%;
+    --surface: 0 0% 100%;
+    --surface-foreground: 222.2 84% 4.9%;
+
+    /* Card system */
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --card-hover: 0 0% 97%;
+
+    /* Popover system */
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    /* Brand colors */
+    --primary: 213 94% 68%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 213 100% 85%;
+
+    /* Platform colors */
+    --windows: 213 94% 68%;
+    --windows-foreground: 0 0% 100%;
+    --windows-light: 213 100% 95%;
+    --windows-border: 213 94% 85%;
+
+    --ios: 240 6% 90%;
+    --ios-foreground: 240 10% 20%;
+    --ios-light: 240 6% 98%;
+    --ios-border: 240 6% 80%;
+
+    --android: 142 76% 36%;
+    --android-foreground: 0 0% 100%;
+    --android-light: 142 76% 95%;
+    --android-border: 142 76% 60%;
+
+    --all-platforms: 262 83% 58%;
+    --all-platforms-foreground: 0 0% 100%;
+    --all-platforms-light: 262 83% 95%;
+    --all-platforms-border: 262 83% 75%;
+
+    /* Semantic colors */
+    --secondary: 220 14.3% 95.9%;
+    --secondary-foreground: 220.9 39.3% 11%;
+
+    --muted: 220 14.3% 95.9%;
+    --muted-foreground: 220 8.9% 46.1%;
+
+    --accent: 220 14.3% 95.9%;
+    --accent-foreground: 220.9 39.3% 11%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    /* Border and input */
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 213 94% 68%;
+
+    /* Layout */
+    --radius: 0.75rem;
+    --header-height: 4rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --surface: 217.2 32.6% 17.5%;
+    --surface-foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --card-hover: 217.2 32.6% 17.5%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 213 94% 68%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary-glow: 213 100% 85%;
+
+    /* Platform colors for dark mode */
+    --windows: 213 94% 68%;
+    --windows-foreground: 222.2 47.4% 11.2%;
+    --windows-light: 213 94% 15%;
+    --windows-border: 213 94% 40%;
+
+    --ios: 240 6% 60%;
+    --ios-foreground: 240 6% 10%;
+    --ios-light: 240 6% 20%;
+    --ios-border: 240 6% 40%;
+
+    --android: 142 76% 36%;
+    --android-foreground: 0 0% 100%;
+    --android-light: 142 76% 15%;
+    --android-border: 142 76% 50%;
+
+    --all-platforms: 262 83% 58%;
+    --all-platforms-foreground: 0 0% 100%;
+    --all-platforms-light: 262 83% 15%;
+    --all-platforms-border: 262 83% 70%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 222.2 47.4% 11.2%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+}
+
+/* Custom animations for Intune Dashboard */
+@layer utilities {
+  .animate-search-highlight {
+    @apply animate-pulse;
+  }
+  
+  .animate-card-expand {
+    animation: expand 0.3s ease-out;
+  }
+  
+  .animate-card-collapse {
+    animation: collapse 0.3s ease-out;
+  }
+  
+  .animate-refresh-spin {
+    animation: spin 1s linear infinite;
+  }
+}
+
+@keyframes expand {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: scaleY(0.95);
+  }
+  to {
+    opacity: 1;
+    max-height: 1000px;
+    transform: scaleY(1);
+  }
+}
+
+@keyframes collapse {
+  from {
+    opacity: 1;
+    max-height: 1000px;
+    transform: scaleY(1);
+  }
+  to {
+    opacity: 0;
+    max-height: 0;
+    transform: scaleY(0.95);
+  }
+}
