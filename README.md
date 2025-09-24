@@ -1,4 +1,4 @@
-# 🥷 Intune Policy Search Dashboard
+# Intune Policy Search Dashboard
 
 A interactive dashboard for searching and exploring Microsoft Intune configuration policies. Built with React and powered by Microsoft Graph API, this tool provides a streamlined interface for IT administrators to quickly find and analyze policy settings across their Intune tenant.
 
