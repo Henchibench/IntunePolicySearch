@@ -1,0 +1,18 @@
+# Azure AD App Registration Configuration
+# Copy this content to a .env file in the root directory and replace these values with your actual Azure AD app registration details
+
+# Client ID from your Azure AD app registration
+VITE_AZURE_CLIENT_ID=your-azure-app-client-id-here
+
+# Authority URL - replace 'your-tenant-id' with your actual tenant ID
+# For single tenant: https://login.microsoftonline.com/{tenant-id}
+# For multi-tenant: https://login.microsoftonline.com/common
+VITE_AZURE_AUTHORITY=https://login.microsoftonline.com/your-tenant-id-here
+
+# Redirect URI - should match the one configured in your Azure AD app registration
+# For development, this should be http://localhost:8080
+# For production, use your actual domain
+VITE_AZURE_REDIRECT_URI=http://localhost:8080
+
+# Optional: Tenant ID (if using single tenant configuration)
+VITE_AZURE_TENANT_ID=your-tenant-id-here

@@ -1,26 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { ChevronDown, ChevronRight, Smartphone, Laptop, Shield, AppWindow } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-
-export interface PolicySetting {
-  category: string;
-  key: string;
-  value: string;
-  description?: string;
-}
-
-export interface Policy {
-  id: string;
-  name: string;
-  description: string;
-  type: "Device Configuration" | "Compliance Policy" | "App Protection" | "Conditional Access";
-  platform: "Windows" | "iOS" | "Android" | "All Platforms";
-  lastModified: string;
-  settings: PolicySetting[];
-}
+import { Policy, PolicySetting } from "@/types/graph";
 
 interface PolicyCardProps {
   policy: Policy;
@@ -52,13 +36,19 @@ const platformConfig = {
     border: "border-all-platforms-border",
     icon: AppWindow,
   },
+  macOS: {
+    color: "bg-ios text-ios-foreground", // Reuse iOS styling for macOS
+    lightBg: "bg-ios-light",
+    border: "border-ios-border",
+    icon: Laptop,
+  },
 };
 
 const typeIcons = {
   "Device Configuration": Laptop,
   "Compliance Policy": Shield,
   "App Protection": AppWindow,
-  "Conditional Access": Shield,
+  "Configuration Policy": AppWindow,
 };
 
 const highlightText = (text: string, searchTerm: string) => {
@@ -83,11 +73,42 @@ export const PolicyCard = ({ policy, searchTerm = "" }: PolicyCardProps) => {
   const PlatformIcon = platformStyle.icon;
   const TypeIcon = typeIcons[policy.type];
   
+  // Check if any settings match the search term
+  const hasMatchingSettings = useMemo(() => {
+    if (!searchTerm) return false;
+    return policy.settings.some(setting => 
+      setting.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      setting.value.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      setting.description?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [policy.settings, searchTerm]);
+
+  // Auto-expand if there are matching settings, collapse when search is cleared
+  useEffect(() => {
+    if (hasMatchingSettings && searchTerm) {
+      setIsExpanded(true);
+    } else if (!searchTerm) {
+      // Collapse when search is cleared
+      setIsExpanded(false);
+    }
+  }, [hasMatchingSettings, searchTerm]);
+  
   const toggleExpanded = () => {
     setIsExpanded(!isExpanded);
   };
 
-  const groupedSettings = policy.settings.reduce((acc, setting) => {
+  // Filter settings based on search term
+  const filteredSettings = useMemo(() => {
+    if (!searchTerm) return policy.settings;
+    
+    return policy.settings.filter(setting => 
+      setting.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      setting.value.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      setting.description?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [policy.settings, searchTerm]);
+
+  const groupedSettings = filteredSettings.reduce((acc, setting) => {
     if (!acc[setting.category]) {
       acc[setting.category] = [];
     }
@@ -105,10 +126,10 @@ export const PolicyCard = ({ policy, searchTerm = "" }: PolicyCardProps) => {
                 <PlatformIcon className={`h-5 w-5 ${platformStyle.color.split(' ')[0].replace('bg-', 'text-')}`} />
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-semibold text-foreground">
+                <h3 className="text-lg font-semibold text-foreground break-words">
                   {highlightText(policy.name, searchTerm)}
                 </h3>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-sm text-muted-foreground mt-1 break-words">
                   {highlightText(policy.description, searchTerm)}
                 </p>
               </div>
@@ -125,6 +146,11 @@ export const PolicyCard = ({ policy, searchTerm = "" }: PolicyCardProps) => {
               <span className="text-xs text-muted-foreground">
                 Last modified: {policy.lastModified}
               </span>
+              {policy.createdBy && policy.createdBy !== "Unknown" && (
+                <span className="text-xs text-muted-foreground">
+                  • Created by: {policy.createdBy}
+                </span>
+              )}
             </div>
           </div>
           
@@ -147,28 +173,35 @@ export const PolicyCard = ({ policy, searchTerm = "" }: PolicyCardProps) => {
         <CardContent className="pt-0 animate-card-expand">
           <Separator className="mb-4" />
           <div className="space-y-6">
-            <h4 className="font-medium text-foreground">Policy Settings</h4>
+            <div className="flex items-center justify-between">
+              <h4 className="font-medium text-foreground">Policy Settings</h4>
+              {searchTerm && filteredSettings.length !== policy.settings.length && (
+                <Badge variant="secondary" className="text-xs">
+                  {filteredSettings.length} of {policy.settings.length} settings match
+                </Badge>
+              )}
+            </div>
             
             {Object.entries(groupedSettings).map(([category, settings]) => (
               <div key={category} className="space-y-3">
                 <h5 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
                   {highlightText(category, searchTerm)}
                 </h5>
-                <div className="space-y-2 pl-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 pl-4">
                   {settings.map((setting, index) => (
                     <div key={index} className="p-3 bg-muted/50 rounded-lg border border-border/50">
-                      <div className="flex justify-between items-start gap-4">
+                      <div className="space-y-2">
                         <div className="flex-1">
-                          <div className="font-medium text-sm">
+                          <div className="font-medium text-sm break-words">
                             {highlightText(setting.key, searchTerm)}
                           </div>
-                          {setting.description && (
-                            <div className="text-xs text-muted-foreground mt-1">
+                          {setting.description && setting.description.trim() && (
+                            <div className="text-xs text-muted-foreground mt-1 break-words">
                               {highlightText(setting.description, searchTerm)}
                             </div>
                           )}
                         </div>
-                        <div className="text-sm text-foreground font-mono bg-background px-2 py-1 rounded border">
+                        <div className="inline-block text-sm text-foreground font-mono bg-background px-2 py-1 rounded border break-all overflow-wrap-anywhere max-w-full">
                           {highlightText(setting.value, searchTerm)}
                         </div>
                       </div>

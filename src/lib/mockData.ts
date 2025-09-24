@@ -1,4 +1,4 @@
-import { Policy } from "@/components/PolicyCard";
+import { Policy } from "@/types/graph";
 
 export const mockPolicies: Policy[] = [
   {
@@ -8,6 +8,8 @@ export const mockPolicies: Policy[] = [
     type: "Device Configuration",
     platform: "Windows",
     lastModified: "2024-01-15",
+    createdBy: "John Doe",
+    assignedGroups: ["All Windows Devices", "Security Team"],
     settings: [
       {
         category: "Security",
@@ -42,6 +44,8 @@ export const mockPolicies: Policy[] = [
     type: "App Protection",
     platform: "iOS",
     lastModified: "2024-01-12",
+    createdBy: "Jane Smith",
+    assignedGroups: ["iOS Devices", "Mobile Users"],
     settings: [
       {
         category: "Data Protection",
@@ -76,6 +80,8 @@ export const mockPolicies: Policy[] = [
     type: "Compliance Policy",
     platform: "Android",
     lastModified: "2024-01-10",
+    createdBy: "Mike Wilson",
+    assignedGroups: ["Android Work Profile", "BYOD Users"],
     settings: [
       {
         category: "Device Health",
@@ -107,9 +113,11 @@ export const mockPolicies: Policy[] = [
     id: "4",
     name: "Multi-Platform Conditional Access",
     description: "Cross-platform conditional access policy requiring MFA and compliant devices for accessing corporate resources",
-    type: "Conditional Access",
+    type: "Configuration Policy",
     platform: "All Platforms",
     lastModified: "2024-01-08",
+    createdBy: "Sarah Johnson",
+    assignedGroups: ["All Users", "Conditional Access Group"],
     settings: [
       {
         category: "Assignments",
@@ -144,6 +152,8 @@ export const mockPolicies: Policy[] = [
     type: "Device Configuration",
     platform: "All Platforms",
     lastModified: "2024-01-05",
+    createdBy: "David Chen",
+    assignedGroups: ["macOS Devices", "Executive Team"],
     settings: [
       {
         category: "Encryption",
@@ -178,7 +188,7 @@ export const policyTypeOptions = [
   { value: "Device Configuration", label: "Device Configuration" },
   { value: "Compliance Policy", label: "Compliance Policy" },
   { value: "App Protection", label: "App Protection" },
-  { value: "Conditional Access", label: "Conditional Access" },
+  { value: "Configuration Policy", label: "Configuration Policy" },
 ];
 
 export const platformOptions = [
@@ -186,5 +196,6 @@ export const platformOptions = [
   { value: "Windows", label: "Windows" },
   { value: "iOS", label: "iOS" },
   { value: "Android", label: "Android" },
+  { value: "macOS", label: "macOS" },
   { value: "All Platforms", label: "Cross-Platform" },
 ];

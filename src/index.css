@@ -181,6 +181,14 @@
   .animate-refresh-spin {
     animation: spin 1s linear infinite;
   }
+  
+  .rotate-360 {
+    transform: rotate(360deg);
+  }
+  
+  .ninja-spin {
+    animation: ninja-spin 0.6s ease-in-out;
+  }
 }
 
 @keyframes expand {
@@ -206,5 +214,14 @@
     opacity: 0;
     max-height: 0;
     transform: scaleY(0.95);
+  }
+}
+
+@keyframes ninja-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }
