@@ -191,7 +191,7 @@ export class GraphService {
           try {
             const detailedPolicy = await this.graphClient
               .api(`${graphConfig.graphConfigurationPoliciesEndpoint}/${policy.id}`)
-              .expand('settings')
+              .expand('settings($expand=settingDefinitions)')
               .get();
             return { ...policy, settings: detailedPolicy.settings || [] };
           } catch (error) {
@@ -727,27 +727,47 @@ export class GraphService {
       return settings;
     }
     
-    // Handle Settings Catalog format as fallback
+    // Handle Settings Catalog format with rich metadata
     if (setting.settingInstance) {
       const instance = setting.settingInstance as any;
+      const settingDefinitions = (setting as any).settingDefinitions;
       const settingId = instance.settingDefinitionId;
       
       if (settingId) {
-        const category = this.categorizeSettingId(settingId);
-        const settingName = this.formatSettingKey(settingId);
-        let value = '[Unknown]';
+        // Try to find the setting definition for rich metadata
+        let settingDefinition = null;
+        if (settingDefinitions && Array.isArray(settingDefinitions)) {
+          settingDefinition = settingDefinitions.find((def: any) => def.id === settingId);
+        }
         
+        // Use rich metadata if available, fallback to parsing
+        const settingName = settingDefinition?.displayName || this.formatSettingKey(settingId);
+        const description = settingDefinition?.description || '';
+        const category = this.getCategoryFromKeywords(settingDefinition?.keywords) || this.categorizeSettingId(settingId);
+        
+        let value = '[Unknown]';
+        let displayValue = value;
+        
+        // Get the configured value
         if (instance.choiceSettingValue?.value) {
           value = instance.choiceSettingValue.value;
+          // Try to map to human-readable value using options
+          if (settingDefinition?.options) {
+            const option = settingDefinition.options.find((opt: any) => opt.itemId === value);
+            displayValue = option?.displayName || option?.name || this.translateSettingValue(value, settingName);
+          } else {
+            displayValue = this.translateSettingValue(value, settingName);
+          }
         } else if (instance.simpleSettingValue?.value !== undefined) {
           value = String(instance.simpleSettingValue.value);
+          displayValue = value;
         }
         
         settings.push({
           category,
           key: settingName,
-          value: this.translateSettingValue(value, settingName),
-          description: '' // Clean display without technical details
+          value: displayValue,
+          description: description
         });
       }
       
@@ -831,6 +851,12 @@ export class GraphService {
    * Format setting key for display with intelligent parsing
    */
   private formatSettingKey(key: string): string {
+    // First, check if we have a known human-readable name
+    const knownName = this.getKnownSettingName(key);
+    if (knownName) {
+      return knownName;
+    }
+    
     // Handle device_vendor_msft_policy_config format (Settings Catalog)
     if (key.includes('device_vendor_msft_policy_config_')) {
       return this.parseSettingsCatalogId(key);
@@ -846,6 +872,55 @@ export class GraphService {
   }
 
   /**
+   * Extract category from keywords array (like "\\Microsoft Edge")
+   */
+  private getCategoryFromKeywords(keywords: string[]): string | null {
+    if (!keywords || !Array.isArray(keywords)) return null;
+    
+    // Look for category indicators in keywords
+    for (const keyword of keywords) {
+      // Handle paths like "\\Microsoft Edge", "\\Windows Components\\Remote Desktop Services"
+      if (keyword.startsWith('\\')) {
+        const path = keyword.substring(1); // Remove leading backslash
+        const parts = path.split('\\');
+        
+        // Create hierarchical category like Intune portal
+        if (parts.length > 1) {
+          return `Administrative Templates > ${parts.join(' > ')}`;
+        } else {
+          return `Administrative Templates > ${path}`;
+        }
+      }
+      
+      // Handle direct category names
+      if (keyword.includes('Microsoft Edge')) return 'Applications > Microsoft Edge';
+      if (keyword.includes('Windows Update')) return 'System > Windows Update';
+      if (keyword.includes('Remote Desktop')) return 'System > Remote Desktop Services';
+    }
+    
+    return null;
+  }
+
+  /**
+   * Get human-readable name for known settings
+   */
+  private getKnownSettingName(settingId: string): string | null {
+    // Database of known setting IDs to human-readable names (like Intune portal)
+    const knownSettings: Record<string, string> = {
+      // Remote Desktop Settings
+      'device_vendor_msft_policy_config_admx_terminalserver_ts_timezone_1': 'Allow time zone redirection',
+      'device_vendor_msft_policy_config_admx_terminalserver_ts_clientclipboard_2': 'Do not allow Clipboard redirection',
+      'device_vendor_msft_policy_config_remotedesktopservices_limitclienttoserverclipboardredirection': 'Restrict clipboard transfer from client to server',
+      'device_vendor_msft_policy_config_remotedesktopservices_limitservertoclientclipboardredirection': 'Restrict clipboard transfer from server to client',
+      
+      // Add more known settings as needed
+      // You can expand this database by analyzing your Intune policies
+    };
+    
+    return knownSettings[settingId.toLowerCase()] || null;
+  }
+
+  /**
    * Parse Settings Catalog ID to human-readable format
    */
   private parseSettingsCatalogId(settingId: string): string {
@@ -853,7 +928,7 @@ export class GraphService {
     const withoutPrefix = settingId.replace('device_vendor_msft_policy_config_', '');
     const parts = withoutPrefix.split('_');
     
-    // Common component mappings
+    // Common component mappings - expanded for better Intune-like display
     const componentMap: Record<string, string> = {
       'admx': 'Administrative Template',
       'defender': 'Microsoft Defender',
@@ -890,7 +965,18 @@ export class GraphService {
       'msdt': 'Microsoft Support Diagnostic Tool',
       'icm': 'Information Collection',
       'nc': 'Network',
-      'searchcompanion': 'Search Companion'
+      'searchcompanion': 'Search Companion',
+      // Remote Desktop specific mappings
+      'terminalserver': 'Terminal Server',
+      'terminalservices': 'Terminal Services',
+      'ts': 'Terminal Server',
+      'rdp': 'Remote Desktop Protocol',
+      'clientclipboard': 'Client Clipboard',
+      'timezone': 'Time Zone',
+      'timezoneredirection': 'Time Zone Redirection',
+      'clipboardredirection': 'Clipboard Redirection',
+      'limitclienttoserverclipboardredirection': 'Limit Client to Server Clipboard Redirection',
+      'limitservertoclientclipboardredirection': 'Limit Server to Client Clipboard Redirection'
     };
 
     // Action/setting mappings
@@ -1048,6 +1134,17 @@ export class GraphService {
     const settingLower = settingId.toLowerCase();
     
     // Create hierarchical categories like Intune portal
+    
+    // Administrative Templates - Remote Desktop Services
+    if (settingLower.includes('admx_terminalserver') || settingLower.includes('remotedesktopservices')) {
+      if (settingLower.includes('timezone') || settingLower.includes('ts_timezone')) {
+        return "Administrative Templates > Windows Components > Remote Desktop Services > Remote Desktop Session Host > Device and Resource Redirection";
+      }
+      if (settingLower.includes('clipboard') || settingLower.includes('clientclipboard')) {
+        return "Administrative Templates > Windows Components > Remote Desktop Services > Remote Desktop Session Host > Device and Resource Redirection";
+      }
+      return "Administrative Templates > Windows Components > Remote Desktop Services";
+    }
     
     // System categories
     if (settingLower.includes('troubleshooting') || settingLower.includes('diagnostics')) {

@@ -184,9 +184,27 @@ export const PolicyCard = ({ policy, searchTerm = "" }: PolicyCardProps) => {
             
             {Object.entries(groupedSettings).map(([category, settings]) => (
               <div key={category} className="space-y-3">
-                <h5 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                  {highlightText(category, searchTerm)}
-                </h5>
+                <div className="flex items-center gap-2">
+                  <h5 className="text-sm font-medium text-muted-foreground tracking-wide">
+                    {category.includes(' > ') ? (
+                      <span className="font-mono text-xs">
+                        {category.split(' > ').map((part, index, array) => (
+                          <span key={index}>
+                            {highlightText(part, searchTerm)}
+                            {index < array.length - 1 && <span className="text-muted-foreground/60 mx-1">›</span>}
+                          </span>
+                        ))}
+                      </span>
+                    ) : (
+                      <span className="uppercase">
+                        {highlightText(category, searchTerm)}
+                      </span>
+                    )}
+                  </h5>
+                  <Badge variant="outline" className="text-xs">
+                    {settings.length}
+                  </Badge>
+                </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 pl-4">
                   {settings.map((setting, index) => (
                     <div key={index} className="p-3 bg-muted/50 rounded-lg border border-border/50">
