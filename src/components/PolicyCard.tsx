@@ -68,6 +68,7 @@ const highlightText = (text: string, searchTerm: string) => {
 
 export const PolicyCard = ({ policy, searchTerm = "" }: PolicyCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showAllSettings, setShowAllSettings] = useState(false);
   
   const platformStyle = platformConfig[policy.platform];
   const PlatformIcon = platformStyle.icon;
@@ -88,8 +89,9 @@ export const PolicyCard = ({ policy, searchTerm = "" }: PolicyCardProps) => {
     if (hasMatchingSettings && searchTerm) {
       setIsExpanded(true);
     } else if (!searchTerm) {
-      // Collapse when search is cleared
+      // Collapse when search is cleared and reset show all
       setIsExpanded(false);
+      setShowAllSettings(false);
     }
   }, [hasMatchingSettings, searchTerm]);
   
@@ -97,16 +99,16 @@ export const PolicyCard = ({ policy, searchTerm = "" }: PolicyCardProps) => {
     setIsExpanded(!isExpanded);
   };
 
-  // Filter settings based on search term
+  // Filter settings based on search term (unless showAllSettings is true)
   const filteredSettings = useMemo(() => {
-    if (!searchTerm) return policy.settings;
+    if (!searchTerm || showAllSettings) return policy.settings;
     
     return policy.settings.filter(setting => 
       setting.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
       setting.value.toLowerCase().includes(searchTerm.toLowerCase()) ||
       setting.description?.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [policy.settings, searchTerm]);
+  }, [policy.settings, searchTerm, showAllSettings]);
 
   const groupedSettings = filteredSettings.reduce((acc, setting) => {
     if (!acc[setting.category]) {
@@ -175,11 +177,33 @@ export const PolicyCard = ({ policy, searchTerm = "" }: PolicyCardProps) => {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h4 className="font-medium text-foreground">Policy Settings</h4>
-              {searchTerm && filteredSettings.length !== policy.settings.length && (
-                <Badge variant="secondary" className="text-xs">
-                  {filteredSettings.length} of {policy.settings.length} settings match
-                </Badge>
-              )}
+              <div className="flex items-center gap-2">
+                {searchTerm && filteredSettings.length !== policy.settings.length && !showAllSettings && (
+                  <Badge variant="secondary" className="text-xs">
+                    {filteredSettings.length} of {policy.settings.length} settings match
+                  </Badge>
+                )}
+                {searchTerm && !showAllSettings && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAllSettings(true)}
+                    className="gap-2"
+                  >
+                    Show All {policy.settings.length} Settings
+                  </Button>
+                )}
+                {searchTerm && showAllSettings && (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => setShowAllSettings(false)}
+                    className="gap-2"
+                  >
+                    Show Filtered Results
+                  </Button>
+                )}
+              </div>
             </div>
             
             {Object.entries(groupedSettings).map(([category, settings]) => (
