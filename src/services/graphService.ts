@@ -742,7 +742,10 @@ export class GraphService {
         
         // Use rich metadata if available, fallback to parsing
         const settingName = settingDefinition?.displayName || this.formatSettingKey(settingId);
-        const description = settingDefinition?.description || '';
+        
+        // Try multiple sources for description: description field, helpText, or from the selected option
+        let description = settingDefinition?.description || settingDefinition?.helpText || '';
+        
         const category = this.getCategoryFromKeywords(settingDefinition?.keywords) || this.categorizeSettingId(settingId);
         
         let value = '[Unknown]';
@@ -755,8 +758,41 @@ export class GraphService {
           if (settingDefinition?.options) {
             const option = settingDefinition.options.find((opt: any) => opt.itemId === value);
             displayValue = option?.displayName || option?.name || this.translateSettingValue(value, settingName);
+            
+            // If we don't have a description yet, try to get it from the selected option
+            if (!description && option?.description) {
+              description = option.description;
+            }
+            // Or use helpText from the option
+            if (!description && option?.helpText) {
+              description = option.helpText;
+            }
           } else {
             displayValue = this.translateSettingValue(value, settingName);
+          }
+          
+          // Handle child settings (nested configurations) - IMPORTANT for sub-settings!
+          if (instance.choiceSettingValue.children && Array.isArray(instance.choiceSettingValue.children)) {
+            console.log(`Found ${instance.choiceSettingValue.children.length} child setting(s) for: ${settingName}`);
+            
+            // Process each child setting - they need the same settingDefinitions array to look up their metadata
+            for (const childSetting of instance.choiceSettingValue.children) {
+              const childSettings = this.extractFromGraphConfigurationSetting({
+                settingInstance: childSetting,
+                settingDefinitions: settingDefinitions // Pass the full settingDefinitions array so children can find their metadata
+              });
+              
+              // Log what we found for debugging
+              if (childSettings.length > 0) {
+                console.log(`Child setting extracted: ${childSettings[0].key} = ${childSettings[0].value}`);
+                if (childSettings[0].description) {
+                  console.log(`  Description: ${childSettings[0].description.substring(0, 100)}...`);
+                }
+              }
+              
+              // Add child settings (they will have their own proper names and descriptions from settingDefinitions)
+              settings.push(...childSettings);
+            }
           }
         } else if (instance.simpleSettingValue?.value !== undefined) {
           value = String(instance.simpleSettingValue.value);
