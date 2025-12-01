@@ -59,6 +59,9 @@ const Index = () => {
     setSelectedPolicyType,
     selectedPlatform,
     setSelectedPlatform,
+    selectedAssignment,
+    setSelectedAssignment,
+    uniqueAssignments,
     filteredPolicies,
   } = usePolicySearch(policiesForSearch);
 
@@ -73,7 +76,7 @@ const Index = () => {
   // Reset to first page when search/filter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, selectedPolicyType, selectedPlatform]);
+  }, [searchTerm, selectedPolicyType, selectedPlatform, selectedAssignment]);
 
   // Load policies from cache or Graph API when authenticated
   const loadPolicies = useCallback(async (forceRefresh = false) => {
@@ -245,28 +248,39 @@ const Index = () => {
               placeholder="Search policies, settings, and configurations..."
             />
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="md:col-span-2">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FilterDropdown
-                    label="Policy Type"
-                    value={selectedPolicyType}
-                    options={policyTypeOptions}
-                    onChange={setSelectedPolicyType}
-                    placeholder="All policy types"
-                  />
-                  <FilterDropdown
-                    label="Platform"
-                    value={selectedPlatform}
-                    options={platformOptions}
-                    onChange={setSelectedPlatform}
-                    placeholder="All platforms"
-                  />
-                </div>
+            <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <FilterDropdown
+                  label="Policy Type"
+                  value={selectedPolicyType}
+                  options={policyTypeOptions}
+                  onChange={setSelectedPolicyType}
+                  placeholder="All policy types"
+                />
+                <FilterDropdown
+                  label="Platform"
+                  value={selectedPlatform}
+                  options={platformOptions}
+                  onChange={setSelectedPlatform}
+                  placeholder="All platforms"
+                />
+                <FilterDropdown
+                  label="Assigned To"
+                  value={selectedAssignment}
+                  options={[
+                    { value: "all", label: "All Assignments" },
+                    ...uniqueAssignments.map(assignment => ({
+                      value: assignment,
+                      label: assignment
+                    }))
+                  ]}
+                  onChange={setSelectedAssignment}
+                  placeholder="All assignments"
+                />
               </div>
               
               {/* Results summary */}
-              <div className="md:col-span-2 flex items-end">
+              <div className="flex items-end">
                 <div className="text-sm text-muted-foreground">
                   Showing {((currentPage - 1) * POLICIES_PER_PAGE) + 1}-{Math.min(currentPage * POLICIES_PER_PAGE, filteredPolicies.length)} of {filteredPolicies.length} policies
                   {filteredPolicies.length !== (isAuthenticated ? policies.length : mockPolicies.length) && (

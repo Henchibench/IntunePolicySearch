@@ -9,7 +9,10 @@ import {
   GraphCollectionResponse,
   Policy,
   PolicySetting,
-  GraphUser
+  GraphUser,
+  GraphAssignment,
+  AssignmentDetails,
+  GraphDirectoryObject
 } from "@/types/graph";
 import { graphConfig } from "./authConfig";
 
@@ -52,6 +55,256 @@ export class GraphService {
   }
 
   /**
+   * Resolve assignment group IDs to display names using batch lookup
+   */
+  async resolveAssignments(assignments: GraphAssignment[]): Promise<AssignmentDetails[]> {
+    if (!assignments || assignments.length === 0) {
+      return [];
+    }
+
+    console.log(`Resolving ${assignments.length} assignments...`);
+
+    const resolvedAssignments: AssignmentDetails[] = [];
+    const idsToResolve: string[] = [];
+    const idToAssignmentMap = new Map<string, GraphAssignment>();
+
+    // First pass: identify special targets and collect IDs to resolve
+    for (const assignment of assignments) {
+      const targetType = assignment.target["@odata.type"];
+      
+      console.log('Processing assignment:', { 
+        id: assignment.id, 
+        targetType, 
+        groupId: assignment.target.groupId,
+        fullTarget: assignment.target
+      });
+      
+      // Handle special assignment targets
+      if (targetType === "#microsoft.graph.allLicensedUsersAssignmentTarget") {
+        console.log('✓ Identified as All Users assignment');
+        resolvedAssignments.push({
+          id: assignment.id,
+          displayName: "All Users",
+          type: "allUsers",
+          intent: this.mapAssignmentIntent(assignment.intent),
+          filterId: assignment.target.deviceAndAppManagementAssignmentFilterId,
+          filterType: assignment.target.deviceAndAppManagementAssignmentFilterType as "include" | "exclude" | undefined
+        });
+      } else if (targetType === "#microsoft.graph.allDevicesAssignmentTarget") {
+        console.log('✓ Identified as All Devices assignment');
+        resolvedAssignments.push({
+          id: assignment.id,
+          displayName: "All Devices",
+          type: "allDevices",
+          intent: this.mapAssignmentIntent(assignment.intent),
+          filterId: assignment.target.deviceAndAppManagementAssignmentFilterId,
+          filterType: assignment.target.deviceAndAppManagementAssignmentFilterType as "include" | "exclude" | undefined
+        });
+      } else if (targetType === "#microsoft.graph.groupAssignmentTarget" || 
+                 targetType === "#microsoft.graph.exclusionGroupAssignmentTarget" ||
+                 assignment.target.groupId) {
+        // Collect group IDs for batch resolution - but only if groupId exists
+        if (assignment.target.groupId) {
+          console.log(`✓ Identified as Group assignment, groupId: ${assignment.target.groupId}`);
+          idsToResolve.push(assignment.target.groupId);
+          idToAssignmentMap.set(assignment.target.groupId, assignment);
+        } else {
+          console.warn('⚠️ Group assignment target without groupId:', assignment);
+        }
+      } else {
+        console.warn('⚠️ Unhandled assignment target type:', targetType, assignment.target);
+      }
+    }
+
+    // Batch resolve group IDs to display names
+    if (idsToResolve.length > 0) {
+      console.log(`Need to resolve ${idsToResolve.length} group/user IDs`);
+      try {
+        const resolvedObjects = await this.resolveDirectoryObjectIds(idsToResolve);
+        
+        console.log(`Resolved ${resolvedObjects.length} objects, mapping back to assignments...`);
+        
+        for (const obj of resolvedObjects) {
+          const assignment = idToAssignmentMap.get(obj.id);
+          if (assignment) {
+            console.log(`Resolved: ${obj.id} -> ${obj.displayName}`);
+            resolvedAssignments.push({
+              id: assignment.id,
+              displayName: obj.displayName,
+              type: this.mapDirectoryObjectType(obj["@odata.type"]),
+              intent: this.mapAssignmentIntent(assignment.intent),
+              filterId: assignment.target.deviceAndAppManagementAssignmentFilterId,
+              filterType: assignment.target.deviceAndAppManagementAssignmentFilterType as "include" | "exclude" | undefined
+            });
+          } else {
+            console.warn(`Could not find assignment mapping for resolved ID: ${obj.id}`);
+          }
+        }
+        
+        // Check for any IDs that weren't resolved
+        const unresolvedIds = idsToResolve.filter(id => !resolvedObjects.find(obj => obj.id === id));
+        if (unresolvedIds.length > 0) {
+          console.warn(`Failed to resolve ${unresolvedIds.length} IDs:`, unresolvedIds);
+          
+          // Fallback: create assignments with IDs as display names
+          for (const id of unresolvedIds) {
+            const assignment = idToAssignmentMap.get(id);
+            if (assignment && id) {
+              resolvedAssignments.push({
+                id: assignment.id,
+                displayName: `Group (${id.substring(0, 8)}...)`,
+                type: "group",
+                intent: this.mapAssignmentIntent(assignment.intent),
+                filterId: assignment.target.deviceAndAppManagementAssignmentFilterId,
+                filterType: assignment.target.deviceAndAppManagementAssignmentFilterType as "include" | "exclude" | undefined
+              });
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Failed to resolve assignment IDs:", error);
+        
+        // Fallback: create assignments with IDs as display names
+        for (const [id, assignment] of idToAssignmentMap) {
+          if (id && !resolvedAssignments.find(a => a.id === assignment.id)) {
+            resolvedAssignments.push({
+              id: assignment.id,
+              displayName: `Group (${id.substring(0, 8)}...)`,
+              type: "group",
+              intent: this.mapAssignmentIntent(assignment.intent),
+              filterId: assignment.target.deviceAndAppManagementAssignmentFilterId,
+              filterType: assignment.target.deviceAndAppManagementAssignmentFilterType as "include" | "exclude" | undefined
+            });
+          }
+        }
+      }
+    }
+
+    // Resolve filter display names if present
+    const filtersToResolve = resolvedAssignments
+      .filter(a => a.filterId)
+      .map(a => a.filterId!);
+
+    if (filtersToResolve.length > 0) {
+      try {
+        const uniqueFilterIds = [...new Set(filtersToResolve)];
+        for (const filterId of uniqueFilterIds) {
+          try {
+            const filter = await this.graphClient
+              .api(`/deviceManagement/assignmentFilters/${filterId}`)
+              .select('id,displayName')
+              .get();
+            
+            // Update all assignments with this filter
+            resolvedAssignments.forEach(assignment => {
+              if (assignment.filterId === filterId) {
+                assignment.filterDisplayName = filter.displayName;
+              }
+            });
+          } catch (error) {
+            console.warn(`Failed to resolve filter ${filterId}:`, error);
+          }
+        }
+      } catch (error) {
+        console.warn("Failed to resolve assignment filters:", error);
+      }
+    }
+
+    console.log(`Returning ${resolvedAssignments.length} total resolved assignments`);
+    return resolvedAssignments;
+  }
+
+  /**
+   * Resolve directory object IDs to display names using batch API
+   */
+  private async resolveDirectoryObjectIds(ids: string[]): Promise<GraphDirectoryObject[]> {
+    if (ids.length === 0) return [];
+
+    console.log(`Resolving ${ids.length} directory object IDs...`, ids);
+
+    // Microsoft Graph supports up to 1000 IDs per request, but we'll batch in smaller chunks
+    const BATCH_SIZE = 100;
+    const results: GraphDirectoryObject[] = [];
+
+    for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+      const batch = ids.slice(i, i + BATCH_SIZE);
+      
+      try {
+        console.log(`🔍 Resolving batch of ${batch.length} IDs:`, batch);
+        
+        // Use full URL with beta endpoint - the SDK doesn't handle /beta prefix well
+        const response = await this.graphClient
+          .api('https://graph.microsoft.com/beta/directoryObjects/getByIds?$select=displayName,id')
+          .post({
+            ids: batch
+          });
+
+        console.log('✅ Directory objects response:', response);
+
+        if (response.value && Array.isArray(response.value)) {
+          console.log(`✅ Successfully resolved ${response.value.length} directory objects`);
+          response.value.forEach((obj: any) => {
+            console.log(`  - ${obj.id} -> ${obj.displayName} (${obj['@odata.type']})`);
+          });
+          results.push(...response.value);
+        } else {
+          console.warn('⚠️ No value in response or not an array:', response);
+        }
+      } catch (error: any) {
+        console.error(`❌ Failed to resolve batch of ${batch.length} IDs:`, error);
+        console.error('Error object:', error);
+        console.error('Error message:', error?.message);
+        console.error('Error code:', error?.code);
+        console.error('Status code:', error?.statusCode);
+        
+        // Check if it's a permission error
+        if (error?.statusCode === 403 || error?.code === 'Forbidden' || error?.message?.includes('Forbidden')) {
+          console.error('');
+          console.error('🔐 PERMISSION ERROR DETECTED!');
+          console.error('════════════════════════════════════════════════════════════');
+          console.error('Missing required permissions: Group.Read.All and User.Read.All');
+          console.error('');
+          console.error('TO FIX:');
+          console.error('1. Go to https://entra.microsoft.com');
+          console.error('2. App registrations → Your app → API permissions');
+          console.error('3. Add Microsoft Graph → Delegated → Group.Read.All');
+          console.error('4. Add Microsoft Graph → Delegated → User.Read.All');
+          console.error('5. Click "Grant admin consent"');
+          console.error('6. SIGN OUT of this app and sign in again');
+          console.error('════════════════════════════════════════════════════════════');
+          console.error('');
+        } else if (error?.statusCode === 401) {
+          console.error('❌ AUTHENTICATION ERROR: Token may be expired or invalid');
+          console.error('Try signing out and signing in again');
+        }
+      }
+    }
+
+    console.log(`Total resolved: ${results.length} out of ${ids.length}`);
+    return results;
+  }
+
+  /**
+   * Map assignment intent from Graph API to our format
+   */
+  private mapAssignmentIntent(intent?: string): "include" | "exclude" | "apply" | "remove" | undefined {
+    if (!intent) return undefined;
+    
+    const intentLower = intent.toLowerCase();
+    if (intentLower.includes('exclude')) return 'exclude';
+    if (intentLower.includes('remove')) return 'remove';
+    if (intentLower.includes('apply')) return 'apply';
+    return 'include';
+  }
+
+  /**
+   * Map directory object type to our assignment type
+   */
+  private mapDirectoryObjectType(odataType: string): "group" | "user" {
+    return odataType.toLowerCase().includes('user') ? 'user' : 'group';
+  }
+
+  /**
    * Fetch all device configuration policies with pagination and detailed settings
    */
   async getDeviceConfigurations(): Promise<GraphDeviceConfiguration[]> {
@@ -81,12 +334,13 @@ export class GraphService {
             
             // Also try to get device configuration assignments
             try {
-              const assignments = await this.graphClient
+              const assignmentsResponse = await this.graphClient
                 .api(`${graphConfig.graphDeviceConfigurationsEndpoint}/${policy.id}/assignments`)
                 .get();
-              detailedPolicy.assignments = assignments.value;
+              detailedPolicy.assignments = assignmentsResponse.value;
             } catch (assignmentError) {
               console.warn(`Failed to fetch assignments for policy ${policy.id}`);
+              detailedPolicy.assignments = [];
             }
             
             return detailedPolicy;
@@ -122,7 +376,24 @@ export class GraphService {
       }
       
       console.log(`Fetched ${allPolicies.length} compliance policies`);
-      return allPolicies;
+      
+      // Fetch assignments for each compliance policy
+      const policiesWithAssignments = await Promise.all(
+        allPolicies.map(async (policy) => {
+          try {
+            const assignmentsResponse = await this.graphClient
+              .api(`${graphConfig.graphCompliancePoliciesEndpoint}/${policy.id}/assignments`)
+              .get();
+            policy.assignments = assignmentsResponse.value;
+          } catch (assignmentError) {
+            console.warn(`Failed to fetch assignments for compliance policy ${policy.id}`);
+            policy.assignments = [];
+          }
+          return policy;
+        })
+      );
+      
+      return policiesWithAssignments;
     } catch (error) {
       console.error("Error fetching compliance policies:", error);
       throw error;
@@ -163,7 +434,24 @@ export class GraphService {
     }
     
     console.log(`Total app protection policies fetched: ${policies.length}`);
-    return policies;
+    
+    // Fetch assignments for each app protection policy
+    const policiesWithAssignments = await Promise.all(
+      policies.map(async (policy) => {
+        try {
+          const assignmentsResponse = await this.graphClient
+            .api(`${graphConfig.graphManagedAppProtectionPoliciesEndpoint}/${policy.id}/assignments`)
+            .get();
+          policy.assignments = assignmentsResponse.value;
+        } catch (assignmentError) {
+          console.warn(`Failed to fetch assignments for app protection policy ${policy.id}`);
+          policy.assignments = [];
+        }
+        return policy;
+      })
+    );
+    
+    return policiesWithAssignments;
   }
 
   /**
@@ -185,15 +473,27 @@ export class GraphService {
       
       console.log(`Fetched ${allPolicies.length} configuration policies (Settings Catalog)`);
       
-      // Fetch detailed settings for each configuration policy
-      const policiesWithSettings = await Promise.all(
+      // Fetch detailed settings and assignments for each configuration policy
+      const policiesWithSettingsAndAssignments = await Promise.all(
         allPolicies.map(async (policy) => {
           try {
             const detailedPolicy = await this.graphClient
               .api(`${graphConfig.graphConfigurationPoliciesEndpoint}/${policy.id}`)
               .expand('settings($expand=settingDefinitions)')
               .get();
-            return { ...policy, settings: detailedPolicy.settings || [] };
+            
+            // Fetch assignments
+            try {
+              const assignmentsResponse = await this.graphClient
+                .api(`${graphConfig.graphConfigurationPoliciesEndpoint}/${policy.id}/assignments`)
+                .get();
+              detailedPolicy.assignments = assignmentsResponse.value;
+            } catch (assignmentError) {
+              console.warn(`Failed to fetch assignments for configuration policy ${policy.id}`);
+              detailedPolicy.assignments = [];
+            }
+            
+            return { ...policy, settings: detailedPolicy.settings || [], assignments: detailedPolicy.assignments };
           } catch (error) {
             console.warn(`Failed to fetch settings for policy ${policy.id}:`, error);
             return policy;
@@ -201,7 +501,7 @@ export class GraphService {
         })
       );
       
-      return policiesWithSettings;
+      return policiesWithSettingsAndAssignments;
     } catch (error) {
       console.error("Error fetching configuration policies:", error);
       throw error;
@@ -294,7 +594,8 @@ export class GraphService {
     // Fetch each policy type independently to avoid total failure
     try {
       const deviceConfigs = await this.getDeviceConfigurations();
-      policies.push(...deviceConfigs.map(policy => this.transformDeviceConfiguration(policy)));
+      const transformed = await Promise.all(deviceConfigs.map(policy => this.transformDeviceConfiguration(policy)));
+      policies.push(...transformed);
       successful.push(`Device Configurations (${deviceConfigs.length})`);
     } catch (error) {
       console.warn("Failed to fetch device configurations:", error);
@@ -303,7 +604,8 @@ export class GraphService {
 
     try {
       const compliancePolicies = await this.getCompliancePolicies();
-      policies.push(...compliancePolicies.map(policy => this.transformCompliancePolicy(policy)));
+      const transformed = await Promise.all(compliancePolicies.map(policy => this.transformCompliancePolicy(policy)));
+      policies.push(...transformed);
       successful.push(`Compliance Policies (${compliancePolicies.length})`);
     } catch (error) {
       console.warn("Failed to fetch compliance policies:", error);
@@ -312,7 +614,8 @@ export class GraphService {
 
     try {
       const appPolicies = await this.getManagedAppPolicies();
-      policies.push(...appPolicies.map(policy => this.transformAppProtectionPolicy(policy)));
+      const transformed = await Promise.all(appPolicies.map(policy => this.transformAppProtectionPolicy(policy)));
+      policies.push(...transformed);
       successful.push(`App Protection Policies (${appPolicies.length})`);
     } catch (error) {
       console.warn("Failed to fetch app protection policies:", error);
@@ -321,7 +624,8 @@ export class GraphService {
 
     try {
       const configPolicies = await this.getConfigurationPolicies();
-      policies.push(...configPolicies.map(policy => this.transformConfigurationPolicy(policy)));
+      const transformed = await Promise.all(configPolicies.map(policy => this.transformConfigurationPolicy(policy)));
+      policies.push(...transformed);
       successful.push(`Configuration Policies (${configPolicies.length})`);
     } catch (error) {
       console.warn("Failed to fetch configuration policies:", error);
@@ -331,7 +635,8 @@ export class GraphService {
     // Fetch additional policy types
     try {
       const groupPolicies = await this.getGroupPolicyConfigurations();
-      policies.push(...groupPolicies.map(policy => this.transformGroupPolicyConfiguration(policy)));
+      const transformed = await Promise.all(groupPolicies.map(policy => this.transformGroupPolicyConfiguration(policy)));
+      policies.push(...transformed);
       successful.push(`Group Policy Configurations (${groupPolicies.length})`);
     } catch (error) {
       console.warn("Failed to fetch Group Policy configurations:", error);
@@ -340,7 +645,8 @@ export class GraphService {
 
     try {
       const securityBaselines = await this.getSecurityBaselines();
-      policies.push(...securityBaselines.map(policy => this.transformSecurityBaseline(policy)));
+      const transformed = await Promise.all(securityBaselines.map(policy => this.transformSecurityBaseline(policy)));
+      policies.push(...transformed);
       successful.push(`Security Baselines (${securityBaselines.length})`);
     } catch (error) {
       console.warn("Failed to fetch Security Baselines:", error);
@@ -349,7 +655,8 @@ export class GraphService {
 
     try {
       const enrollmentConfigs = await this.getDeviceEnrollmentConfigurations();
-      policies.push(...enrollmentConfigs.map(policy => this.transformEnrollmentConfiguration(policy)));
+      const transformed = await Promise.all(enrollmentConfigs.map(policy => this.transformEnrollmentConfiguration(policy)));
+      policies.push(...transformed);
       successful.push(`Enrollment Configurations (${enrollmentConfigs.length})`);
     } catch (error) {
       console.warn("Failed to fetch Device Enrollment configurations:", error);
@@ -373,7 +680,7 @@ export class GraphService {
   /**
    * Transform device configuration policy to unified format
    */
-  private transformDeviceConfiguration(policy: GraphDeviceConfiguration): Policy {
+  private async transformDeviceConfiguration(policy: GraphDeviceConfiguration): Promise<Policy> {
     const settings: PolicySetting[] = [];
     
     // Debug logging to see what policy names we're getting
@@ -397,10 +704,13 @@ export class GraphService {
     }
     if (policy.settings) {
       policy.settings.forEach(setting => {
-        settings.push(...this.extractFromGraphConfigurationSetting(setting));
+        settings.push(...this.extractFromGraphConfigurationSetting(setting as any));
       });
     }
 
+    // Resolve assignments
+    const assignments = await this.resolveAssignments(policy.assignments || []);
+    
     const transformedPolicy = {
       id: policy.id,
       name: policy.displayName || (policy as any).name || `Device Configuration ${policy.id}`,
@@ -409,14 +719,16 @@ export class GraphService {
       platform: this.determinePlatform(policy["@odata.type"]),
       lastModified: new Date(policy.lastModifiedDateTime).toLocaleDateString(),
       createdBy: policy.createdBy?.user?.displayName || "Unknown",
-      assignedGroups: policy.assignments?.map(a => a.target.groupId || "Unknown") || [],
+      assignedGroups: policy.assignments?.map(a => a.target.groupId || "Unknown") || [], // Deprecated
+      assignments,
       settings
     };
 
     console.log(`Transformed to:`, {
       id: transformedPolicy.id,
       name: transformedPolicy.name,
-      settingsCount: transformedPolicy.settings.length
+      settingsCount: transformedPolicy.settings.length,
+      assignmentsCount: transformedPolicy.assignments.length
     });
 
     return transformedPolicy;
@@ -425,7 +737,7 @@ export class GraphService {
   /**
    * Transform compliance policy to unified format
    */
-  private transformCompliancePolicy(policy: GraphCompliancePolicy): Policy {
+  private async transformCompliancePolicy(policy: GraphCompliancePolicy): Promise<Policy> {
     const settings: PolicySetting[] = [];
     
     // Extract compliance settings
@@ -444,15 +756,19 @@ export class GraphService {
 
     this.extractSettingsFromObject(complianceSettings, "Compliance Requirements", settings);
 
+    // Resolve assignments
+    const assignments = await this.resolveAssignments(policy.assignments || []);
+
     return {
       id: policy.id,
-      name: policy.displayName || policy.name || `Compliance Policy ${policy.id}`,
+      name: policy.displayName || `Compliance Policy ${policy.id}`,
       description: policy.description || "",
       type: "Compliance Policy",
       platform: this.determinePlatform("compliance"),
       lastModified: new Date(policy.lastModifiedDateTime).toLocaleDateString(),
       createdBy: policy.createdBy?.user?.displayName || "Unknown",
-      assignedGroups: policy.assignments?.map(a => a.target.groupId || "Unknown") || [],
+      assignedGroups: policy.assignments?.map(a => a.target.groupId || "Unknown") || [], // Deprecated
+      assignments,
       settings
     };
   }
@@ -460,7 +776,7 @@ export class GraphService {
   /**
    * Transform app protection policy to unified format
    */
-  private transformAppProtectionPolicy(policy: GraphManagedAppPolicy): Policy {
+  private async transformAppProtectionPolicy(policy: GraphManagedAppPolicy): Promise<Policy> {
     const settings: PolicySetting[] = [];
     
     // Extract app protection settings
@@ -486,15 +802,19 @@ export class GraphService {
 
     this.extractSettingsFromObject(appSettings, "App Protection", settings);
 
+    // Resolve assignments
+    const assignments = await this.resolveAssignments(policy.assignments || []);
+
     return {
       id: policy.id,
-      name: policy.displayName || policy.name || `App Protection Policy ${policy.id}`,
+      name: policy.displayName || `App Protection Policy ${policy.id}`,
       description: policy.description || "",
       type: "App Protection",
       platform: this.determinePlatform(policy["@odata.type"]),
       lastModified: new Date(policy.lastModifiedDateTime).toLocaleDateString(),
       createdBy: policy.createdBy?.user?.displayName || "Unknown",
-      assignedGroups: policy.assignments?.map(a => a.target.groupId || "Unknown") || [],
+      assignedGroups: policy.assignments?.map(a => a.target.groupId || "Unknown") || [], // Deprecated
+      assignments,
       settings
     };
   }
@@ -502,7 +822,7 @@ export class GraphService {
   /**
    * Transform configuration policy to unified format
    */
-  private transformConfigurationPolicy(policy: GraphConfigurationPolicy): Policy {
+  private async transformConfigurationPolicy(policy: GraphConfigurationPolicy): Promise<Policy> {
     const settings: PolicySetting[] = [];
     
     // Debug logging to see what policy names we're getting
@@ -527,6 +847,9 @@ export class GraphService {
       console.log(`No settings array found or not array:`, policy.settings);
     }
 
+    // Resolve assignments
+    const assignments = await this.resolveAssignments(policy.assignments || []);
+    
     const transformedPolicy = {
       id: policy.id,
       name: policy.displayName || (policy as any).name || `Configuration Policy ${policy.id}`,
@@ -535,7 +858,8 @@ export class GraphService {
       platform: this.mapPlatformFromString(policy.platforms),
       lastModified: new Date(policy.lastModifiedDateTime).toLocaleDateString(),
       createdBy: policy.createdBy?.user?.displayName || "Unknown",
-      assignedGroups: policy.assignments?.map(a => a.target.groupId || "Unknown") || [],
+      assignedGroups: policy.assignments?.map(a => a.target.groupId || "Unknown") || [], // Deprecated
+      assignments,
       settings,
       // Keep raw data for troubleshooting
       rawGraphData: policy
@@ -544,7 +868,8 @@ export class GraphService {
     console.log(`Transformed to:`, {
       id: transformedPolicy.id,
       name: transformedPolicy.name,
-      settingsCount: transformedPolicy.settings.length
+      settingsCount: transformedPolicy.settings.length,
+      assignmentsCount: transformedPolicy.assignments.length
     });
 
     return transformedPolicy;
@@ -587,7 +912,7 @@ export class GraphService {
       'experienceBlockTaskSwitcher', 'logonBlockFastUserSwitching'
     ];
 
-    const policyObj = policy as Record<string, unknown>;
+    const policyObj = policy as any as Record<string, unknown>;
     
     for (const prop of settingProperties) {
       if (policyObj[prop] !== undefined && policyObj[prop] !== null) {
@@ -1296,11 +1621,14 @@ export class GraphService {
   /**
    * Transform Group Policy Configuration to unified format
    */
-  private transformGroupPolicyConfiguration(policy: any): Policy {
+  private async transformGroupPolicyConfiguration(policy: any): Promise<Policy> {
     const settings: PolicySetting[] = [];
     
     // Extract settings from Group Policy object
     this.extractSettingsFromObject(policy, "Group Policy", settings);
+
+    // Resolve assignments
+    const assignments = await this.resolveAssignments(policy.assignments || []);
 
     return {
       id: policy.id || "unknown",
@@ -1310,7 +1638,8 @@ export class GraphService {
       platform: "Windows",
       lastModified: policy.lastModifiedDateTime ? new Date(policy.lastModifiedDateTime).toLocaleDateString() : "Unknown",
       createdBy: policy.createdBy?.user?.displayName || "Unknown",
-      assignedGroups: [],
+      assignedGroups: [], // Deprecated
+      assignments,
       settings
     };
   }
@@ -1318,11 +1647,14 @@ export class GraphService {
   /**
    * Transform Security Baseline/Intent to unified format
    */
-  private transformSecurityBaseline(baseline: any): Policy {
+  private async transformSecurityBaseline(baseline: any): Promise<Policy> {
     const settings: PolicySetting[] = [];
     
     // Extract settings from Security Baseline object
     this.extractSettingsFromObject(baseline, "Security Baseline", settings);
+
+    // Resolve assignments
+    const assignments = await this.resolveAssignments(baseline.assignments || []);
 
     return {
       id: baseline.id || "unknown",
@@ -1332,7 +1664,8 @@ export class GraphService {
       platform: this.determinePlatform(baseline["@odata.type"] || ""),
       lastModified: baseline.lastModifiedDateTime ? new Date(baseline.lastModifiedDateTime).toLocaleDateString() : "Unknown",
       createdBy: baseline.createdBy?.user?.displayName || "Unknown",
-      assignedGroups: [],
+      assignedGroups: [], // Deprecated
+      assignments,
       settings
     };
   }
@@ -1340,11 +1673,14 @@ export class GraphService {
   /**
    * Transform Device Enrollment Configuration to unified format
    */
-  private transformEnrollmentConfiguration(config: any): Policy {
+  private async transformEnrollmentConfiguration(config: any): Promise<Policy> {
     const settings: PolicySetting[] = [];
     
     // Extract settings from Enrollment Configuration object
     this.extractSettingsFromObject(config, "Enrollment Configuration", settings);
+
+    // Resolve assignments
+    const assignments = await this.resolveAssignments(config.assignments || []);
 
     return {
       id: config.id || "unknown",
@@ -1354,7 +1690,8 @@ export class GraphService {
       platform: this.determinePlatform(config["@odata.type"] || ""),
       lastModified: config.lastModifiedDateTime ? new Date(config.lastModifiedDateTime).toLocaleDateString() : "Unknown",
       createdBy: config.createdBy?.user?.displayName || "Unknown",
-      assignedGroups: [],
+      assignedGroups: [], // Deprecated
+      assignments,
       settings
     };
   }

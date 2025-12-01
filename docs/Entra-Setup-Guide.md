@@ -39,15 +39,19 @@ This guide will walk you through setting up an Entra ID app registration for the
 3. Select **Microsoft Graph**
 4. Choose **Delegated permissions**
 5. Add the following permissions:
-   - `DeviceManagementConfiguration.Read.All`
-   - `DeviceManagementApps.Read.All` 
-   - `DeviceManagementManagedDevices.Read.All`
-   - `User.Read` (usually already present)
+   - `DeviceManagementConfiguration.Read.All` - Read device configurations
+   - `DeviceManagementApps.Read.All` - Read app protection policies
+   - `DeviceManagementManagedDevices.Read.All` - Read managed devices
+   - `DeviceManagementServiceConfig.Read.All` - Read service configuration
+   - `Group.Read.All` - **Required** to resolve assignment group names
+   - `User.Read.All` - **Required** to resolve user assignment names
+   - `User.Read` (usually already present) - Read current user profile
 
 6. Click **Add permissions**
 7. **Important**: Click **Grant admin consent** for your organization
    - This step requires Global Administrator permissions
    - Without this, users will see consent prompts
+   - **Note**: After granting new permissions, users must sign out and sign in again
 
 ## Step 4: Configure Application Settings
 

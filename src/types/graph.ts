@@ -7,6 +7,12 @@ export interface GraphUser {
   userPrincipalName: string;
 }
 
+export interface GraphDirectoryObject {
+  id: string;
+  "@odata.type": string;
+  displayName: string;
+}
+
 export interface GraphPolicyBase {
   id: string;
   displayName: string;
@@ -29,6 +35,17 @@ export interface GraphAssignment {
     deviceAndAppManagementAssignmentFilterId?: string;
     deviceAndAppManagementAssignmentFilterType?: string;
   };
+  intent?: string; // For assignment intent (apply, remove, etc.)
+}
+
+export interface AssignmentDetails {
+  id: string;
+  displayName: string;
+  type: "group" | "user" | "allUsers" | "allDevices";
+  intent?: "include" | "exclude" | "apply" | "remove";
+  filterId?: string;
+  filterDisplayName?: string;
+  filterType?: "include" | "exclude";
 }
 
 // Device Configuration Policy
@@ -146,7 +163,8 @@ export interface Policy {
   platform: "Windows" | "iOS" | "Android" | "macOS" | "All Platforms";
   lastModified: string;
   createdBy: string;
-  assignedGroups: string[];
+  assignedGroups: string[]; // Deprecated - use assignments instead
+  assignments: AssignmentDetails[];
   settings: PolicySetting[];
   rawGraphData?: any; // For troubleshooting - contains original Graph API response
 }

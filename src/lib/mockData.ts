@@ -10,6 +10,10 @@ export const mockPolicies: Policy[] = [
     lastModified: "2024-01-15",
     createdBy: "John Doe",
     assignedGroups: ["All Windows Devices", "Security Team"],
+    assignments: [
+      { id: "a1", displayName: "All Windows Devices", type: "group", intent: "include" },
+      { id: "a2", displayName: "Security Team", type: "group", intent: "include" }
+    ],
     settings: [
       {
         category: "Security",
@@ -46,6 +50,10 @@ export const mockPolicies: Policy[] = [
     lastModified: "2024-01-12",
     createdBy: "Jane Smith",
     assignedGroups: ["iOS Devices", "Mobile Users"],
+    assignments: [
+      { id: "a3", displayName: "iOS Devices", type: "group", intent: "include" },
+      { id: "a4", displayName: "Mobile Users", type: "group", intent: "include" }
+    ],
     settings: [
       {
         category: "Data Protection",
@@ -82,6 +90,10 @@ export const mockPolicies: Policy[] = [
     lastModified: "2024-01-10",
     createdBy: "Mike Wilson",
     assignedGroups: ["Android Work Profile", "BYOD Users"],
+    assignments: [
+      { id: "a5", displayName: "Android Work Profile", type: "group", intent: "include" },
+      { id: "a6", displayName: "BYOD Users", type: "group", intent: "include" }
+    ],
     settings: [
       {
         category: "Device Health",
@@ -118,6 +130,10 @@ export const mockPolicies: Policy[] = [
     lastModified: "2024-01-08",
     createdBy: "Sarah Johnson",
     assignedGroups: ["All Users", "Conditional Access Group"],
+    assignments: [
+      { id: "a7", displayName: "All Users", type: "allUsers" },
+      { id: "a8", displayName: "Conditional Access Group", type: "group", intent: "include" }
+    ],
     settings: [
       {
         category: "Assignments",
@@ -154,6 +170,10 @@ export const mockPolicies: Policy[] = [
     lastModified: "2024-01-05",
     createdBy: "David Chen",
     assignedGroups: ["macOS Devices", "Executive Team"],
+    assignments: [
+      { id: "a9", displayName: "macOS Devices", type: "group", intent: "include" },
+      { id: "a10", displayName: "Executive Team", type: "group", intent: "include", filterId: "f1", filterDisplayName: "Corporate Devices", filterType: "include" }
+    ],
     settings: [
       {
         category: "Encryption",

@@ -19,7 +19,9 @@ export const loginRequest: PopupRequest = {
     "https://graph.microsoft.com/DeviceManagementConfiguration.Read.All",
     "https://graph.microsoft.com/DeviceManagementApps.Read.All", 
     "https://graph.microsoft.com/DeviceManagementManagedDevices.Read.All",
-    "https://graph.microsoft.com/DeviceManagementServiceConfig.Read.All"
+    "https://graph.microsoft.com/DeviceManagementServiceConfig.Read.All",
+    "https://graph.microsoft.com/Group.Read.All", // Required to resolve assignment group names
+    "https://graph.microsoft.com/User.Read.All"   // Required to resolve user assignments
   ]
 };
 

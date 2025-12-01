@@ -1,10 +1,10 @@
 import { useState, useMemo, useEffect } from "react";
-import { ChevronDown, ChevronRight, Smartphone, Laptop, Shield, AppWindow } from "lucide-react";
+import { ChevronDown, ChevronRight, Smartphone, Laptop, Shield, AppWindow, Users, User, Globe, Filter } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Policy, PolicySetting } from "@/types/graph";
+import { Policy, PolicySetting, AssignmentDetails } from "@/types/graph";
 
 interface PolicyCardProps {
   policy: Policy;
@@ -64,6 +64,34 @@ const highlightText = (text: string, searchTerm: string) => {
       </mark>
     ) : part
   );
+};
+
+const getAssignmentIcon = (type: AssignmentDetails['type']) => {
+  switch (type) {
+    case 'group':
+      return Users;
+    case 'user':
+      return User;
+    case 'allUsers':
+      return Globe;
+    case 'allDevices':
+      return Laptop;
+    default:
+      return Users;
+  }
+};
+
+const getAssignmentBadgeVariant = (intent?: AssignmentDetails['intent']): "default" | "secondary" | "destructive" | "outline" => {
+  switch (intent) {
+    case 'exclude':
+    case 'remove':
+      return 'destructive';
+    case 'include':
+    case 'apply':
+      return 'default';
+    default:
+      return 'secondary';
+  }
 };
 
 export const PolicyCard = ({ policy, searchTerm = "" }: PolicyCardProps) => {
@@ -174,6 +202,44 @@ export const PolicyCard = ({ policy, searchTerm = "" }: PolicyCardProps) => {
       {isExpanded && (
         <CardContent className="pt-0 animate-card-expand">
           <Separator className="mb-4" />
+          
+          {/* Assignments Section */}
+          {policy.assignments && policy.assignments.length > 0 && (
+            <div className="space-y-3 mb-6">
+              <div className="flex items-center gap-2">
+                <h4 className="font-medium text-foreground">Assignments</h4>
+                <Badge variant="outline" className="text-xs">
+                  {policy.assignments.length}
+                </Badge>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {policy.assignments.map((assignment, index) => {
+                  const AssignmentIcon = getAssignmentIcon(assignment.type);
+                  const variant = getAssignmentBadgeVariant(assignment.intent);
+                  
+                  return (
+                    <div key={index} className="flex flex-col gap-1">
+                      <Badge variant={variant} className="gap-1.5 px-3 py-1">
+                        <AssignmentIcon className="h-3 w-3" />
+                        {highlightText(assignment.displayName, searchTerm)}
+                        {assignment.intent && assignment.intent !== 'include' && (
+                          <span className="text-xs opacity-80">({assignment.intent})</span>
+                        )}
+                      </Badge>
+                      {assignment.filterDisplayName && (
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground ml-1">
+                          <Filter className="h-2.5 w-2.5" />
+                          <span>{assignment.filterType === 'exclude' ? 'Exclude' : 'Include'} filter: {assignment.filterDisplayName}</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              <Separator className="mt-4" />
+            </div>
+          )}
+          
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h4 className="font-medium text-foreground">Policy Settings</h4>
