@@ -56,8 +56,8 @@ A interactive dashboard for searching and exploring Microsoft Intune configurati
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/IntuneDashLove.git
-   cd IntuneDashLove
+   git clone https://github.com/Henchibench/IntunePolicySearch.git
+   cd IntunePolicySearch
    ```
 
 2. **Install dependencies**
@@ -107,6 +107,8 @@ The application requires these Microsoft Graph delegated permissions:
 - `DeviceManagementApps.Read.All`
 - `DeviceManagementManagedDevices.Read.All`
 - `DeviceManagementServiceConfig.Read.All`
+- `Group.Read.All` (for resolving assignment group names)
+- `User.Read.All` (for resolving user assignment names)
 - `User.Read`
 
 ### User Requirements

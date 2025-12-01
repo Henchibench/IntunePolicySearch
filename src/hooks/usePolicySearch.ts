@@ -1,10 +1,22 @@
 import { useMemo, useState } from "react";
-import { Policy } from "@/components/PolicyCard";
+import { Policy } from "@/types/graph";
 
 export const usePolicySearch = (policies: Policy[]) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPolicyType, setSelectedPolicyType] = useState("all");
   const [selectedPlatform, setSelectedPlatform] = useState("all");
+  const [selectedAssignment, setSelectedAssignment] = useState("all");
+
+  // Extract unique assignments from all policies
+  const uniqueAssignments = useMemo(() => {
+    const assignmentSet = new Set<string>();
+    policies.forEach(policy => {
+      policy.assignments?.forEach(assignment => {
+        assignmentSet.add(assignment.displayName);
+      });
+    });
+    return Array.from(assignmentSet).sort();
+  }, [policies]);
 
   const filteredPolicies = useMemo(() => {
     return policies.filter((policy) => {
@@ -13,6 +25,10 @@ export const usePolicySearch = (policies: Policy[]) => {
       
       // Filter by platform
       const matchesPlatform = selectedPlatform === "all" || policy.platform === selectedPlatform;
+      
+      // Filter by assignment
+      const matchesAssignment = selectedAssignment === "all" || 
+        policy.assignments?.some(assignment => assignment.displayName === selectedAssignment);
       
       // Filter by search term
       const matchesSearch = !searchTerm || 
@@ -25,9 +41,9 @@ export const usePolicySearch = (policies: Policy[]) => {
           (setting.description && setting.description.toLowerCase().includes(searchTerm.toLowerCase()))
         );
       
-      return matchesPolicyType && matchesPlatform && matchesSearch;
+      return matchesPolicyType && matchesPlatform && matchesAssignment && matchesSearch;
     });
-  }, [policies, searchTerm, selectedPolicyType, selectedPlatform]);
+  }, [policies, searchTerm, selectedPolicyType, selectedPlatform, selectedAssignment]);
 
   return {
     searchTerm,
@@ -36,6 +52,9 @@ export const usePolicySearch = (policies: Policy[]) => {
     setSelectedPolicyType,
     selectedPlatform,
     setSelectedPlatform,
+    selectedAssignment,
+    setSelectedAssignment,
+    uniqueAssignments,
     filteredPolicies,
   };
 };
