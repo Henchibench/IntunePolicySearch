@@ -5,23 +5,24 @@ import { FilterDropdown } from "@/components/FilterDropdown";
 import { PolicyCard } from "@/components/PolicyCard";
 import { mockPolicies, policyTypeOptions, platformOptions } from "@/lib/mockData";
 import { usePolicySearch } from "@/hooks/usePolicySearch";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Policy } from "@/types/graph";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, Shield, Loader2, ChevronLeft, ChevronRight, Database } from "lucide-react";
+import { AlertCircle, Shield, Loader2, Database } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import { CacheService } from "@/services/cacheService";
 
-const POLICIES_PER_PAGE = 20;
+const ITEMS_PER_LOAD = 20;
 
 const Index = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [policies, setPolicies] = useState<Policy[]>([]);
   const [isLoadingPolicies, setIsLoadingPolicies] = useState(false);
   const [policiesError, setPoliciesError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [displayedCount, setDisplayedCount] = useState(ITEMS_PER_LOAD);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hideCertificates, setHideCertificates] = useState(false);
   const { toast } = useToast();
   const { isAuthenticated, graphService, error: authError } = useAuth();
@@ -62,17 +63,34 @@ const Index = () => {
     filteredPolicies,
   } = usePolicySearch(policiesForSearch);
 
-  // Pagination logic
-  const totalPages = Math.ceil(filteredPolicies.length / POLICIES_PER_PAGE);
-  const paginatedPolicies = useMemo(() => {
-    const startIndex = (currentPage - 1) * POLICIES_PER_PAGE;
-    const endIndex = startIndex + POLICIES_PER_PAGE;
-    return filteredPolicies.slice(startIndex, endIndex);
-  }, [filteredPolicies, currentPage]);
+  // Infinite scroll logic
+  const displayedPolicies = useMemo(() => {
+    return filteredPolicies.slice(0, displayedCount);
+  }, [filteredPolicies, displayedCount]);
 
-  // Reset to first page when search/filter changes
+  const hasMore = displayedCount < filteredPolicies.length;
+
+  // Load more items for infinite scroll
+  const loadMoreItems = useCallback(() => {
+    if (!hasMore || isLoadingMore) return;
+
+    setIsLoadingMore(true);
+    // Simulate a small delay for smooth UX
+    setTimeout(() => {
+      setDisplayedCount(prev => prev + ITEMS_PER_LOAD);
+      setIsLoadingMore(false);
+    }, 300);
+  }, [hasMore, isLoadingMore]);
+
+  // Set up infinite scroll observer
+  const { observerTarget } = useInfiniteScroll(loadMoreItems, {
+    threshold: 0.1,
+    rootMargin: '100px',
+  });
+
+  // Reset displayed count when search/filter changes
   useEffect(() => {
-    setCurrentPage(1);
+    setDisplayedCount(ITEMS_PER_LOAD);
   }, [searchTerm, selectedPolicyType, selectedPlatform]);
 
   // Load policies from cache or Graph API when authenticated
@@ -268,7 +286,7 @@ const Index = () => {
               {/* Results summary */}
               <div className="md:col-span-2 flex items-end">
                 <div className="text-sm text-muted-foreground">
-                  Showing {((currentPage - 1) * POLICIES_PER_PAGE) + 1}-{Math.min(currentPage * POLICIES_PER_PAGE, filteredPolicies.length)} of {filteredPolicies.length} policies
+                  Showing {Math.min(displayedCount, filteredPolicies.length)} of {filteredPolicies.length} policies
                   {filteredPolicies.length !== (isAuthenticated ? policies.length : mockPolicies.length) && (
                     <span className="ml-1">
                       (filtered from {isAuthenticated ? policies.length : mockPolicies.length} total)
@@ -299,7 +317,7 @@ const Index = () => {
           ) : (
             <>
               <div className="grid gap-6">
-                {paginatedPolicies.map((policy, index) => (
+                {displayedPolicies.map((policy, index) => (
                   <PolicyCard
                     key={`${policy.id}-${index}`}
                     policy={policy}
@@ -308,63 +326,25 @@ const Index = () => {
                 ))}
               </div>
 
-              {/* Pagination Controls */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between border-t pt-6">
-                  <div className="text-sm text-muted-foreground">
-                    Page {currentPage} of {totalPages}
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                      disabled={currentPage === 1}
-                      className="gap-2"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                      Previous
-                    </Button>
-                    
-                    <div className="flex items-center gap-1">
-                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                        let pageNum;
-                        if (totalPages <= 5) {
-                          pageNum = i + 1;
-                        } else if (currentPage <= 3) {
-                          pageNum = i + 1;
-                        } else if (currentPage >= totalPages - 2) {
-                          pageNum = totalPages - 4 + i;
-                        } else {
-                          pageNum = currentPage - 2 + i;
-                        }
-                        
-                        return (
-                          <Button
-                            key={pageNum}
-                            variant={currentPage === pageNum ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setCurrentPage(pageNum)}
-                            className="w-10"
-                          >
-                            {pageNum}
-                          </Button>
-                        );
-                      })}
+              {/* Infinite Scroll Trigger & Loading Indicator */}
+              {hasMore && (
+                <div
+                  ref={observerTarget}
+                  className="flex items-center justify-center py-8"
+                >
+                  {isLoadingMore && (
+                    <div className="flex items-center gap-3 text-muted-foreground">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <span>Loading more policies...</span>
                     </div>
-                    
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                      disabled={currentPage === totalPages}
-                      className="gap-2"
-                    >
-                      Next
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  )}
+                </div>
+              )}
+
+              {/* End of results indicator */}
+              {!hasMore && filteredPolicies.length > ITEMS_PER_LOAD && (
+                <div className="text-center py-8 text-sm text-muted-foreground border-t">
+                  You've reached the end of the results ({filteredPolicies.length} policies)
                 </div>
               )}
             </>
