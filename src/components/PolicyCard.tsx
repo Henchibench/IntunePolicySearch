@@ -154,6 +154,12 @@ export const PolicyCard = ({ policy, searchTerm = "" }: PolicyCardProps) => {
                 </span>
               )}
             </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground font-mono">
+                GUID: {policy.id}
+              </span>
+            </div>
           </div>
           
           <Button
