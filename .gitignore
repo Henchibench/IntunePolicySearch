@@ -24,3 +24,9 @@ dist-ssr
 *.sw?
 
 *.env
+
+# Electron app build outputs
+electron-app/dist-electron
+electron-app/web-dist
+electron-app/release
+electron-app/node_modules

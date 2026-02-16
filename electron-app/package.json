@@ -1,0 +1,55 @@
+{
+  "name": "intune-policy-search-desktop",
+  "version": "1.0.0",
+  "description": "Intune Policy Search - Desktop App",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "clean": "node -e \"const fs=require('fs');['web-dist','dist-electron','release'].forEach(d=>{if(fs.existsSync(d))fs.rmSync(d,{recursive:true})})\"",
+    "build:web": "cd .. && npx vite build && node -e \"require('fs').cpSync('dist','electron-app/web-dist',{recursive:true})\"",
+    "build:electron": "npx tsc",
+    "build": "npm run clean && npm run build:web && npm run build:electron",
+    "start": "npm run build:electron && npx electron .",
+    "dist:win": "npm run build && npx electron-builder --win"
+  },
+  "dependencies": {
+    "electron-store": "^8.2.0",
+    "serve-handler": "^6.1.6"
+  },
+  "devDependencies": {
+    "@types/serve-handler": "^6.1.4",
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8",
+    "typescript": "^5.8.3"
+  },
+  "build": {
+    "appId": "com.intunepolicysearch.desktop",
+    "productName": "Intune Policy Search",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist-electron/**/*",
+      "web-dist/**/*",
+      "setup.html",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "Intune Policy Search"
+    }
+  }
+}

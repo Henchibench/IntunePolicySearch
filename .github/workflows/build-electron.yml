@@ -1,0 +1,67 @@
+name: Build Electron App
+
+on:
+  # Build automatically when a version tag is pushed
+  push:
+    tags:
+      - 'v*'
+  # Allow manual builds from the GitHub Actions tab
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install web project dependencies
+        run: npm ci
+
+      - name: Build web project
+        run: npx vite build
+
+      - name: Copy web build to electron-app
+        run: |
+          node -e "require('fs').cpSync('dist','electron-app/web-dist',{recursive:true})"
+
+      - name: Install electron-app dependencies
+        working-directory: electron-app
+        run: npm ci
+
+      - name: Compile Electron TypeScript
+        working-directory: electron-app
+        run: npx tsc
+
+      - name: Build Windows installer
+        working-directory: electron-app
+        run: npx electron-builder --win
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload installer artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: |
+            electron-app/release/*.exe
+          retention-days: 30
+
+      # Create a GitHub Release with the .exe files when triggered by a tag
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: electron-app/release/*.exe
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

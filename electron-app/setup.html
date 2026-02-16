@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Intune Policy Search - Setup</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .setup-container {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 40px;
+      max-width: 640px;
+      width: 100%;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .logo h1 {
+      font-size: 24px;
+      font-weight: 600;
+      color: #f1f5f9;
+      margin-bottom: 8px;
+    }
+
+    .logo p {
+      font-size: 14px;
+      color: #94a3b8;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: #cbd5e1;
+      margin-bottom: 6px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px 14px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: #f1f5f9;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus {
+      border-color: #3b82f6;
+    }
+
+    input::placeholder {
+      color: #475569;
+    }
+
+    .help-text {
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 4px;
+    }
+
+    .button {
+      width: 100%;
+      padding: 12px;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-top: 8px;
+    }
+
+    .button:hover {
+      background: #2563eb;
+    }
+
+    .button:disabled {
+      background: #1e40af;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .error {
+      background: #451a1a;
+      border: 1px solid #7f1d1d;
+      color: #fca5a5;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    /* Help guide styles */
+    .help-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: none;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #60a5fa;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      width: 100%;
+      margin-bottom: 20px;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .help-toggle:hover {
+      background: #172554;
+      border-color: #1e40af;
+    }
+
+    .help-toggle .arrow {
+      transition: transform 0.2s;
+      font-size: 12px;
+    }
+
+    .help-toggle.open .arrow {
+      transform: rotate(90deg);
+    }
+
+    .help-guide {
+      display: none;
+      background: #0f172a;
+      border: 1px solid #1e3a5f;
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin-bottom: 24px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #cbd5e1;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .help-guide.open {
+      display: block;
+    }
+
+    .help-guide h3 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #f1f5f9;
+      margin-bottom: 16px;
+    }
+
+    .step {
+      margin-bottom: 16px;
+      padding-left: 28px;
+      position: relative;
+    }
+
+    .step:last-child {
+      margin-bottom: 0;
+    }
+
+    .step-number {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 20px;
+      height: 20px;
+      background: #1e40af;
+      color: #e0e7ff;
+      border-radius: 50%;
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .step strong {
+      color: #f1f5f9;
+    }
+
+    .step code {
+      background: #1e293b;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-family: 'Cascadia Code', 'Consolas', monospace;
+      font-size: 12px;
+      color: #93c5fd;
+    }
+
+    .step a {
+      color: #60a5fa;
+      text-decoration: none;
+    }
+
+    .step a:hover {
+      text-decoration: underline;
+    }
+
+    .permissions-list {
+      margin: 8px 0;
+      padding-left: 16px;
+    }
+
+    .permissions-list li {
+      margin-bottom: 4px;
+      color: #93c5fd;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #334155;
+      margin: 16px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="setup-container">
+    <div class="logo">
+      <h1>Intune Policy Search</h1>
+      <p>Connect to your Microsoft Intune tenant</p>
+    </div>
+
+    <!-- Collapsible help guide -->
+    <button class="help-toggle" id="help-toggle" type="button">
+      <span class="arrow">&#9654;</span>
+      Need help? Step-by-step setup guide
+    </button>
+
+    <div class="help-guide" id="help-guide">
+      <h3>Azure AD App Registration Setup</h3>
+
+      <div class="step">
+        <span class="step-number">1</span>
+        <strong>Open Azure Portal</strong><br>
+        Go to <a href="https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade" target="_blank">portal.azure.com</a>
+        and navigate to <strong>Microsoft Entra ID</strong> &gt; <strong>App registrations</strong>.
+      </div>
+
+      <div class="step">
+        <span class="step-number">2</span>
+        <strong>Create a new registration</strong><br>
+        Click <strong>+ New registration</strong>. Enter a name (e.g., <code>Intune Policy Search</code>).
+        Under "Supported account types", select <strong>Accounts in this organizational directory only</strong> (single tenant).
+        Click <strong>Register</strong>.
+      </div>
+
+      <div class="step">
+        <span class="step-number">3</span>
+        <strong>Add redirect URI</strong><br>
+        In your new app, go to <strong>Authentication</strong> &gt; <strong>+ Add a platform</strong> &gt; <strong>Single-page application</strong>.
+        Set the redirect URI to <code>http://localhost</code> and click <strong>Configure</strong>.
+      </div>
+
+      <div class="step">
+        <span class="step-number">4</span>
+        <strong>Add API permissions</strong><br>
+        Go to <strong>API permissions</strong> &gt; <strong>+ Add a permission</strong> &gt; <strong>Microsoft Graph</strong> &gt; <strong>Delegated permissions</strong>.
+        Search for and add these 4 permissions:
+        <ul class="permissions-list">
+          <li><code>DeviceManagementConfiguration.Read.All</code></li>
+          <li><code>DeviceManagementApps.Read.All</code></li>
+          <li><code>DeviceManagementManagedDevices.Read.All</code></li>
+          <li><code>DeviceManagementServiceConfig.Read.All</code></li>
+        </ul>
+      </div>
+
+      <div class="step">
+        <span class="step-number">5</span>
+        <strong>Grant admin consent</strong> (if required)<br>
+        If your organization requires it, click <strong>Grant admin consent for [your org]</strong> on the API permissions page.
+        You may need a Global Administrator to do this.
+      </div>
+
+      <hr class="divider">
+
+      <div class="step">
+        <span class="step-number">6</span>
+        <strong>Copy your IDs</strong><br>
+        Go back to <strong>Overview</strong>. Copy the <strong>Application (client) ID</strong> and the
+        <strong>Directory (tenant) ID</strong> and paste them into the fields below.
+      </div>
+    </div>
+
+    <div class="error" id="error"></div>
+
+    <form id="setup-form">
+      <div class="form-group">
+        <label for="clientId">Application (Client) ID</label>
+        <input
+          type="text"
+          id="clientId"
+          placeholder="e.g., 12345678-abcd-1234-efgh-123456789012"
+          required
+          autocomplete="off"
+          spellcheck="false"
+        >
+        <div class="help-text">
+          Found in Azure Portal &gt; App registrations &gt; Your app &gt; Overview
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="tenantId">Directory (Tenant) ID</label>
+        <input
+          type="text"
+          id="tenantId"
+          placeholder="e.g., 12345678-abcd-1234-efgh-123456789012"
+          required
+          autocomplete="off"
+          spellcheck="false"
+        >
+        <div class="help-text">
+          Found in Azure Portal &gt; App registrations &gt; Your app &gt; Overview
+        </div>
+      </div>
+
+      <button type="submit" class="button" id="submit-btn">
+        Connect
+      </button>
+    </form>
+  </div>
+
+  <script>
+    // Help guide toggle
+    const helpToggle = document.getElementById('help-toggle');
+    const helpGuide = document.getElementById('help-guide');
+
+    helpToggle.addEventListener('click', () => {
+      helpToggle.classList.toggle('open');
+      helpGuide.classList.toggle('open');
+    });
+
+    const form = document.getElementById('setup-form');
+    const errorEl = document.getElementById('error');
+    const submitBtn = document.getElementById('submit-btn');
+
+    // Pre-fill with existing config if reconfiguring
+    if (window.setupAPI) {
+      window.setupAPI.getConfig().then(config => {
+        if (config.clientId) {
+          document.getElementById('clientId').value = config.clientId;
+        }
+        if (config.tenantId) {
+          document.getElementById('tenantId').value = config.tenantId;
+        }
+      });
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorEl.style.display = 'none';
+
+      const clientId = document.getElementById('clientId').value.trim();
+      const tenantId = document.getElementById('tenantId').value.trim();
+
+      // Basic GUID validation
+      const guidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+      if (!guidPattern.test(clientId)) {
+        errorEl.textContent = 'Client ID must be a valid GUID (e.g., 12345678-abcd-1234-efgh-123456789012)';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      if (!guidPattern.test(tenantId)) {
+        errorEl.textContent = 'Tenant ID must be a valid GUID (e.g., 12345678-abcd-1234-efgh-123456789012)';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Connecting...';
+
+      try {
+        await window.setupAPI.setConfig({
+          azureClientId: clientId,
+          azureTenantId: tenantId,
+        });
+        await window.setupAPI.launchApp();
+      } catch (err) {
+        errorEl.textContent = 'Failed to save configuration. Please try again.';
+        errorEl.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Connect';
+      }
+    });
+  </script>
+</body>
+</html>

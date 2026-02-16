@@ -1,11 +1,14 @@
 import { Configuration, PopupRequest } from "@azure/msal-browser";
 
+// Runtime config injected by Electron preload script (if running as desktop app)
+const runtimeConfig = (window as any).__INTUNE_CONFIG__ as { clientId?: string; authority?: string; redirectUri?: string } | undefined;
+
 // MSAL configuration object
 export const msalConfig: Configuration = {
   auth: {
-    clientId: import.meta.env.VITE_AZURE_CLIENT_ID || "",
-    authority: import.meta.env.VITE_AZURE_AUTHORITY || "https://login.microsoftonline.com/common",
-    redirectUri: import.meta.env.VITE_AZURE_REDIRECT_URI || window.location.origin,
+    clientId: runtimeConfig?.clientId || import.meta.env.VITE_AZURE_CLIENT_ID || "",
+    authority: runtimeConfig?.authority || import.meta.env.VITE_AZURE_AUTHORITY || "https://login.microsoftonline.com/common",
+    redirectUri: runtimeConfig?.redirectUri || import.meta.env.VITE_AZURE_REDIRECT_URI || window.location.origin,
   },
   cache: {
     cacheLocation: "sessionStorage", // This configures where your cache will be stored
