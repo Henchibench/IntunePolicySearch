@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx vite build)",
+      "Bash(ls -la \"c:\\\\GITHUB\\\\IntunePolicySearch\\\\.github\"\" 2>/dev/null || echo \"No .github directory found \")",
+      "Bash(npm run dist:*)",
+      "Bash(CSC_IDENTITY_AUTO_DISCOVERY=false npx electron-builder:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git tag:*)"
+    ]
+  }
+}

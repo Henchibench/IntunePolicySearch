@@ -14,6 +14,7 @@ const store = new Store({
 let mainWindow: BrowserWindow | null = null;
 let localServer: http.Server | null = null;
 let localServerPort: number | null = null;
+let isRelaunching = false;
 
 function hasConfig(): boolean {
   const clientId = store.get('azureClientId') as string;
@@ -118,9 +119,10 @@ async function loadApp() {
       await startLocalServer();
     }
 
-    // Close current window and create a new one with the app preload
+    // Prevent app.quit() from firing when we close the setup window
+    isRelaunching = true;
     const bounds = mainWindow.getBounds();
-    mainWindow.close();
+    mainWindow.destroy();
 
     mainWindow = new BrowserWindow({
       ...bounds,
@@ -137,23 +139,32 @@ async function loadApp() {
 
     setupWindowHandlers(mainWindow);
 
+    mainWindow.on('closed', () => {
+      mainWindow = null;
+    });
+
     mainWindow.once('ready-to-show', () => {
       mainWindow?.show();
     });
 
+    isRelaunching = false;
     await mainWindow.loadURL(`http://localhost:${localServerPort}`);
   } catch (error) {
     console.error('Failed to load app:', error);
+    isRelaunching = false;
   }
 }
 
 function setupWindowHandlers(win: BrowserWindow) {
-  // Allow MSAL login popups, open other external links in default browser
+  // Allow MSAL login popups and related URLs
+  // MSAL opens about:blank first, then navigates to the login URL
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (
+      url === 'about:blank' ||
       url.includes('login.microsoftonline.com') ||
       url.includes('login.live.com') ||
-      url.includes('login.windows.net')
+      url.includes('login.windows.net') ||
+      url.startsWith('http://localhost')
     ) {
       return { action: 'allow' };
     }
@@ -236,6 +247,7 @@ ipcMain.handle('launch-app', async () => {
 app.whenReady().then(createWindow);
 
 app.on('window-all-closed', () => {
+  if (isRelaunching) return;
   if (localServer) {
     localServer.close();
   }
