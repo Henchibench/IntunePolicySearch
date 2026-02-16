@@ -2,6 +2,11 @@
   "name": "intune-policy-search-desktop",
   "version": "1.0.0",
   "description": "Intune Policy Search - Desktop App",
+  "author": "Henchibench",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Henchibench/IntunePolicySearch.git"
+  },
   "main": "dist-electron/main.js",
   "scripts": {
     "clean": "node -e \"const fs=require('fs');['web-dist','dist-electron','release'].forEach(d=>{if(fs.existsSync(d))fs.rmSync(d,{recursive:true})})\"",
