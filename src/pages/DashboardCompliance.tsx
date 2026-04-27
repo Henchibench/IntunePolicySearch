@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,6 +9,8 @@ import { GroupList } from "@/components/dashboard/GroupList";
 import { DeviceTable } from "@/components/dashboard/DeviceTable";
 import { DeviceDrawer } from "@/components/dashboard/DeviceDrawer";
 import { ChevronLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ManagedDevice } from "@/types/managedDevice";
 
 const VALID_PIVOTS: PivotKey[] = ["reason", "platform", "user"];
 
@@ -69,6 +71,40 @@ export default function DashboardCompliance() {
     });
   };
 
+  const [refinedGroups, setRefinedGroups] = useState<PivotGroup[] | null>(null);
+  const [isRefining, setIsRefining] = useState(false);
+
+  const refineReasons = async () => {
+    if (!dashboardService) return;
+    setIsRefining(true);
+    try {
+      const ids = devices
+        .filter(d => d.complianceState !== "compliant" && d.complianceState !== "unknown")
+        .map(d => d.id);
+      const map = await dashboardService.getNonCompliantPolicyStatesBulk(ids);
+      const settingMap = new Map<string, ManagedDevice[]>();
+      for (const d of devices) {
+        const entries = map.get(d.id) ?? [];
+        for (const e of entries) {
+          for (const s of e.failingSettings) {
+            if (!settingMap.has(s)) settingMap.set(s, []);
+            settingMap.get(s)!.push(d);
+          }
+        }
+      }
+      const groups: PivotGroup[] = [];
+      for (const [key, ds] of settingMap.entries()) {
+        groups.push({ key: `setting:${key}`, label: key, devices: ds });
+      }
+      groups.sort((a, b) => b.devices.length - a.devices.length);
+      setRefinedGroups(groups);
+    } finally {
+      setIsRefining(false);
+    }
+  };
+
+  const displayedGroups = pivot === "reason" && refinedGroups ? refinedGroups : groups;
+
   if (!isAuthenticated) {
     return (
       <>
@@ -103,8 +139,21 @@ export default function DashboardCompliance() {
 
         <PivotTabs value={pivot} onChange={setPivot} />
 
+        {pivot === "reason" && (
+          <div className="flex items-center gap-3">
+            <Button onClick={refineReasons} disabled={isRefining || !devices.length} variant="outline" size="sm">
+              {isRefining ? "Refining…" : refinedGroups ? "Refine again" : "Refine reasons (slow, opt-in)"}
+            </Button>
+            {refinedGroups && (
+              <Button onClick={() => setRefinedGroups(null)} variant="ghost" size="sm">
+                Clear refinement
+              </Button>
+            )}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-4">
-          <GroupList groups={groups} selectedKey={groupKey} onSelect={setGroup} total={devices.length} />
+          <GroupList groups={displayedGroups} selectedKey={groupKey} onSelect={setGroup} total={devices.length} />
           <div>
             {selectedGroup ? (
               <DeviceTable
