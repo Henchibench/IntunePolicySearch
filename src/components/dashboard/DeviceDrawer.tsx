@@ -41,7 +41,7 @@ export function DeviceDrawer({ device, open, onOpenChange }: DeviceDrawerProps) 
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="w-[760px] max-w-[92vw] rounded-l-3xl border-l border-border bg-lifted p-7 shadow-drawer-light dark:shadow-drawer flex flex-col"
+        className="w-[760px] max-w-[92vw] sm:max-w-none rounded-l-3xl border-l border-border bg-lifted p-7 shadow-drawer-light dark:shadow-drawer flex flex-col"
       >
         {/* Header */}
         <div>
