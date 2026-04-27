@@ -1,6 +1,6 @@
 import { Client } from "@microsoft/microsoft-graph-client";
 import { AuthenticationProvider } from "@microsoft/microsoft-graph-client";
-import { ManagedDevice, DeviceDeepDetails } from "@/types/managedDevice";
+import { ManagedDevice, DeviceDeepDetails, MobileAppState } from "@/types/managedDevice";
 import { graphConfig } from "./authConfig";
 import { batchGet } from "./graphBatch";
 
@@ -48,12 +48,19 @@ export class DashboardService {
     return all;
   }
 
-  async getDeviceDeepDetails(deviceId: string): Promise<DeviceDeepDetails> {
-    const requests = [
+  async getDeviceDeepDetails(deviceId: string, userPrincipalName?: string): Promise<DeviceDeepDetails> {
+    const requests: Array<{ id: string; relativeUrl: string }> = [
       { id: "compliance", relativeUrl: `/deviceManagement/managedDevices/${deviceId}/deviceCompliancePolicyStates` },
       { id: "configuration", relativeUrl: `/deviceManagement/managedDevices/${deviceId}/deviceConfigurationStates` },
       { id: "apps", relativeUrl: `/deviceManagement/managedDevices/${deviceId}/detectedApps` },
     ];
+
+    if (userPrincipalName) {
+      requests.push({
+        id: "managedApps",
+        relativeUrl: `/users/${encodeURIComponent(userPrincipalName)}/mobileAppIntentAndStates?$filter=managedDeviceIdentifier eq '${deviceId}'`,
+      });
+    }
 
     const responses = await batchGet(this.client, requests);
 
@@ -61,10 +68,28 @@ export class DashboardService {
     const configuration = responses.get("configuration");
     const apps = responses.get("apps");
 
+    const managedAppsResp = responses.get("managedApps");
+    let managedAppStates: MobileAppState[] = [];
+    if (managedAppsResp?.status === 200) {
+      const records = (managedAppsResp.body?.value ?? []) as Array<any>;
+      // The filter narrows to one record per device, but be defensive.
+      const record = records.find(r => r.managedDeviceIdentifier === deviceId) ?? records[0];
+      if (record?.mobileAppList) {
+        managedAppStates = record.mobileAppList.map((a: any) => ({
+          applicationId: a.applicationId,
+          displayName: a.displayName,
+          mobileAppIntent: a.mobileAppIntent,
+          installState: a.installState,
+          displayVersion: a.displayVersion,
+        }));
+      }
+    }
+
     return {
       compliancePolicyStates: compliance?.status === 200 ? compliance.body?.value ?? [] : [],
       configurationStates: configuration?.status === 200 ? configuration.body?.value ?? [] : [],
       detectedApps: apps?.status === 200 ? apps.body?.value ?? [] : [],
+      managedAppStates,
     };
   }
 

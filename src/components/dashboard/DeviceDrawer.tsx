@@ -41,7 +41,7 @@ export function DeviceDrawer({ device, open, onOpenChange }: DeviceDrawerProps) 
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="w-[520px] max-w-[92vw] rounded-l-3xl border-l border-border bg-lifted p-7 shadow-drawer-light dark:shadow-drawer flex flex-col"
+        className="w-[760px] max-w-[92vw] rounded-l-3xl border-l border-border bg-lifted p-7 shadow-drawer-light dark:shadow-drawer flex flex-col"
       >
         {/* Header */}
         <div>
@@ -71,7 +71,7 @@ export function DeviceDrawer({ device, open, onOpenChange }: DeviceDrawerProps) 
         </div>
 
         {/* Metadata grid */}
-        <div className="mt-6 space-y-4 text-sm overflow-y-auto flex-1">
+        <div className="mt-6 space-y-4 text-sm overflow-y-auto flex-1 min-h-0">
           <dl className="grid grid-cols-3 gap-x-3 gap-y-2">
             <dt className="text-muted-foreground">Last sync</dt>
             <dd className="col-span-2">{device.lastSyncDateTime ? new Date(device.lastSyncDateTime).toLocaleString() : "—"}</dd>
@@ -91,7 +91,7 @@ export function DeviceDrawer({ device, open, onOpenChange }: DeviceDrawerProps) 
           {error && (
             <div className="rounded-2xl border border-signal/30 bg-signal/[0.10] p-2 text-sm text-signal-light">
               Failed to load: {error}
-              <Button onClick={() => load(device.id)} variant="link" size="sm" className="ml-2">
+              <Button onClick={() => load(device.id, device.userPrincipalName)} variant="link" size="sm" className="ml-2">
                 Retry
               </Button>
             </div>
@@ -109,7 +109,7 @@ export function DeviceDrawer({ device, open, onOpenChange }: DeviceDrawerProps) 
         {/* Pinned bottom CTAs */}
         <div className="mt-auto pt-6 flex flex-wrap gap-3">
           {!details && !isLoading && !error && (
-            <Button variant="ink" onClick={() => load(device.id)}>
+            <Button variant="ink" onClick={() => load(device.id, device.userPrincipalName)}>
               <RefreshCw className="h-4 w-4 mr-2" /> Load deep details
             </Button>
           )}

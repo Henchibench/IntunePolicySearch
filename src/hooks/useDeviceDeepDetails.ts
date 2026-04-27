@@ -6,7 +6,7 @@ interface UseDeviceDeepDetailsResult {
   details: DeviceDeepDetails | null;
   isLoading: boolean;
   error: string | null;
-  load: (deviceId: string) => Promise<void>;
+  load: (deviceId: string, userPrincipalName?: string) => Promise<void>;
   reset: () => void;
 }
 
@@ -16,7 +16,7 @@ export function useDeviceDeepDetails(service: DashboardService | null): UseDevic
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(
-    async (deviceId: string) => {
+    async (deviceId: string, userPrincipalName?: string) => {
       if (!service) {
         setError("Not authenticated");
         return;
@@ -25,7 +25,7 @@ export function useDeviceDeepDetails(service: DashboardService | null): UseDevic
       setError(null);
       setDetails(null);
       try {
-        const data = await service.getDeviceDeepDetails(deviceId);
+        const data = await service.getDeviceDeepDetails(deviceId, userPrincipalName);
         setDetails(data);
       } catch (err) {
         console.error("Failed to load deep details:", err);

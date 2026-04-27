@@ -56,8 +56,33 @@ export interface DetectedApp {
   platform?: string;
 }
 
+export interface MobileAppState {
+  applicationId: string;
+  displayName: string;
+  mobileAppIntent?:
+    | "available"
+    | "notAvailable"
+    | "requiredInstall"
+    | "requiredUninstall"
+    | "requiredAndAvailableInstall"
+    | "availableInstallWithoutEnrollment"
+    | "exclude"
+    | string;
+  installState?:
+    | "installed"
+    | "failed"
+    | "notInstalled"
+    | "uninstallFailed"
+    | "pendingInstall"
+    | "unknown"
+    | "notApplicable"
+    | string;
+  displayVersion?: string;
+}
+
 export interface DeviceDeepDetails {
   compliancePolicyStates: DeviceCompliancePolicyState[];
   configurationStates: DeviceConfigurationState[];
   detectedApps: DetectedApp[];
+  managedAppStates: MobileAppState[];
 }
