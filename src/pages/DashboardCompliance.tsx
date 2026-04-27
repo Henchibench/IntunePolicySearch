@@ -12,6 +12,7 @@ import { DeviceDrawer } from "@/components/dashboard/DeviceDrawer";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ManagedDevice } from "@/types/managedDevice";
+import { EyebrowLabel } from "@/components/ui/EyebrowLabel";
 
 const VALID_PIVOTS: PivotKey[] = ["reason", "platform", "user"];
 
@@ -108,26 +109,36 @@ export default function DashboardCompliance() {
 
   if (!isAuthenticated) {
     return (
-      <>
-        <PillNav />
-        <UtilityRow />
-        <main className="max-w-7xl mx-auto p-6">
-          <p className="text-muted-foreground">Sign in to view the dashboard.</p>
+      <div className="min-h-screen bg-canvas">
+        <div className="px-6">
+          <PillNav />
+          <UtilityRow />
+        </div>
+        <main className="mx-auto mt-12 max-w-[1240px] px-8 pb-24">
+          <EyebrowLabel>INTUNE POLICY SEARCH</EyebrowLabel>
+          <h1 className="mt-3 text-[44px] font-medium leading-tight tracking-tight2 text-ink">
+            Sign in to view compliance.
+          </h1>
         </main>
-      </>
+      </div>
     );
   }
 
   return (
-    <>
-      <PillNav />
-      <UtilityRow onRefresh={refresh} isRefreshing={isLoading} />
-      <main className="max-w-7xl mx-auto p-6 space-y-4">
+    <div className="min-h-screen bg-canvas">
+      <div className="px-6">
+        <PillNav />
+        <UtilityRow onRefresh={refresh} isRefreshing={isLoading} />
+      </div>
+      <main className="mx-auto mt-12 max-w-[1240px] px-8 pb-24 space-y-4">
         <Link to="/dashboard" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ChevronLeft className="h-4 w-4" /> Back to dashboard
         </Link>
 
-        <h2 className="text-xl font-semibold">Compliance</h2>
+        <EyebrowLabel>COMPLIANCE</EyebrowLabel>
+        <h1 className="mt-3 text-[44px] font-medium leading-tight tracking-tight2 text-ink">
+          Every device, every policy.
+        </h1>
 
         {error && (
           <div className="rounded border border-red-500/50 bg-red-500/10 p-3 text-sm">
@@ -178,6 +189,6 @@ export default function DashboardCompliance() {
         open={!!selectedDevice}
         onOpenChange={open => { if (!open) setDevice(null); }}
       />
-    </>
+    </div>
   );
 }
