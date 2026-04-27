@@ -13,33 +13,33 @@ interface PolicyCardProps {
 
 const platformConfig = {
   Windows: {
-    color: "bg-windows text-windows-foreground",
-    lightBg: "bg-windows-light",
-    border: "border-windows-border",
+    color: "bg-lifted text-ink",
+    lightBg: "bg-lifted",
+    border: "border-border",
     icon: Laptop,
   },
   iOS: {
-    color: "bg-ios text-ios-foreground",
-    lightBg: "bg-ios-light",
-    border: "border-ios-border",
+    color: "bg-lifted text-ink",
+    lightBg: "bg-lifted",
+    border: "border-border",
     icon: Smartphone,
   },
   Android: {
-    color: "bg-android text-android-foreground",
-    lightBg: "bg-android-light",
-    border: "border-android-border",
+    color: "bg-lifted text-ink",
+    lightBg: "bg-lifted",
+    border: "border-border",
     icon: Smartphone,
   },
   "All Platforms": {
-    color: "bg-all-platforms text-all-platforms-foreground",
-    lightBg: "bg-all-platforms-light",
-    border: "border-all-platforms-border",
+    color: "bg-lifted text-ink",
+    lightBg: "bg-lifted",
+    border: "border-border",
     icon: AppWindow,
   },
   macOS: {
-    color: "bg-ios text-ios-foreground", // Reuse iOS styling for macOS
-    lightBg: "bg-ios-light",
-    border: "border-ios-border",
+    color: "bg-lifted text-ink",
+    lightBg: "bg-lifted",
+    border: "border-border",
     icon: Laptop,
   },
 };
