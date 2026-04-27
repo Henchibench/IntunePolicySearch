@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { ManagedDevice } from "@/types/managedDevice";
 import { cn } from "@/lib/utils";
+import { EditorialCard } from "@/components/ui/EditorialCard";
 
 interface DeviceTableProps {
   devices: ManagedDevice[];
@@ -22,8 +23,8 @@ export function DeviceTable({ devices, selectedDeviceId, onSelect }: DeviceTable
   });
 
   return (
-    <div className="rounded-md border bg-card">
-      <div className="grid grid-cols-[1.5fr_1.5fr_1fr_1fr_1fr] gap-2 px-3 py-2 text-xs uppercase tracking-wide text-muted-foreground border-b">
+    <EditorialCard radius="frame" padding="lg" className="flex flex-col overflow-hidden">
+      <div className="sticky top-0 z-10 grid grid-cols-[2fr_1.4fr_1fr_0.8fr_0.8fr] gap-4 border-b border-border bg-lifted py-3 text-[10.5px] font-bold uppercase tracking-eyebrow text-slate">
         <div>Device</div>
         <div>User</div>
         <div>Platform</div>
@@ -43,7 +44,7 @@ export function DeviceTable({ devices, selectedDeviceId, onSelect }: DeviceTable
                   key={device.id}
                   onClick={() => onSelect(device.id)}
                   className={cn(
-                    "absolute left-0 right-0 grid grid-cols-[1.5fr_1.5fr_1fr_1fr_1fr] gap-2 px-3 items-center text-sm hover:bg-accent/50 text-left",
+                    "absolute left-0 right-0 grid grid-cols-[2fr_1.4fr_1fr_0.8fr_0.8fr] gap-4 border-b border-border/50 px-3 py-3 text-[12.5px] font-[450] text-ink hover:bg-ink/[0.03] cursor-pointer items-center text-left",
                     selected && "bg-accent"
                   )}
                   style={{
@@ -52,17 +53,22 @@ export function DeviceTable({ devices, selectedDeviceId, onSelect }: DeviceTable
                   }}
                 >
                   <div className="truncate">{device.deviceName}</div>
-                  <div className="truncate text-muted-foreground">{device.userDisplayName || device.userPrincipalName || "—"}</div>
+                  <div className="truncate">{device.userDisplayName || device.userPrincipalName || "—"}</div>
                   <div className="truncate">{device.operatingSystem} {device.osVersion}</div>
-                  <div className={cn(
-                    "truncate",
-                    device.complianceState === "compliant" ? "text-emerald-600" :
-                    device.complianceState === "noncompliant" ? "text-red-600" :
-                    "text-amber-600"
-                  )}>
-                    {device.complianceState}
+                  <div>
+                    <span className={cn(
+                      device.complianceState === "compliant"
+                        ? "inline-flex items-center rounded-pill bg-success/15 px-2.5 py-0.5 text-[11px] font-medium text-success"
+                        : device.complianceState === "noncompliant" || device.complianceState === "nonCompliant"
+                        ? "inline-flex items-center rounded-pill bg-signal/[0.18] px-2.5 py-0.5 text-[11px] font-medium text-signal-light"
+                        : device.complianceState === "inGracePeriod"
+                        ? "inline-flex items-center rounded-pill bg-signal-light/[0.12] px-2.5 py-0.5 text-[11px] font-medium text-signal-light"
+                        : "inline-flex items-center rounded-pill bg-ink/[0.06] px-2.5 py-0.5 text-[11px] font-medium text-ink"
+                    )}>
+                      {device.complianceState}
+                    </span>
                   </div>
-                  <div className="truncate text-muted-foreground">
+                  <div className="truncate">
                     {device.lastSyncDateTime ? new Date(device.lastSyncDateTime).toLocaleString() : "—"}
                   </div>
                 </button>
@@ -71,7 +77,7 @@ export function DeviceTable({ devices, selectedDeviceId, onSelect }: DeviceTable
           </div>
         )}
       </div>
-      <div className="px-3 py-2 text-xs text-muted-foreground border-t">{devices.length} device(s)</div>
-    </div>
+      <div className="px-3 py-2 text-xs text-muted-foreground border-t border-border">{devices.length} device(s)</div>
+    </EditorialCard>
   );
 }
