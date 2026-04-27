@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import GroupLookup from "./pages/GroupLookup";
 import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
+import DashboardCompliance from "./pages/DashboardCompliance";
 
 const queryClient = new QueryClient();
 const msalInstance = new PublicClientApplication(msalConfig);
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/groups" element={<GroupLookup />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard/compliance" element={<DashboardCompliance />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </TooltipProvider>
