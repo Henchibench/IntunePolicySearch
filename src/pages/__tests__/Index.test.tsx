@@ -42,6 +42,6 @@ describe("Index page", () => {
       logout: vi.fn(),
     });
     renderAt("/");
-    expect(screen.getByText(/INTUNE POLICY SEARCH/i)).toBeInTheDocument();
+    expect(screen.getByText("INTUNE POLICY SEARCH")).toBeInTheDocument();
   });
 });
