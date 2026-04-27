@@ -75,31 +75,49 @@ export default function DashboardCompliance() {
 
   const [refinedGroups, setRefinedGroups] = useState<PivotGroup[] | null>(null);
   const [isRefining, setIsRefining] = useState(false);
+  const [refineError, setRefineError] = useState<string | null>(null);
 
   const refineReasons = async () => {
     if (!dashboardService) return;
     setIsRefining(true);
+    setRefineError(null);
     try {
       const ids = devices
         .filter(d => d.complianceState !== "compliant" && d.complianceState !== "unknown")
         .map(d => d.id);
       const map = await dashboardService.getNonCompliantPolicyStatesBulk(ids);
-      const settingMap = new Map<string, ManagedDevice[]>();
+
+      // Bucket devices by failing setting name. If a policy reports no per-setting
+      // detail (settingStates omitted or empty), fall back to grouping by policy name
+      // so the user still gets a meaningful refinement.
+      const bucketMap = new Map<string, { label: string; devices: Set<ManagedDevice> }>();
+      const addToBucket = (key: string, label: string, device: ManagedDevice) => {
+        if (!bucketMap.has(key)) bucketMap.set(key, { label, devices: new Set() });
+        bucketMap.get(key)!.devices.add(device);
+      };
+
       for (const d of devices) {
         const entries = map.get(d.id) ?? [];
         for (const e of entries) {
-          for (const s of e.failingSettings) {
-            if (!settingMap.has(s)) settingMap.set(s, []);
-            settingMap.get(s)!.push(d);
+          if (e.failingSettings.length > 0) {
+            for (const s of e.failingSettings) {
+              addToBucket(`setting:${s}`, s, d);
+            }
+          } else if (e.policyDisplayName) {
+            addToBucket(`policy:${e.policyDisplayName}`, `Policy: ${e.policyDisplayName}`, d);
           }
         }
       }
+
       const groups: PivotGroup[] = [];
-      for (const [key, ds] of settingMap.entries()) {
-        groups.push({ key: `setting:${key}`, label: key, devices: ds });
+      for (const [key, v] of bucketMap.entries()) {
+        groups.push({ key, label: v.label, devices: Array.from(v.devices) });
       }
       groups.sort((a, b) => b.devices.length - a.devices.length);
       setRefinedGroups(groups);
+    } catch (err) {
+      console.error("Refine reasons failed:", err);
+      setRefineError(err instanceof Error ? err.message : String(err));
     } finally {
       setIsRefining(false);
     }
@@ -154,14 +172,21 @@ export default function DashboardCompliance() {
         <PivotTabs value={pivot} onChange={setPivot} />
 
         {pivot === "reason" && (
-          <div className="flex items-center gap-3">
-            <Button onClick={refineReasons} disabled={isRefining || !devices.length} variant="outline" size="sm">
-              {isRefining ? "Refining…" : refinedGroups ? "Refine again" : "Refine reasons (slow, opt-in)"}
-            </Button>
-            {refinedGroups && (
-              <Button onClick={() => setRefinedGroups(null)} variant="ghost" size="sm">
-                Clear refinement
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <Button onClick={refineReasons} disabled={isRefining || !devices.length} variant="outline" size="sm">
+                {isRefining ? "Refining…" : refinedGroups ? "Refine again" : "Refine reasons (slow, opt-in)"}
               </Button>
+              {refinedGroups && (
+                <Button onClick={() => { setRefinedGroups(null); setRefineError(null); }} variant="ghost" size="sm">
+                  Clear refinement
+                </Button>
+              )}
+            </div>
+            {refineError && (
+              <div className="rounded border border-red-500/50 bg-red-500/10 p-2 text-sm text-red-700 dark:text-red-300">
+                Refine failed: {refineError}
+              </div>
             )}
           </div>
         )}

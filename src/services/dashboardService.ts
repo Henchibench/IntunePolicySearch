@@ -71,32 +71,51 @@ export class DashboardService {
   async getNonCompliantPolicyStatesBulk(
     deviceIds: string[]
   ): Promise<Map<string, Array<{ policyDisplayName: string; failingSettings: string[] }>>> {
-    const requests = deviceIds.map((id, idx) => ({
-      id: `r${idx}`,
+    // settingStates is a navigation property on deviceCompliancePolicyState — not
+    // $expand-able. Two waves: list policy states per device, then fetch
+    // settingStates sub-collection per non-compliant policy state.
+    const wave1 = deviceIds.map((id, idx) => ({
+      id: `d${idx}`,
       relativeUrl: `/deviceManagement/managedDevices/${id}/deviceCompliancePolicyStates`,
     }));
+    const wave1Resp = await batchGet(this.client, wave1);
 
-    const responses = await batchGet(this.client, requests);
-
+    type PolicyEntry = { deviceId: string; policyStateId: string; displayName: string };
+    const nonCompliant: PolicyEntry[] = [];
     const out = new Map<string, Array<{ policyDisplayName: string; failingSettings: string[] }>>();
     deviceIds.forEach((deviceId, idx) => {
-      const resp = responses.get(`r${idx}`);
-      if (resp?.status !== 200) {
-        out.set(deviceId, []);
-        return;
-      }
+      out.set(deviceId, []);
+      const resp = wave1Resp.get(`d${idx}`);
+      if (resp?.status !== 200) return;
       const policies = (resp.body?.value ?? []) as Array<any>;
-      const flat: Array<{ policyDisplayName: string; failingSettings: string[] }> = [];
       for (const p of policies) {
         if (p.state !== "compliant" && p.state !== "notApplicable") {
-          const failing = (p.settingStates ?? [])
-            .filter((s: any) => s.state !== "compliant" && s.state !== "notApplicable")
-            .map((s: any) => s.settingName || s.setting);
-          flat.push({ policyDisplayName: p.displayName, failingSettings: failing });
+          nonCompliant.push({ deviceId, policyStateId: p.id, displayName: p.displayName });
         }
       }
-      out.set(deviceId, flat);
     });
+
+    if (nonCompliant.length === 0) return out;
+
+    const wave2 = nonCompliant.map((entry, idx) => ({
+      id: `s${idx}`,
+      relativeUrl: `/deviceManagement/managedDevices/${entry.deviceId}/deviceCompliancePolicyStates/${entry.policyStateId}/settingStates`,
+    }));
+    const wave2Resp = await batchGet(this.client, wave2);
+
+    nonCompliant.forEach((entry, idx) => {
+      const resp = wave2Resp.get(`s${idx}`);
+      const settings = resp?.status === 200 ? ((resp.body?.value ?? []) as Array<any>) : [];
+      const failing = settings
+        .filter(s => s.state !== "compliant" && s.state !== "notApplicable")
+        .map(s => s.settingName || s.setting)
+        .filter(Boolean);
+      out.get(entry.deviceId)!.push({
+        policyDisplayName: entry.displayName,
+        failingSettings: failing,
+      });
+    });
+
     return out;
   }
 }
