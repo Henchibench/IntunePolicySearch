@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { Header } from "@/components/Header";
+import { PillNav } from "@/components/PillNav";
+import { UtilityRow } from "@/components/UtilityRow";
 import { KpiTile } from "@/components/dashboard/KpiTile";
 import { useAuth } from "@/hooks/useAuth";
 import { useManagedDevices } from "@/hooks/useManagedDevices";
@@ -19,7 +20,8 @@ export default function Dashboard() {
   if (!isAuthenticated) {
     return (
       <>
-        <Header />
+        <PillNav />
+        <UtilityRow />
         <main className="max-w-7xl mx-auto p-6">
           <p className="text-muted-foreground">Sign in to view the dashboard.</p>
         </main>
@@ -29,7 +31,8 @@ export default function Dashboard() {
 
   return (
     <>
-      <Header onRefresh={refresh} isRefreshing={isLoading} />
+      <PillNav />
+      <UtilityRow onRefresh={refresh} isRefreshing={isLoading} />
       <main className="max-w-7xl mx-auto p-6 space-y-4">
         {error && (
           <div className="rounded border border-red-500/50 bg-red-500/10 p-3 text-sm text-red-700 dark:text-red-300">

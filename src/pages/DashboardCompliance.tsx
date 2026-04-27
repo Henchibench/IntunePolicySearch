@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { Header } from "@/components/Header";
+import { PillNav } from "@/components/PillNav";
+import { UtilityRow } from "@/components/UtilityRow";
 import { useAuth } from "@/hooks/useAuth";
 import { useManagedDevices } from "@/hooks/useManagedDevices";
 import { groupByPlatform, groupByReason, groupByUser, PivotGroup } from "@/lib/compliance-pivots";
@@ -108,7 +109,8 @@ export default function DashboardCompliance() {
   if (!isAuthenticated) {
     return (
       <>
-        <Header />
+        <PillNav />
+        <UtilityRow />
         <main className="max-w-7xl mx-auto p-6">
           <p className="text-muted-foreground">Sign in to view the dashboard.</p>
         </main>
@@ -118,7 +120,8 @@ export default function DashboardCompliance() {
 
   return (
     <>
-      <Header onRefresh={refresh} isRefreshing={isLoading} />
+      <PillNav />
+      <UtilityRow onRefresh={refresh} isRefreshing={isLoading} />
       <main className="max-w-7xl mx-auto p-6 space-y-4">
         <Link to="/dashboard" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ChevronLeft className="h-4 w-4" /> Back to dashboard

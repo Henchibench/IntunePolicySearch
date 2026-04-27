@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Header } from "@/components/Header";
+import { PillNav } from "@/components/PillNav";
+import { UtilityRow } from "@/components/UtilityRow";
 import { SearchBar } from "@/components/SearchBar";
 import { FilterDropdown } from "@/components/FilterDropdown";
 import { PolicyCard } from "@/components/PolicyCard";
@@ -178,10 +179,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header 
-        onRefresh={handleRefresh} 
-        isRefreshing={isRefreshing} 
-      />
+      <PillNav />
+      <UtilityRow onRefresh={handleRefresh} isRefreshing={isRefreshing} />
       
       <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
         {/* Authentication & Error States */}
