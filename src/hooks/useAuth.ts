@@ -9,6 +9,7 @@ import {
 import { useMsal } from "@azure/msal-react";
 import { msalConfig, loginRequest } from "@/services/authConfig";
 import { GraphService, MSALAuthenticationProvider } from "@/services/graphService";
+import { DashboardService } from "@/services/dashboardService";
 import { GraphUser } from "@/types/graph";
 
 export interface AuthState {
@@ -17,6 +18,7 @@ export interface AuthState {
   user: GraphUser | null;
   error: string | null;
   graphService: GraphService | null;
+  dashboardService: DashboardService | null;
 }
 
 export const useAuth = () => {
@@ -26,7 +28,8 @@ export const useAuth = () => {
     isLoading: true,
     user: null,
     error: null,
-    graphService: null
+    graphService: null,
+    dashboardService: null
   });
 
   /**
@@ -64,17 +67,19 @@ export const useAuth = () => {
       try {
         const authProvider = new MSALAuthenticationProvider(getAccessToken);
         const graphService = new GraphService(authProvider);
-        
+        const dashboardService = new DashboardService(authProvider);
+
         // Test the connection by getting current user
         const user = await graphService.getCurrentUser();
-        
+
         setAuthState(prev => ({
           ...prev,
           isAuthenticated: true,
           isLoading: false,
           user,
           error: null,
-          graphService
+          graphService,
+          dashboardService
         }));
       } catch (error) {
         console.error("Failed to initialize Graph service:", error);
@@ -83,7 +88,8 @@ export const useAuth = () => {
           isAuthenticated: false,
           isLoading: false,
           error: error instanceof Error ? error.message : "Authentication failed",
-          graphService: null
+          graphService: null,
+          dashboardService: null
         }));
       }
     } else {
@@ -93,7 +99,8 @@ export const useAuth = () => {
         isLoading: false,
         user: null,
         error: null,
-        graphService: null
+        graphService: null,
+        dashboardService: null
       }));
     }
   }, [accounts, getAccessToken]);
@@ -134,7 +141,8 @@ export const useAuth = () => {
         isLoading: false,
         user: null,
         error: null,
-        graphService: null
+        graphService: null,
+        dashboardService: null
       });
     } catch (error) {
       console.error("Logout failed:", error);
