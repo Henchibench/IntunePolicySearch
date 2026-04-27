@@ -45,5 +45,8 @@ export const graphConfig = {
   // Additional policy endpoints for comprehensive coverage
   graphGroupPolicyConfigurationsEndpoint: "https://graph.microsoft.com/beta/deviceManagement/groupPolicyConfigurations",
   graphIntentAssignmentsEndpoint: "https://graph.microsoft.com/beta/deviceManagement/intents",
-  graphDeviceEnrollmentConfigurationsEndpoint: "https://graph.microsoft.com/beta/deviceManagement/deviceEnrollmentConfigurations"
+  graphDeviceEnrollmentConfigurationsEndpoint: "https://graph.microsoft.com/beta/deviceManagement/deviceEnrollmentConfigurations",
+
+  // Managed devices (Dashboard sub-project 1)
+  graphManagedDevicesEndpoint: "https://graph.microsoft.com/beta/deviceManagement/managedDevices"
 };
