@@ -36,7 +36,7 @@ export function Footer() {
         </div>
 
         <p className="mt-16 text-[12px] text-canvas/50">
-          © Intune Policy Search · Workplace Ninja Summit 2025
+          © 2025 · Workplace Ninja Summit
         </p>
       </div>
     </footer>

@@ -17,6 +17,7 @@ export default {
       colors: {
         canvas: "hsl(var(--canvas))",
         lifted: "hsl(var(--lifted))",
+        "pure-white": "hsl(var(--pure-white))",
         ink: "hsl(var(--ink))",
         charcoal: "hsl(var(--charcoal))",
         slate: "hsl(var(--slate))",
