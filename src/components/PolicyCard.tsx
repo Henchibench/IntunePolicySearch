@@ -1,10 +1,11 @@
 import { useState, useMemo, useEffect } from "react";
-import { ChevronDown, ChevronRight, Smartphone, Laptop, Shield, AppWindow, Users, User, Globe, Filter } from "lucide-react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { ChevronDown, ChevronRight, Smartphone, Laptop, Shield, AppWindow } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Policy, PolicySetting, AssignmentDetails } from "@/types/graph";
+import { EditorialCard } from "@/components/ui/EditorialCard";
+import { EyebrowLabel } from "@/components/ui/EyebrowLabel";
+import { Policy, PolicySetting } from "@/types/graph";
 
 interface PolicyCardProps {
   policy: Policy;
@@ -66,34 +67,6 @@ const highlightText = (text: string, searchTerm: string) => {
   );
 };
 
-const getAssignmentIcon = (type: AssignmentDetails['type']) => {
-  switch (type) {
-    case 'group':
-      return Users;
-    case 'user':
-      return User;
-    case 'allUsers':
-      return Globe;
-    case 'allDevices':
-      return Laptop;
-    default:
-      return Users;
-  }
-};
-
-const getAssignmentBadgeVariant = (intent?: AssignmentDetails['intent']): "default" | "secondary" | "destructive" | "outline" => {
-  switch (intent) {
-    case 'exclude':
-    case 'remove':
-      return 'destructive';
-    case 'include':
-    case 'apply':
-      return 'default';
-    default:
-      return 'secondary';
-  }
-};
-
 export const PolicyCard = ({ policy, searchTerm = "" }: PolicyCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showAllSettings, setShowAllSettings] = useState(false);
@@ -147,32 +120,34 @@ export const PolicyCard = ({ policy, searchTerm = "" }: PolicyCardProps) => {
   }, {} as Record<string, PolicySetting[]>);
 
   return (
-    <Card className="hover:shadow-lg transition-all duration-300 hover:bg-card-hover border-border">
-      <CardHeader className="pb-4">
+    <EditorialCard radius="card" padding="lg" className="group transition-shadow hover:shadow-card cursor-pointer">
+      {/* Card header */}
+      <div className="pb-4">
         <div className="flex items-start justify-between">
           <div className="flex-1 space-y-3">
             <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-lg ${platformStyle.lightBg} ${platformStyle.border} border`}>
-                <PlatformIcon className={`h-5 w-5 ${platformStyle.color.split(' ')[0].replace('bg-', 'text-')}`} />
+              <div className="p-2 rounded-lg bg-lifted border border-border">
+                <PlatformIcon className="h-5 w-5 text-ink" />
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-semibold text-foreground break-words">
+                <EyebrowLabel className="mb-2">{policy.type}</EyebrowLabel>
+                <h3 className="text-[20px] font-medium leading-tight tracking-tight2 text-ink break-words">
                   {highlightText(policy.name, searchTerm)}
                 </h3>
-                <p className="text-sm text-muted-foreground mt-1 break-words">
+                <p className="mt-2 text-[14px] font-[450] leading-relaxed text-charcoal break-words">
                   {highlightText(policy.description, searchTerm)}
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2 flex-wrap">
-              <Badge className={platformStyle.color}>
+              <span className="inline-flex items-center rounded-pill bg-ink/[0.06] px-2.5 py-0.5 text-[11px] font-medium text-ink">
                 {policy.platform}
-              </Badge>
-              <Badge variant="secondary" className="gap-1">
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-pill bg-ink/[0.06] px-2.5 py-0.5 text-[11px] font-medium text-ink">
                 <TypeIcon className="h-3 w-3" />
                 {policy.type}
-              </Badge>
+              </span>
               <span className="text-xs text-muted-foreground">
                 Last modified: {policy.lastModified}
               </span>
@@ -189,9 +164,9 @@ export const PolicyCard = ({ policy, searchTerm = "" }: PolicyCardProps) => {
               </span>
             </div>
           </div>
-          
+
           <Button
-            variant="ghost"
+            variant="outlined"
             size="sm"
             onClick={toggleExpanded}
             className="ml-4"
@@ -203,49 +178,11 @@ export const PolicyCard = ({ policy, searchTerm = "" }: PolicyCardProps) => {
             )}
           </Button>
         </div>
-      </CardHeader>
-      
+      </div>
+
       {isExpanded && (
-        <CardContent className="pt-0 animate-card-expand">
+        <div className="pt-0 animate-card-expand">
           <Separator className="mb-4" />
-          
-          {/* Assignments Section */}
-          {policy.assignments && policy.assignments.length > 0 && (
-            <div className="space-y-3 mb-6">
-              <div className="flex items-center gap-2">
-                <h4 className="font-medium text-foreground">Assignments</h4>
-                <Badge variant="outline" className="text-xs">
-                  {policy.assignments.length}
-                </Badge>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {policy.assignments.map((assignment, index) => {
-                  const AssignmentIcon = getAssignmentIcon(assignment.type);
-                  const variant = getAssignmentBadgeVariant(assignment.intent);
-                  
-                  return (
-                    <div key={index} className="flex flex-col gap-1">
-                      <Badge variant={variant} className="gap-1.5 px-3 py-1">
-                        <AssignmentIcon className="h-3 w-3" />
-                        {highlightText(assignment.displayName, searchTerm)}
-                        {assignment.intent && assignment.intent !== 'include' && (
-                          <span className="text-xs opacity-80">({assignment.intent})</span>
-                        )}
-                      </Badge>
-                      {assignment.filterDisplayName && (
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground ml-1">
-                          <Filter className="h-2.5 w-2.5" />
-                          <span>{assignment.filterType === 'exclude' ? 'Exclude' : 'Include'} filter: {assignment.filterDisplayName}</span>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-              <Separator className="mt-4" />
-            </div>
-          )}
-          
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h4 className="font-medium text-foreground">Policy Settings</h4>
@@ -257,7 +194,7 @@ export const PolicyCard = ({ policy, searchTerm = "" }: PolicyCardProps) => {
                 )}
                 {searchTerm && !showAllSettings && (
                   <Button
-                    variant="outline"
+                    variant="outlined"
                     size="sm"
                     onClick={() => setShowAllSettings(true)}
                     className="gap-2"
@@ -267,7 +204,7 @@ export const PolicyCard = ({ policy, searchTerm = "" }: PolicyCardProps) => {
                 )}
                 {searchTerm && showAllSettings && (
                   <Button
-                    variant="default"
+                    variant="ink"
                     size="sm"
                     onClick={() => setShowAllSettings(false)}
                     className="gap-2"
@@ -277,7 +214,7 @@ export const PolicyCard = ({ policy, searchTerm = "" }: PolicyCardProps) => {
                 )}
               </div>
             </div>
-            
+
             {Object.entries(groupedSettings).map(([category, settings]) => (
               <div key={category} className="space-y-3">
                 <div className="flex items-center gap-2">
@@ -325,8 +262,8 @@ export const PolicyCard = ({ policy, searchTerm = "" }: PolicyCardProps) => {
               </div>
             ))}
           </div>
-        </CardContent>
+        </div>
       )}
-    </Card>
+    </EditorialCard>
   );
 };
