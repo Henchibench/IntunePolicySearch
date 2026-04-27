@@ -8,11 +8,11 @@ import { PublicClientApplication } from "@azure/msal-browser";
 import { MsalProvider } from "@azure/msal-react";
 import { msalConfig } from "@/services/authConfig";
 import Index from "./pages/Index";
-import Dashboard from "./pages/Dashboard";
-import GroupLookup from "./pages/GroupLookup";
+import Policies from "./pages/Policies";
 import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
 import DashboardCompliance from "./pages/DashboardCompliance";
+import GroupLookup from "./pages/GroupLookup";
 
 const queryClient = new QueryClient();
 const msalInstance = new PublicClientApplication(msalConfig);
@@ -28,11 +28,11 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/filter" element={<Index />} />
             <Route path="/demo" element={<Index />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/groups" element={<GroupLookup />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="/policies" element={<Policies />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/dashboard/compliance" element={<DashboardCompliance />} />
+            <Route path="/groups" element={<GroupLookup />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </TooltipProvider>

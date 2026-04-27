@@ -44,4 +44,16 @@ describe("Index page", () => {
     renderAt("/");
     expect(screen.getByText("INTUNE POLICY SEARCH")).toBeInTheDocument();
   });
+
+  it("renders nothing while auth is still loading", () => {
+    (useAuth as any).mockReturnValue({
+      isAuthenticated: false,
+      isLoading: true,
+      user: null,
+      login: vi.fn(),
+      logout: vi.fn(),
+    });
+    const { container } = renderAt("/");
+    expect(container).toBeEmptyDOMElement();
+  });
 });

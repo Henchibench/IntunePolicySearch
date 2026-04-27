@@ -6,7 +6,7 @@ import { IconCircleButton } from "@/components/ui/IconCircleButton";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
-  { to: "/", label: "Policies", end: true },
+  { to: "/policies", label: "Policies" },
   { to: "/dashboard", label: "Dashboard" },
   { to: "/dashboard/compliance", label: "Compliance" },
 ];

@@ -14,7 +14,10 @@ export default function Index() {
     document.title = "Intune Policy Search";
   }, []);
 
-  if (!isLoading && isAuthenticated) {
+  if (isLoading) {
+    return null;
+  }
+  if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
   }
 
