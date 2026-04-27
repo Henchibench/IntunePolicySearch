@@ -30,3 +30,5 @@ electron-app/dist-electron
 electron-app/web-dist
 electron-app/release
 electron-app/node_modules
+
+.superpowers/
