@@ -159,7 +159,7 @@ export default function DashboardCompliance() {
         </h1>
 
         {error && (
-          <div className="rounded border border-red-500/50 bg-red-500/10 p-3 text-sm">
+          <div className="rounded-2xl border border-signal/30 bg-signal/[0.10] p-3 text-sm text-signal-light">
             Failed to load devices: {error}
           </div>
         )}
@@ -184,7 +184,7 @@ export default function DashboardCompliance() {
               )}
             </div>
             {refineError && (
-              <div className="rounded border border-red-500/50 bg-red-500/10 p-2 text-sm text-red-700 dark:text-red-300">
+              <div className="rounded-2xl border border-signal/30 bg-signal/[0.10] p-2 text-sm text-signal-light">
                 Refine failed: {refineError}
               </div>
             )}

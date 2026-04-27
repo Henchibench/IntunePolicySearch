@@ -19,29 +19,24 @@ export const ThemeToggle = () => {
       variant="ghost"
       size="sm"
       onClick={toggleTheme}
-      className="relative group p-2 hover:bg-muted/50 transition-all duration-300"
+      className="group p-2 rounded-pill hover:bg-ink/5 transition-colors"
       aria-label="Toggle dark mode"
     >
-      <div 
-        className={`transition-all duration-300 transform ${
+      <div
+        className={`transition-transform duration-300 ${
           isSpinning ? "ninja-spin" : ""
         } ${theme === "dark" ? "scale-110" : "scale-100"}`}
       >
-        <img 
-          src="/ninja.png" 
+        <img
+          src="/ninja.png"
           alt="Ninja"
-          className={`h-6 w-6 transition-all duration-300 ${
-            theme === "dark" 
-              ? "drop-shadow-lg brightness-110 contrast-125" 
+          className={`h-6 w-6 transition-opacity duration-300 ${
+            theme === "dark"
+              ? "brightness-110 contrast-125"
               : "opacity-70 group-hover:opacity-100"
-          }`} 
+          }`}
         />
       </div>
-      
-      {/* Subtle glow effect in dark mode */}
-      {theme === "dark" && (
-        <div className="absolute inset-0 rounded-md bg-blue-500/10 animate-pulse opacity-50" />
-      )}
     </Button>
   );
 };

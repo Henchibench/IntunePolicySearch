@@ -49,7 +49,7 @@ export default function Dashboard() {
 
         <div className="mt-8 space-y-4">
           {error && (
-            <div className="rounded border border-red-500/50 bg-red-500/10 p-3 text-sm text-red-700 dark:text-red-300">
+            <div className="rounded-2xl border border-signal/30 bg-signal/[0.10] p-3 text-sm text-signal-light">
               Failed to load devices: {error}
             </div>
           )}

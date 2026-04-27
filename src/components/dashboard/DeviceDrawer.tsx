@@ -89,7 +89,7 @@ export function DeviceDrawer({ device, open, onOpenChange }: DeviceDrawerProps) 
           <hr />
 
           {error && (
-            <div className="rounded border border-red-500/50 bg-red-500/10 p-2 text-sm">
+            <div className="rounded-2xl border border-signal/30 bg-signal/[0.10] p-2 text-sm text-signal-light">
               Failed to load: {error}
               <Button onClick={() => load(device.id)} variant="link" size="sm" className="ml-2">
                 Retry
