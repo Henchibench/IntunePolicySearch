@@ -1,7 +1,8 @@
 import { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { EditorialCard } from "@/components/ui/EditorialCard";
+import { EyebrowLabel } from "@/components/ui/EyebrowLabel";
 
 interface KpiTileProps {
   label: string;
@@ -20,21 +21,38 @@ export function KpiTile({ label, value, subStat, to, disabled, tone = "default" 
     navigate(to);
   };
 
-  const toneClass =
-    tone === "danger" ? "text-red-500" : tone === "warning" ? "text-amber-500" : "text-foreground";
+  const valueTone =
+    tone === "danger" ? "text-signal" : tone === "warning" ? "text-signal-light" : "text-ink";
 
   return (
-    <Card
+    <EditorialCard
+      radius="card"
+      padding="lg"
       onClick={onClick}
       className={cn(
-        "p-4 transition-shadow",
-        disabled ? "opacity-50 cursor-not-allowed" : to ? "cursor-pointer hover:shadow-md" : ""
+        "flex min-h-[140px] flex-col justify-between transition-shadow",
+        disabled
+          ? "cursor-not-allowed opacity-50"
+          : to
+            ? "cursor-pointer hover:shadow-card"
+            : "",
       )}
     >
-      <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className={cn("text-3xl font-semibold mt-1", toneClass)}>{value}</div>
-      {subStat && <div className="text-xs text-muted-foreground mt-1">{subStat}</div>}
-      {disabled && <div className="text-xs text-muted-foreground mt-2 italic">Coming in v2</div>}
-    </Card>
+      <EyebrowLabel>{label}</EyebrowLabel>
+      <div
+        className={cn(
+          "mt-4 text-[44px] font-medium leading-none tracking-tight3",
+          valueTone,
+        )}
+      >
+        {value}
+      </div>
+      {subStat && (
+        <div className="mt-2 text-xs font-[450] text-slate">{subStat}</div>
+      )}
+      {disabled && (
+        <div className="mt-2 text-xs italic text-slate">Coming in v2</div>
+      )}
+    </EditorialCard>
   );
 }
