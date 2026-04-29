@@ -455,7 +455,147 @@ describe('processBatchCategory', () => {
   });
 });
 
-import { resolveFilterDisplayNames } from './groupAssignmentService';
+import { resolveFilterDisplayNames, fetchGroupAssignments } from './groupAssignmentService';
+import type { CategoryState as _CategoryState, IntuneObjectCategory as _IntuneObjectCategory } from '@/types/graph';
+
+describe('fetchGroupAssignments', () => {
+  it('calls onCategoryStatus loading->done for each category and emits results', async () => {
+    const handlers: Record<string, () => any> = {
+      '/groups/g1': () => ({ id: 'g1', displayName: 'G1' }),
+      '/groups/g1/transitiveMemberOf/microsoft.graph.group': () => ({
+        value: [],
+      }),
+      '/deviceManagement/deviceConfigurations': () => ({
+        value: [
+          {
+            id: 'p1',
+            displayName: 'P',
+            assignments: [
+              {
+                id: 'a',
+                target: {
+                  '@odata.type': '#microsoft.graph.groupAssignmentTarget',
+                  groupId: 'g1',
+                },
+              },
+            ],
+          },
+        ],
+      }),
+    };
+    const client = {
+      api: (path: string) => {
+        const handler = handlers[path] ?? (() => ({ value: [] }));
+        const builder: any = {
+          get: async () => handler(),
+          post: async () => ({ responses: [] }),
+          select: () => builder,
+          expand: () => builder,
+          top: () => builder,
+          header: () => builder,
+        };
+        return builder;
+      },
+    } as unknown as Client;
+
+    const statuses: Array<[_IntuneObjectCategory, _CategoryState]> = [];
+    const results: Array<[_IntuneObjectCategory, GroupAssignmentResult[]]> = [];
+
+    await fetchGroupAssignments(client, 'g1', {
+      signal: new AbortController().signal,
+      onCategoryStatus: (c, s) => statuses.push([c, s]),
+      onResults: (c, r) => results.push([c, r]),
+      onParentGroups: () => {},
+    });
+
+    const dcStatuses = statuses
+      .filter(([c]) => c === 'deviceConfiguration')
+      .map(([, s]) => s.status);
+    expect(dcStatuses).toEqual(expect.arrayContaining(['loading', 'done']));
+
+    const dcResults = results.find(([c]) => c === 'deviceConfiguration');
+    expect(dcResults?.[1]).toHaveLength(1);
+  });
+
+  it('isolates per-category errors', async () => {
+    const client = {
+      api: (path: string) => {
+        const builder: any = {
+          get: async () => {
+            if (path === '/groups/g1') return { id: 'g1', displayName: 'G1' };
+            if (path === '/groups/g1/transitiveMemberOf/microsoft.graph.group')
+              return { value: [] };
+            if (path === '/deviceManagement/deviceConfigurations')
+              throw Object.assign(new Error('forbidden'), { statusCode: 403 });
+            return { value: [] };
+          },
+          post: async () => ({ responses: [] }),
+          select: () => builder,
+          expand: () => builder,
+          top: () => builder,
+          header: () => builder,
+        };
+        return builder;
+      },
+    } as unknown as Client;
+
+    const statuses: Array<[_IntuneObjectCategory, _CategoryState]> = [];
+
+    await fetchGroupAssignments(client, 'g1', {
+      signal: new AbortController().signal,
+      onCategoryStatus: (c, s) => statuses.push([c, s]),
+      onResults: () => {},
+      onParentGroups: () => {},
+    });
+
+    const dcFinal = [...statuses]
+      .reverse()
+      .find(([c]) => c === 'deviceConfiguration');
+    expect(dcFinal?.[1].status).toBe('error');
+
+    const otherFinals = [...statuses]
+      .reverse()
+      .find(([c]) => c === 'compliancePolicy');
+    expect(otherFinals?.[1].status).toBe('done');
+  });
+
+  it('marks updateRing as error when deviceConfiguration fails', async () => {
+    const client = {
+      api: (path: string) => {
+        const builder: any = {
+          get: async () => {
+            if (path === '/groups/g1') return { id: 'g1', displayName: 'G1' };
+            if (path === '/groups/g1/transitiveMemberOf/microsoft.graph.group')
+              return { value: [] };
+            if (path === '/deviceManagement/deviceConfigurations')
+              throw Object.assign(new Error('forbidden'), { statusCode: 403 });
+            return { value: [] };
+          },
+          post: async () => ({ responses: [] }),
+          select: () => builder,
+          expand: () => builder,
+          top: () => builder,
+          header: () => builder,
+        };
+        return builder;
+      },
+    } as unknown as Client;
+
+    const statuses: Array<[_IntuneObjectCategory, _CategoryState]> = [];
+
+    await fetchGroupAssignments(client, 'g1', {
+      signal: new AbortController().signal,
+      onCategoryStatus: (c, s) => statuses.push([c, s]),
+      onResults: () => {},
+      onParentGroups: () => {},
+    });
+
+    const updateRingFinal = [...statuses]
+      .reverse()
+      .find(([c]) => c === 'updateRing');
+    expect(updateRingFinal?.[1].status).toBe('error');
+  });
+});
 
 describe('resolveFilterDisplayNames', () => {
   it('patches filter display names into rows', async () => {

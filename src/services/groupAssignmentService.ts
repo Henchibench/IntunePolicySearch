@@ -49,11 +49,117 @@ export interface FetchGroupAssignmentsCallbacks {
 }
 
 export async function fetchGroupAssignments(
-  _client: Client,
-  _groupId: string,
-  _callbacks: FetchGroupAssignmentsCallbacks,
+  client: Client,
+  groupId: string,
+  callbacks: FetchGroupAssignmentsCallbacks,
 ): Promise<void> {
-  throw new Error('not implemented yet');
+  const { signal, onCategoryStatus, onResults, onParentGroups } = callbacks;
+
+  // Mark every category as pending up front so the UI can render the full list.
+  for (const cat of ALL_CATEGORIES_FOR_PROGRESS) {
+    onCategoryStatus(cat, { status: 'pending' });
+  }
+
+  let resolved: ResolvedTargetGroupSet;
+  try {
+    resolved = await resolveTargetGroupSet(client, groupId);
+  } catch (e: any) {
+    const message = humanizeError(e);
+    for (const cat of ALL_CATEGORIES_FOR_PROGRESS) {
+      onCategoryStatus(cat, { status: 'error', error: message });
+    }
+    throw e;
+  }
+  onParentGroups(resolved.parentGroups);
+
+  const parentGroupsById = new Map(
+    resolved.parentGroups.map((p) => [p.id, p] as const),
+  );
+
+  const ctx: ProcessContext = {
+    targetIds: resolved.targetIds,
+    selectedGroupId: groupId,
+    parentGroupsById,
+    signal,
+  };
+
+  const allRows: GroupAssignmentResult[] = [];
+
+  const runExpandCategory = async (config: ExpandCategoryConfig) => {
+    onCategoryStatus(config.category, { status: 'loading' });
+    try {
+      let rows = await processExpandCategory(client, config, ctx);
+      if (config.category === 'deviceConfiguration') {
+        rows = deriveUpdateRingRows(rows);
+        const updateRingRows = rows.filter((r) => r.category === 'updateRing');
+        rows = rows.filter((r) => r.category !== 'updateRing');
+        onResults('updateRing', updateRingRows);
+        onCategoryStatus('updateRing', {
+          status: 'done',
+          count: updateRingRows.length,
+        });
+        allRows.push(...updateRingRows);
+      }
+      onResults(config.category, rows);
+      onCategoryStatus(config.category, {
+        status: 'done',
+        count: rows.length,
+      });
+      allRows.push(...rows);
+    } catch (e: any) {
+      const errorMessage = humanizeError(e);
+      onCategoryStatus(config.category, {
+        status: 'error',
+        error: errorMessage,
+      });
+      if (config.category === 'deviceConfiguration') {
+        // updateRing is derived from deviceConfiguration; if that fails, mark updateRing too.
+        onCategoryStatus('updateRing', {
+          status: 'error',
+          error: errorMessage,
+        });
+      }
+    }
+  };
+
+  const runBatchCategory = async (config: BatchCategoryConfig) => {
+    onCategoryStatus(config.category, { status: 'loading' });
+    try {
+      const rows = await processBatchCategory(client, config, ctx);
+      onResults(config.category, rows);
+      onCategoryStatus(config.category, {
+        status: 'done',
+        count: rows.length,
+      });
+      allRows.push(...rows);
+    } catch (e: any) {
+      onCategoryStatus(config.category, {
+        status: 'error',
+        error: humanizeError(e),
+      });
+    }
+  };
+
+  await Promise.allSettled([
+    ...EXPAND_CATEGORY_CONFIGS.map((c) => runExpandCategory(c)),
+    ...BATCH_CATEGORY_CONFIGS.map((c) => runBatchCategory(c)),
+  ]);
+
+  if (signal.aborted) return;
+
+  try {
+    const withFilterNames = await resolveFilterDisplayNames(client, allRows);
+    const changedByCategory = new Map<IntuneObjectCategory, GroupAssignmentResult[]>();
+    for (const r of withFilterNames) {
+      if (!changedByCategory.has(r.category)) changedByCategory.set(r.category, []);
+      changedByCategory.get(r.category)!.push(r);
+    }
+    for (const [cat, rows] of changedByCategory) {
+      onResults(cat, rows);
+    }
+  } catch (e) {
+    console.warn('Filter name resolution failed:', e);
+  }
 }
 
 // ============================================================================
@@ -317,4 +423,122 @@ export async function resolveFilterDisplayNames(
     if (!displayName) return r;
     return { ...r, filter: { ...r.filter, displayName } };
   });
+}
+
+// ============================================================================
+// Category configurations for fetchGroupAssignments
+// ============================================================================
+
+const EXPAND_CATEGORY_CONFIGS: ExpandCategoryConfig[] = [
+  {
+    category: 'deviceConfiguration',
+    endpoint: '/deviceManagement/deviceConfigurations',
+    extractName: (o) => o.displayName,
+    extractDescription: (o) => o.description,
+    extractLastModified: (o) => o.lastModifiedDateTime,
+  },
+  {
+    category: 'compliancePolicy',
+    endpoint: '/deviceManagement/deviceCompliancePolicies',
+    extractName: (o) => o.displayName,
+    extractDescription: (o) => o.description,
+    extractLastModified: (o) => o.lastModifiedDateTime,
+  },
+  {
+    category: 'configurationPolicy',
+    endpoint: '/deviceManagement/configurationPolicies',
+    extractName: (o) => o.name ?? o.displayName,
+    extractDescription: (o) => o.description,
+    extractLastModified: (o) => o.lastModifiedDateTime,
+  },
+  {
+    category: 'appProtection',
+    endpoint: '/deviceAppManagement/managedAppPolicies',
+    extractName: (o) => o.displayName,
+    extractDescription: (o) => o.description,
+    extractLastModified: (o) => o.lastModifiedDateTime,
+  },
+  {
+    category: 'appConfiguration',
+    endpoint: '/deviceAppManagement/mobileAppConfigurations',
+    extractName: (o) => o.displayName,
+    extractDescription: (o) => o.description,
+    extractLastModified: (o) => o.lastModifiedDateTime,
+  },
+  {
+    category: 'platformScript',
+    endpoint: '/deviceManagement/deviceManagementScripts',
+    extractName: (o) => o.displayName,
+    extractDescription: (o) => o.description,
+    extractLastModified: (o) => o.lastModifiedDateTime,
+  },
+  {
+    category: 'remediationScript',
+    endpoint: '/deviceManagement/deviceHealthScripts',
+    extractName: (o) => o.displayName,
+    extractDescription: (o) => o.description,
+    extractLastModified: (o) => o.lastModifiedDateTime,
+  },
+  {
+    category: 'complianceScript',
+    endpoint: '/deviceManagement/deviceComplianceScripts',
+    extractName: (o) => o.displayName,
+    extractDescription: (o) => o.description,
+    extractLastModified: (o) => o.lastModifiedDateTime,
+  },
+  {
+    category: 'autopilotProfile',
+    endpoint: '/deviceManagement/windowsAutopilotDeploymentProfiles',
+    extractName: (o) => o.displayName,
+    extractDescription: (o) => o.description,
+    extractLastModified: (o) => o.lastModifiedDateTime,
+  },
+  {
+    category: 'enrollmentConfig',
+    endpoint: '/deviceManagement/deviceEnrollmentConfigurations',
+    extractName: (o) => o.displayName,
+    extractDescription: (o) => o.description,
+    extractLastModified: (o) => o.lastModifiedDateTime,
+  },
+];
+
+const BATCH_CATEGORY_CONFIGS: BatchCategoryConfig[] = [
+  {
+    category: 'mobileApp',
+    listEndpoint: '/deviceAppManagement/mobileApps',
+    listSelect: 'id,displayName,lastModifiedDateTime',
+    assignmentsPathFor: (id) =>
+      `/deviceAppManagement/mobileApps/${id}/assignments`,
+    extractName: (o) => o.displayName,
+    extractLastModified: (o) => o.lastModifiedDateTime,
+    extractAppIntent: (a) => {
+      const v = (a?.intent as string | undefined)?.toLowerCase();
+      if (v === 'available' || v === 'required' || v === 'uninstall') return v;
+      if (v === 'availablewithoutenrollment') return 'available';
+      return undefined;
+    },
+  },
+  {
+    category: 'endpointSecurity',
+    listEndpoint: '/deviceManagement/intents',
+    listSelect: 'id,displayName,description,lastModifiedDateTime',
+    assignmentsPathFor: (id) => `/deviceManagement/intents/${id}/assignments`,
+    extractName: (o) => o.displayName,
+    extractDescription: (o) => o.description,
+    extractLastModified: (o) => o.lastModifiedDateTime,
+  },
+];
+
+const ALL_CATEGORIES_FOR_PROGRESS: IntuneObjectCategory[] = [
+  ...EXPAND_CATEGORY_CONFIGS.map((c) => c.category),
+  ...BATCH_CATEGORY_CONFIGS.map((c) => c.category),
+  'updateRing',
+];
+
+function humanizeError(e: any): string {
+  if (e?.statusCode === 403 || e?.code === 'Forbidden')
+    return 'Permission denied — your tenant or account may not have access to this resource.';
+  if (e?.statusCode === 404) return 'Endpoint not available in this tenant.';
+  if (e?.statusCode === 429) return 'Rate limited by Microsoft Graph.';
+  return e?.message ?? 'Unknown error';
 }
