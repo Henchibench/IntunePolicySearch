@@ -276,3 +276,149 @@ describe('processExpandCategory', () => {
     expect(rows[0].filter).toEqual({ id: 'f1', mode: 'include' });
   });
 });
+
+import { processBatchCategory, type BatchCategoryConfig } from './groupAssignmentService';
+
+describe('processBatchCategory', () => {
+  const config: BatchCategoryConfig = {
+    category: 'mobileApp',
+    listEndpoint: '/deviceAppManagement/mobileApps',
+    listSelect: 'id,displayName,lastModifiedDateTime',
+    assignmentsPathFor: (id) =>
+      `/deviceAppManagement/mobileApps/${id}/assignments`,
+    extractName: (o: any) => o.displayName,
+    extractAppIntent: (a: any) => a.intent,
+  };
+
+  function batchClient(opts: {
+    listPages: any[][];
+    batchResponses: any[][]; // one per $batch POST
+  }): { client: Client; postedBatches: any[] } {
+    const postedBatches: any[] = [];
+    let listIdx = 0;
+    let batchIdx = 0;
+    const client = {
+      api: (path: string) => {
+        if (path === '/$batch') {
+          return {
+            post: async (body: any) => {
+              postedBatches.push(body);
+              const responses = opts.batchResponses[batchIdx] ?? [];
+              batchIdx++;
+              return { responses };
+            },
+          };
+        }
+        const handler = () => {
+          const page = opts.listPages[listIdx] ?? [];
+          listIdx++;
+          return {
+            value: page,
+            '@odata.nextLink':
+              listIdx < opts.listPages.length ? `next-${listIdx}` : undefined,
+          };
+        };
+        // self-referential builder for the list call: select/top/get all return the same builder
+        const builder: any = {
+          select: () => builder,
+          top: () => builder,
+          get: async () => handler(),
+        };
+        return builder;
+      },
+    } as unknown as Client;
+    return { client, postedBatches };
+  }
+
+  it('lists objects then fetches assignments via $batch (≤20 per request)', async () => {
+    const { client, postedBatches } = batchClient({
+      listPages: [
+        Array.from({ length: 25 }, (_, i) => ({
+          id: `app${i}`,
+          displayName: `App ${i}`,
+        })),
+      ],
+      batchResponses: [
+        Array.from({ length: 20 }, (_, i) => ({
+          id: `${i + 1}`,
+          status: 200,
+          body: {
+            value: [
+              {
+                id: `a-${i}`,
+                intent: 'required',
+                target: {
+                  '@odata.type': '#microsoft.graph.groupAssignmentTarget',
+                  groupId: 'g1',
+                },
+              },
+            ],
+          },
+        })),
+        Array.from({ length: 5 }, (_, i) => ({
+          id: `${i + 1}`,
+          status: 200,
+          body: { value: [] },
+        })),
+      ],
+    });
+
+    const rows = await processBatchCategory(client, config, {
+      targetIds: new Set(['g1']),
+      selectedGroupId: 'g1',
+      parentGroupsById: new Map(),
+      signal: new AbortController().signal,
+    });
+
+    expect(postedBatches).toHaveLength(2);
+    expect(postedBatches[0].requests).toHaveLength(20);
+    expect(postedBatches[1].requests).toHaveLength(5);
+    expect(rows).toHaveLength(20);
+    expect(rows[0]).toMatchObject({
+      category: 'mobileApp',
+      intent: 'include',
+      appIntent: 'required',
+    });
+  });
+
+  it('tolerates per-item batch failures', async () => {
+    const { client } = batchClient({
+      listPages: [
+        [
+          { id: 'app1', displayName: 'A1' },
+          { id: 'app2', displayName: 'A2' },
+        ],
+      ],
+      batchResponses: [
+        [
+          {
+            id: '1',
+            status: 200,
+            body: {
+              value: [
+                {
+                  id: 'a1',
+                  target: {
+                    '@odata.type': '#microsoft.graph.groupAssignmentTarget',
+                    groupId: 'g1',
+                  },
+                },
+              ],
+            },
+          },
+          { id: '2', status: 403, body: { error: { message: 'denied' } } },
+        ],
+      ],
+    });
+
+    const rows = await processBatchCategory(client, config, {
+      targetIds: new Set(['g1']),
+      selectedGroupId: 'g1',
+      parentGroupsById: new Map(),
+      signal: new AbortController().signal,
+    });
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].id).toBe('app1');
+  });
+});

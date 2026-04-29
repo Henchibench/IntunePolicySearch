@@ -137,6 +137,105 @@ function buildRowsFromObject(
   return rows;
 }
 
+// ============================================================================
+// processBatchCategory — list + $batch assignment fetches (mobileApps, intents)
+// ============================================================================
+
+export interface BatchCategoryConfig {
+  category: IntuneObjectCategory;
+  listEndpoint: string;
+  listSelect?: string;
+  assignmentsPathFor: (objectId: string) => string;
+  extractName: (obj: any) => string;
+  extractDescription?: (obj: any) => string | undefined;
+  extractPlatform?: (obj: any) => IntunePlatform | undefined;
+  extractLastModified?: (obj: any) => string | undefined;
+  extractAppIntent?: (assignment: any) => AppInstallIntent | undefined;
+}
+
+const BATCH_SIZE = 20;
+
+function chunk<T>(arr: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
+
+export async function processBatchCategory(
+  client: Client,
+  config: BatchCategoryConfig,
+  ctx: ProcessContext,
+): Promise<GroupAssignmentResult[]> {
+  // Step 1: list all objects with paging.
+  const objects: any[] = [];
+  let nextLink: string | undefined;
+
+  do {
+    if (ctx.signal.aborted) throw new Error('aborted');
+    const builder = nextLink
+      ? client.api(nextLink)
+      : config.listSelect
+        ? client.api(config.listEndpoint).select(config.listSelect).top(PAGE_SIZE)
+        : client.api(config.listEndpoint).top(PAGE_SIZE);
+    const page = (await builder.get()) as {
+      value: any[];
+      '@odata.nextLink'?: string;
+    };
+    objects.push(...(page.value ?? []));
+    nextLink = page['@odata.nextLink'];
+  } while (nextLink);
+
+  if (objects.length === 0) return [];
+
+  // Step 2: $batch assignment fetches in chunks of 20.
+  const batches = chunk(objects, BATCH_SIZE);
+  const rows: GroupAssignmentResult[] = [];
+
+  // Adapt BatchCategoryConfig → ExpandCategoryConfig so we can reuse buildRowsFromObject.
+  const adaptedConfig: ExpandCategoryConfig = {
+    category: config.category,
+    endpoint: config.listEndpoint,
+    extractName: config.extractName,
+    extractDescription: config.extractDescription,
+    extractPlatform: config.extractPlatform,
+    extractLastModified: config.extractLastModified,
+    extractAppIntent: config.extractAppIntent,
+  };
+
+  for (const batch of batches) {
+    if (ctx.signal.aborted) throw new Error('aborted');
+
+    const requests = batch.map((o, i) => ({
+      id: String(i + 1),
+      method: 'GET',
+      url: config.assignmentsPathFor(o.id),
+    }));
+    const objectByReqId = new Map(
+      batch.map((o, i) => [String(i + 1), o] as const),
+    );
+
+    const resp = (await client
+      .api('/$batch')
+      .post({ requests })) as {
+      responses: Array<{ id: string; status: number; body: any }>;
+    };
+
+    for (const r of resp.responses ?? []) {
+      if (r.status !== 200) continue; // tolerate per-item failures
+      const obj = objectByReqId.get(r.id);
+      if (!obj) continue;
+      const assignments: any[] = r.body?.value ?? [];
+
+      // Attach fetched assignments to the local obj and reuse buildRowsFromObject.
+      obj.assignments = assignments;
+      rows.push(...buildRowsFromObject(obj, adaptedConfig, ctx));
+    }
+  }
+
+  if (ctx.signal.aborted) throw new Error('aborted');
+  return rows;
+}
+
 export async function processExpandCategory(
   client: Client,
   config: ExpandCategoryConfig,
