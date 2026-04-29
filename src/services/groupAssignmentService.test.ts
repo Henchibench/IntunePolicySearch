@@ -454,3 +454,81 @@ describe('processBatchCategory', () => {
     expect(rows[0].id).toBe('app1');
   });
 });
+
+import { resolveFilterDisplayNames } from './groupAssignmentService';
+
+describe('resolveFilterDisplayNames', () => {
+  it('patches filter display names into rows', async () => {
+    const rows: GroupAssignmentResult[] = [
+      {
+        id: 'p1',
+        category: 'deviceConfiguration',
+        name: 'P',
+        intent: 'include',
+        source: { kind: 'direct' },
+        filter: { id: 'f1', mode: 'include' },
+        rawObject: {},
+      },
+      {
+        id: 'p2',
+        category: 'deviceConfiguration',
+        name: 'P2',
+        intent: 'include',
+        source: { kind: 'direct' },
+        filter: { id: 'f1', mode: 'include' },
+        rawObject: {},
+      },
+      {
+        id: 'p3',
+        category: 'deviceConfiguration',
+        name: 'P3',
+        intent: 'include',
+        source: { kind: 'direct' },
+        rawObject: {},
+      },
+    ];
+
+    const client = {
+      api: (path: string) => {
+        expect(path).toBe('/deviceManagement/assignmentFilters');
+        return {
+          select: () => ({
+            get: async () => ({
+              value: [{ id: 'f1', displayName: 'Marketing Filter' }],
+            }),
+          }),
+        };
+      },
+    } as unknown as Client;
+
+    const out = await resolveFilterDisplayNames(client, rows);
+
+    expect(out[0].filter?.displayName).toBe('Marketing Filter');
+    expect(out[1].filter?.displayName).toBe('Marketing Filter');
+    expect(out[2].filter).toBeUndefined();
+  });
+
+  it('is a no-op when no filters are present', async () => {
+    const calls: string[] = [];
+    const client = {
+      api: (path: string) => {
+        calls.push(path);
+        return { select: () => ({ get: async () => ({ value: [] }) }) };
+      },
+    } as unknown as Client;
+
+    const rows: GroupAssignmentResult[] = [
+      {
+        id: 'p',
+        category: 'compliancePolicy',
+        name: 'P',
+        intent: 'include',
+        source: { kind: 'direct' },
+        rawObject: {},
+      },
+    ];
+    const out = await resolveFilterDisplayNames(client, rows);
+    expect(calls).toEqual([]);
+    expect(out).toBe(rows);
+  });
+});

@@ -291,3 +291,30 @@ export async function processExpandCategory(
   if (ctx.signal.aborted) throw new Error('aborted');
   return results;
 }
+
+// ============================================================================
+// resolveFilterDisplayNames — post-pass to patch filter names into rows
+// ============================================================================
+
+export async function resolveFilterDisplayNames(
+  client: Client,
+  rows: GroupAssignmentResult[],
+): Promise<GroupAssignmentResult[]> {
+  const filterIds = new Set<string>();
+  for (const r of rows) if (r.filter?.id) filterIds.add(r.filter.id);
+  if (filterIds.size === 0) return rows;
+
+  const resp = (await client
+    .api('/deviceManagement/assignmentFilters')
+    .select('id,displayName')
+    .get()) as { value: Array<{ id: string; displayName: string }> };
+
+  const nameById = new Map(resp.value.map((f) => [f.id, f.displayName]));
+
+  return rows.map((r) => {
+    if (!r.filter) return r;
+    const displayName = nameById.get(r.filter.id);
+    if (!displayName) return r;
+    return { ...r, filter: { ...r.filter, displayName } };
+  });
+}
