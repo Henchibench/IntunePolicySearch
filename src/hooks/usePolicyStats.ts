@@ -60,7 +60,7 @@ export function usePolicyStats(policies: Policy[]): PolicyStats {
 
     // Find unassigned policies
     const unassigned = policies.filter(
-      (policy) => !policy.assignedGroups || policy.assignedGroups.length === 0
+      (policy) => !policy.assignments || policy.assignments.length === 0
     );
 
     // Get recently modified (last 30 days, sorted by date)
