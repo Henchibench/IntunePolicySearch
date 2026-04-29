@@ -236,6 +236,31 @@ export async function processBatchCategory(
   return rows;
 }
 
+// ============================================================================
+// deriveUpdateRingRows — reclassify Windows update profile rows
+// ============================================================================
+
+const UPDATE_RING_ODATA_TYPES = new Set([
+  '#microsoft.graph.windowsUpdateForBusinessConfiguration',
+  '#microsoft.graph.windowsQualityUpdateProfile',
+  '#microsoft.graph.windowsFeatureUpdateProfile',
+  '#microsoft.graph.windowsDriverUpdateProfile',
+]);
+
+export function deriveUpdateRingRows(
+  rows: GroupAssignmentResult[],
+): GroupAssignmentResult[] {
+  return rows.map((row) => {
+    if (row.category !== 'deviceConfiguration') return row;
+    const odataType = (row.rawObject as { '@odata.type'?: string } | undefined)
+      ?.['@odata.type'];
+    if (odataType && UPDATE_RING_ODATA_TYPES.has(odataType)) {
+      return { ...row, category: 'updateRing' };
+    }
+    return row;
+  });
+}
+
 export async function processExpandCategory(
   client: Client,
   config: ExpandCategoryConfig,

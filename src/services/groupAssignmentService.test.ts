@@ -278,6 +278,38 @@ describe('processExpandCategory', () => {
 });
 
 import { processBatchCategory, type BatchCategoryConfig } from './groupAssignmentService';
+import { deriveUpdateRingRows } from './groupAssignmentService';
+import type { GroupAssignmentResult } from '@/types/graph';
+
+describe('deriveUpdateRingRows', () => {
+  it('reclassifies windowsUpdateForBusinessConfiguration rows to updateRing', () => {
+    const input: GroupAssignmentResult[] = [
+      {
+        id: 'd1',
+        category: 'deviceConfiguration',
+        name: 'Wifi',
+        intent: 'include',
+        source: { kind: 'direct' },
+        rawObject: { '@odata.type': '#microsoft.graph.windows10GeneralConfiguration' },
+      },
+      {
+        id: 'd2',
+        category: 'deviceConfiguration',
+        name: 'Update Ring',
+        intent: 'include',
+        source: { kind: 'direct' },
+        rawObject: { '@odata.type': '#microsoft.graph.windowsUpdateForBusinessConfiguration' },
+      },
+    ];
+
+    const result = deriveUpdateRingRows(input);
+
+    expect(result.map((r) => [r.name, r.category])).toEqual([
+      ['Wifi', 'deviceConfiguration'],
+      ['Update Ring', 'updateRing'],
+    ]);
+  });
+});
 
 describe('processBatchCategory', () => {
   const config: BatchCategoryConfig = {
