@@ -195,3 +195,96 @@ export interface GraphError {
     }>;
   };
 }
+
+// ============================================================================
+// Group Lookup feature types
+// ============================================================================
+
+export type IntuneObjectCategory =
+  | 'deviceConfiguration'
+  | 'compliancePolicy'
+  | 'configurationPolicy'
+  | 'appProtection'
+  | 'mobileApp'
+  | 'appConfiguration'
+  | 'endpointSecurity'
+  | 'platformScript'
+  | 'remediationScript'
+  | 'complianceScript'
+  | 'autopilotProfile'
+  | 'enrollmentConfig'
+  | 'updateRing';
+
+export const ALL_INTUNE_OBJECT_CATEGORIES: IntuneObjectCategory[] = [
+  'deviceConfiguration',
+  'compliancePolicy',
+  'configurationPolicy',
+  'appProtection',
+  'mobileApp',
+  'appConfiguration',
+  'endpointSecurity',
+  'platformScript',
+  'remediationScript',
+  'complianceScript',
+  'autopilotProfile',
+  'enrollmentConfig',
+  'updateRing',
+];
+
+export type GroupAssignmentSourceKind = 'direct' | 'parent';
+
+export interface GroupAssignmentSource {
+  kind: GroupAssignmentSourceKind;
+  groupId?: string;
+  groupName?: string;
+}
+
+export interface GroupAssignmentFilterRef {
+  id: string;
+  displayName?: string;
+  mode: 'include' | 'exclude';
+}
+
+export type AssignmentIntent = 'include' | 'exclude';
+export type AppInstallIntent = 'available' | 'required' | 'uninstall';
+export type IntunePlatform =
+  | 'Windows'
+  | 'iOS'
+  | 'Android'
+  | 'macOS'
+  | 'All Platforms';
+
+export interface GroupAssignmentResult {
+  id: string;
+  category: IntuneObjectCategory;
+  name: string;
+  description?: string;
+  platform?: IntunePlatform;
+  intent: AssignmentIntent;
+  appIntent?: AppInstallIntent;
+  source: GroupAssignmentSource;
+  filter?: GroupAssignmentFilterRef;
+  lastModified?: string;
+  rawObject: unknown;
+}
+
+export type CategoryStatus = 'pending' | 'loading' | 'done' | 'error';
+
+export interface CategoryState {
+  status: CategoryStatus;
+  count?: number;
+  error?: string;
+}
+
+export interface ParentGroupRef {
+  id: string;
+  displayName: string;
+}
+
+export interface GroupLookupState {
+  groupId: string;
+  groupName: string;
+  parentGroups: ParentGroupRef[];
+  perCategory: Record<IntuneObjectCategory, CategoryState>;
+  results: GroupAssignmentResult[];
+}
