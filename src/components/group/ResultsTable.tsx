@@ -25,18 +25,39 @@ import { Button } from '@/components/ui/button';
 import { GroupTypeBadge } from './GroupTypeBadge';
 import { SavedViewsMenu } from './SavedViewsMenu';
 import { type SavedView } from '@/lib/savedViews';
-import type { GroupAssignmentResult } from '@/types/graph';
+import type {
+  GroupAssignmentResult,
+  IntuneObjectCategory,
+  IntunePlatform,
+} from '@/types/graph';
+import type { FilterState } from '@/lib/facetCounts';
 
 export interface ResultsTableProps {
   rows: GroupAssignmentResult[];
   tenantId: string;
+  filters: FilterState;
+  onFiltersChange: (next: FilterState) => void;
   onRowClick: (row: GroupAssignmentResult) => void;
 }
 
-export function ResultsTable({ rows, tenantId, onRowClick }: ResultsTableProps) {
+export function ResultsTable({
+  rows,
+  tenantId,
+  filters,
+  onFiltersChange,
+  onRowClick,
+}: ResultsTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
+
+  const columnFilters = useMemo<ColumnFiltersState>(() => {
+    const out: ColumnFiltersState = [];
+    if (filters.category.length) out.push({ id: 'category', value: filters.category });
+    if (filters.platform.length) out.push({ id: 'platform', value: filters.platform });
+    if (filters.appType.length) out.push({ id: 'appType', value: filters.appType });
+    if (filters.intent.length) out.push({ id: 'intent', value: filters.intent });
+    return out;
+  }, [filters]);
 
   const showAppIntent = useMemo(() => rows.some((r) => r.appIntent), [rows]);
 
@@ -60,6 +81,8 @@ export function ResultsTable({ rows, tenantId, onRowClick }: ResultsTableProps) 
         accessorKey: 'platform',
         header: ({ column }) => <SortHeader column={column}>Platform</SortHeader>,
         cell: ({ row }) => row.original.platform ?? '—',
+        filterFn: (row, _id, value: string[]) =>
+          value.length === 0 || (row.original.platform != null && value.includes(row.original.platform)),
       },
       {
         accessorKey: 'intent',
@@ -69,6 +92,8 @@ export function ResultsTable({ rows, tenantId, onRowClick }: ResultsTableProps) 
             {row.original.intent}
           </Badge>
         ),
+        filterFn: (row, _id, value: string[]) =>
+          value.length === 0 || value.includes(row.original.intent),
       },
     ];
     if (showAppIntent) {
@@ -118,7 +143,21 @@ export function ResultsTable({ rows, tenantId, onRowClick }: ResultsTableProps) 
     columns,
     state: { sorting, columnFilters, globalFilter },
     onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
+    onColumnFiltersChange: (updater) => {
+      const next = typeof updater === 'function' ? updater(columnFilters) : updater;
+      const newFilters: FilterState = {
+        category: [],
+        platform: [],
+        appType: [],
+        intent: [],
+      };
+      for (const f of next) {
+        if (Array.isArray(f.value) && (f.id in newFilters)) {
+          (newFilters as Record<string, unknown>)[f.id] = f.value;
+        }
+      }
+      onFiltersChange(newFilters);
+    },
     onGlobalFilterChange: setGlobalFilter,
     globalFilterFn: (row, _id, value) =>
       row.original.name.toLowerCase().includes(String(value).toLowerCase()),
@@ -127,10 +166,12 @@ export function ResultsTable({ rows, tenantId, onRowClick }: ResultsTableProps) 
     getSortedRowModel: getSortedRowModel(),
   });
 
-  const filtersByColumn: Record<string, string[]> = {};
-  for (const f of columnFilters) {
-    if (Array.isArray(f.value)) filtersByColumn[f.id] = f.value as string[];
-  }
+  const filtersByColumn: Record<string, string[]> = {
+    category: filters.category,
+    platform: filters.platform,
+    appType: filters.appType,
+    intent: filters.intent,
+  };
 
   return (
     <div className="space-y-3">
@@ -146,7 +187,7 @@ export function ResultsTable({ rows, tenantId, onRowClick }: ResultsTableProps) 
           size="sm"
           onClick={() => {
             setSorting([]);
-            setColumnFilters([]);
+            onFiltersChange({ category: [], platform: [], appType: [], intent: [] });
             setGlobalFilter('');
           }}
         >
@@ -156,7 +197,7 @@ export function ResultsTable({ rows, tenantId, onRowClick }: ResultsTableProps) 
           <SavedViewsMenu
             tenantId={tenantId}
             current={{ filters: filtersByColumn, sorting, freeTextSearch: globalFilter }}
-            onApply={(v) => applyView(v, setSorting, setColumnFilters, setGlobalFilter)}
+            onApply={(v) => applyView(v, setSorting, setGlobalFilter, onFiltersChange)}
           />
         </div>
       </div>
@@ -224,12 +265,15 @@ function SortHeader({
 function applyView(
   v: SavedView,
   setSorting: React.Dispatch<React.SetStateAction<SortingState>>,
-  setColumnFilters: React.Dispatch<React.SetStateAction<ColumnFiltersState>>,
   setGlobalFilter: React.Dispatch<React.SetStateAction<string>>,
+  onFiltersChange: (next: FilterState) => void,
 ) {
   setSorting(v.sorting);
-  setColumnFilters(
-    Object.entries(v.filters).map(([id, value]) => ({ id, value })),
-  );
+  onFiltersChange({
+    category: (v.filters.category ?? []) as IntuneObjectCategory[],
+    platform: (v.filters.platform ?? []) as IntunePlatform[],
+    appType: v.filters.appType ?? [],
+    intent: (v.filters.intent ?? []) as ('include' | 'exclude')[],
+  });
   setGlobalFilter(v.freeTextSearch);
 }

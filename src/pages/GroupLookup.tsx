@@ -9,6 +9,7 @@ import { ResultsDetailDrawer } from '@/components/group/ResultsDetailDrawer';
 import { useGroupAssignments } from '@/hooks/useGroupAssignments';
 import { ALL_INTUNE_OBJECT_CATEGORIES, type GroupAssignmentResult } from '@/types/graph';
 import type { EntraGroupMatch } from '@/hooks/useEntraGroupSearch';
+import type { FilterState } from '@/lib/facetCounts';
 
 export default function GroupLookupPage() {
   const { accounts } = useMsal();
@@ -16,6 +17,12 @@ export default function GroupLookupPage() {
 
   const [selected, setSelected] = useState<EntraGroupMatch | null>(null);
   const [drawerRow, setDrawerRow] = useState<GroupAssignmentResult | null>(null);
+  const [filters, setFilters] = useState<FilterState>({
+    category: [],
+    platform: [],
+    appType: [],
+    intent: [],
+  });
 
   const { perCategory, results, parentGroups, fatalError } = useGroupAssignments(
     selected?.id ?? null,
@@ -77,6 +84,8 @@ export default function GroupLookupPage() {
                 <ResultsTable
                   rows={results}
                   tenantId={tenantId}
+                  filters={filters}
+                  onFiltersChange={setFilters}
                   onRowClick={setDrawerRow}
                 />
               </>
