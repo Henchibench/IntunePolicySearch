@@ -84,11 +84,13 @@ export default function GroupLookupPage() {
           </>
         )}
 
-        <ResultsDetailDrawer
-          row={drawerRow}
-          open={!!drawerRow}
-          onOpenChange={(open) => !open && setDrawerRow(null)}
-        />
+        {drawerRow && (
+          <ResultsDetailDrawer
+            row={drawerRow}
+            open
+            onOpenChange={(open) => !open && setDrawerRow(null)}
+          />
+        )}
       </main>
     </div>
   );
