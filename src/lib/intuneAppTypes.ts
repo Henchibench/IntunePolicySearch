@@ -7,7 +7,7 @@ export interface MobileAppClassification {
 
 const PREFIX = '#microsoft.graph.';
 
-const KNOWN: Record<string, MobileAppClassification> = {
+const KNOWN = {
   win32LobApp: { platform: 'Windows', appType: 'Win32' },
   win32CatalogApp: { platform: 'Windows', appType: 'Win32 (Catalog)' },
   windowsStoreApp: { platform: 'Windows', appType: 'Microsoft Store' },
@@ -42,7 +42,7 @@ const KNOWN: Record<string, MobileAppClassification> = {
   macOSMicrosoftEdgeApp: { platform: 'macOS', appType: 'macOS Microsoft Edge' },
   macOSMicrosoftDefenderApp: { platform: 'macOS', appType: 'macOS Microsoft Defender' },
   macOsVppApp: { platform: 'macOS', appType: 'macOS VPP' },
-};
+} satisfies Record<string, MobileAppClassification>;
 
 export function classifyMobileApp(
   odataType: string | undefined,
