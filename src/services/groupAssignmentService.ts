@@ -460,13 +460,6 @@ export async function resolveFilterDisplayNames(
 
 export const EXPAND_CATEGORY_CONFIGS: ExpandCategoryConfig[] = [
   {
-    category: 'deviceConfiguration',
-    endpoint: '/deviceManagement/deviceConfigurations',
-    extractName: (o) => o.displayName,
-    extractDescription: (o) => o.description,
-    extractLastModified: (o) => o.lastModifiedDateTime,
-  },
-  {
     category: 'compliancePolicy',
     endpoint: '/deviceManagement/deviceCompliancePolicies',
     extractName: (o) => o.displayName,
@@ -525,6 +518,16 @@ export const EXPAND_CATEGORY_CONFIGS: ExpandCategoryConfig[] = [
 ];
 
 export const BATCH_CATEGORY_CONFIGS: BatchCategoryConfig[] = [
+  {
+    category: 'deviceConfiguration',
+    listEndpoint: '/deviceManagement/deviceConfigurations',
+    listSelect: 'id,displayName,description,lastModifiedDateTime,@odata.type',
+    assignmentsPathFor: (id) =>
+      `/deviceManagement/deviceConfigurations/${id}/assignments`,
+    extractName: (o) => o.displayName,
+    extractDescription: (o) => o.description,
+    extractLastModified: (o) => o.lastModifiedDateTime,
+  },
   {
     category: 'mobileApp',
     listEndpoint: '/beta/deviceAppManagement/mobileApps',

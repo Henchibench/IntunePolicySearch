@@ -16,6 +16,19 @@ describe('category registration', () => {
     expect(cfg.listSelect).toBe('id,name,description,platforms,lastModifiedDateTime,isAssigned');
     expect(cfg.assignmentsPathFor('p1')).toBe('/beta/deviceManagement/configurationPolicies/p1/assignments');
   });
+
+  it('deviceConfiguration uses BATCH mode (not EXPAND)', () => {
+    expect(EXPAND_CATEGORY_CONFIGS.map((c) => c.category)).not.toContain('deviceConfiguration');
+    expect(BATCH_CATEGORY_CONFIGS.map((c) => c.category)).toContain('deviceConfiguration');
+  });
+
+  it('deviceConfiguration uses v1.0 endpoint with @odata.type in select', () => {
+    const cfg = BATCH_CATEGORY_CONFIGS.find((c) => c.category === 'deviceConfiguration')!;
+    expect(cfg.listEndpoint).toBe('/deviceManagement/deviceConfigurations');
+    expect(cfg.listFilter).toBeUndefined();  // no isAssigned property on this resource
+    expect(cfg.listSelect).toBe('id,displayName,description,lastModifiedDateTime,@odata.type');
+    expect(cfg.assignmentsPathFor('p1')).toBe('/deviceManagement/deviceConfigurations/p1/assignments');
+  });
 });
 
 function makeMockClient(handlers: Record<string, () => unknown>): Client {
@@ -606,6 +619,74 @@ describe('processBatchCategory', () => {
     expect(parent.source.kind === 'parent' && parent.source.groupName).toBe('Parent');
   });
 
+  it('deviceConfiguration: rows include rawObject so deriveUpdateRingRows can reclassify updateRing later', async () => {
+    const cfg = BATCH_CATEGORY_CONFIGS.find((c) => c.category === 'deviceConfiguration')!;
+    const winUpdate = {
+      id: 'wu1',
+      displayName: 'Patch Tuesday',
+      '@odata.type': '#microsoft.graph.windowsUpdateForBusinessConfiguration',
+    };
+    const wifi = {
+      id: 'cfg1',
+      displayName: 'Wifi',
+      '@odata.type': '#microsoft.graph.windows10GeneralConfiguration',
+    };
+    const { client } = batchClient({
+      listPages: [[winUpdate, wifi]],
+      batchResponses: [
+        [
+          {
+            id: '1',
+            status: 200,
+            body: {
+              value: [
+                {
+                  id: 'a1',
+                  target: {
+                    '@odata.type': '#microsoft.graph.groupAssignmentTarget',
+                    groupId: 'g1',
+                  },
+                },
+              ],
+            },
+          },
+          {
+            id: '2',
+            status: 200,
+            body: {
+              value: [
+                {
+                  id: 'a2',
+                  target: {
+                    '@odata.type': '#microsoft.graph.groupAssignmentTarget',
+                    groupId: 'g1',
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      ],
+    });
+
+    const rows = await processBatchCategory(client, cfg, {
+      targetIds: new Set(['g1']),
+      selectedGroupId: 'g1',
+      parentGroupsById: new Map(),
+      signal: new AbortController().signal,
+    });
+
+    expect(rows).toHaveLength(2);
+    // Both rows are still 'deviceConfiguration' here — runBatchCategory in
+    // fetchGroupAssignments reclassifies via deriveUpdateRingRows.
+    expect(rows.every((r) => r.category === 'deviceConfiguration')).toBe(true);
+    // rawObject must carry @odata.type so the post-process can inspect it.
+    const wuRow = rows.find((r) => r.id === 'wu1')!;
+    expect((wuRow.rawObject as any)['@odata.type']).toBe(
+      '#microsoft.graph.windowsUpdateForBusinessConfiguration',
+    );
+  });
+
   it('tolerates per-item batch failures', async () => {
     const { client } = batchClient({
       listPages: [
@@ -663,15 +744,6 @@ describe('fetchGroupAssignments', () => {
           {
             id: 'p1',
             displayName: 'P',
-            assignments: [
-              {
-                id: 'a',
-                target: {
-                  '@odata.type': '#microsoft.graph.groupAssignmentTarget',
-                  groupId: 'g1',
-                },
-              },
-            ],
           },
         ],
       }),
@@ -681,9 +753,29 @@ describe('fetchGroupAssignments', () => {
         const handler = handlers[path] ?? (() => ({ value: [] }));
         const builder: any = {
           get: async () => handler(),
-          post: async () => ({ responses: [] }),
+          post: async () => ({
+            // BATCH mode: deviceConfiguration assignments come back here.
+            responses: [
+              {
+                id: '1',
+                status: 200,
+                body: {
+                  value: [
+                    {
+                      id: 'a',
+                      target: {
+                        '@odata.type': '#microsoft.graph.groupAssignmentTarget',
+                        groupId: 'g1',
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+          }),
           select: () => builder,
           expand: () => builder,
+          filter: () => builder,
           top: () => builder,
           header: () => builder,
         };
