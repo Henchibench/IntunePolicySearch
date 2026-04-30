@@ -62,4 +62,41 @@ describe('ResultsTable', () => {
     await user.click(screen.getByText('Outlook'));
     expect(onRowClick).toHaveBeenCalledWith(rows[0]);
   });
+
+  it('renders Platform chip group with faceted counts and toggles filter on click', async () => {
+    const user = userEvent.setup();
+    let captured: FilterState | null = null;
+    render(
+      <ResultsTable
+        rows={[
+          { id: '1', category: 'mobileApp', name: 'A', platform: 'iOS', appType: 'iOS Store', intent: 'include', source: { kind: 'direct' }, rawObject: {} },
+          { id: '2', category: 'mobileApp', name: 'B', platform: 'Windows', appType: 'Win32', intent: 'include', source: { kind: 'direct' }, rawObject: {} },
+          { id: '3', category: 'mobileApp', name: 'C', platform: 'Windows', appType: 'Win32', intent: 'include', source: { kind: 'direct' }, rawObject: {} },
+        ]}
+        tenantId="t1"
+        filters={emptyFilters}
+        onFiltersChange={(next) => { captured = next; }}
+        onRowClick={() => {}}
+      />,
+    );
+
+    await user.click(await screen.findByRole('button', { name: /Windows.*2/ }));
+    expect(captured).toEqual({ ...emptyFilters, platform: ['Windows'] });
+  });
+
+  it('hides the App Type chip group and column when no rows have appType', () => {
+    render(
+      <ResultsTable
+        rows={[
+          { id: '1', category: 'compliancePolicy', name: 'X', platform: 'Windows', intent: 'include', source: { kind: 'direct' }, rawObject: {} },
+        ]}
+        tenantId="t1"
+        filters={emptyFilters}
+        onFiltersChange={() => {}}
+        onRowClick={() => {}}
+      />,
+    );
+    expect(screen.queryByText(/^App Type:/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^App type$/ })).not.toBeInTheDocument();
+  });
 });

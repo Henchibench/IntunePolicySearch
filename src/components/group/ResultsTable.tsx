@@ -31,6 +31,8 @@ import type {
   IntunePlatform,
 } from '@/types/graph';
 import type { FilterState } from '@/lib/facetCounts';
+import { FilterChipGroup, type FilterChipOption } from './FilterChipGroup';
+import { computeFacetCounts } from '@/lib/facetCounts';
 
 export interface ResultsTableProps {
   rows: GroupAssignmentResult[];
@@ -60,6 +62,32 @@ export function ResultsTable({
   }, [filters]);
 
   const showAppIntent = useMemo(() => rows.some((r) => r.appIntent), [rows]);
+
+  const platformCounts = useMemo(
+    () => computeFacetCounts(rows, filters, 'platform'),
+    [rows, filters],
+  );
+  const appTypeCounts = useMemo(
+    () => computeFacetCounts(rows, filters, 'appType'),
+    [rows, filters],
+  );
+  const intentCounts = useMemo(
+    () => computeFacetCounts(rows, filters, 'intent'),
+    [rows, filters],
+  );
+
+  function entriesToOptions(counts: Map<string, number>): FilterChipOption[] {
+    return [...counts.entries()]
+      .filter(([, n]) => n > 0)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([value, count]) => ({ value, label: value, count }));
+  }
+
+  const platformOptions = entriesToOptions(platformCounts);
+  const appTypeOptions = entriesToOptions(appTypeCounts);
+  const intentOptions = entriesToOptions(intentCounts);
+
+  const showAppType = useMemo(() => rows.some((r) => r.appType), [rows]);
 
   const columns = useMemo<ColumnDef<GroupAssignmentResult>[]>(() => {
     const base: ColumnDef<GroupAssignmentResult>[] = [
@@ -96,6 +124,15 @@ export function ResultsTable({
           value.length === 0 || value.includes(row.original.intent),
       },
     ];
+    if (showAppType) {
+      base.push({
+        accessorKey: 'appType',
+        header: ({ column }) => <SortHeader column={column}>App type</SortHeader>,
+        cell: ({ row }) => row.original.appType ?? '—',
+        filterFn: (row, _id, value: string[]) =>
+          value.length === 0 || (row.original.appType != null && value.includes(row.original.appType)),
+      });
+    }
     if (showAppIntent) {
       base.push({
         accessorKey: 'appIntent',
@@ -136,7 +173,7 @@ export function ResultsTable({
       },
     );
     return base;
-  }, [showAppIntent]);
+  }, [showAppIntent, showAppType]);
 
   const table = useReactTable({
     data: rows,
@@ -175,6 +212,30 @@ export function ResultsTable({
 
   return (
     <div className="space-y-3">
+      <div className="space-y-2">
+        <FilterChipGroup
+          label="Platform"
+          options={platformOptions}
+          selected={filters.platform}
+          onChange={(next) =>
+            onFiltersChange({ ...filters, platform: next as IntunePlatform[] })
+          }
+        />
+        <FilterChipGroup
+          label="App Type"
+          options={appTypeOptions}
+          selected={filters.appType}
+          onChange={(next) => onFiltersChange({ ...filters, appType: next })}
+        />
+        <FilterChipGroup
+          label="Intent"
+          options={intentOptions}
+          selected={filters.intent}
+          onChange={(next) =>
+            onFiltersChange({ ...filters, intent: next as ('include' | 'exclude')[] })
+          }
+        />
+      </div>
       <div className="flex items-center gap-2 flex-wrap">
         <Input
           placeholder="Search by name…"
