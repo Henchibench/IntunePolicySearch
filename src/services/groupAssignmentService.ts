@@ -9,6 +9,7 @@ import type {
   ParentGroupRef,
 } from '@/types/graph';
 import { classifyMobileApp } from '@/lib/intuneAppTypes';
+import { normalizeConfigurationPolicyPlatforms } from '@/lib/intunePlatform';
 
 export interface ResolvedTargetGroupSet {
   groupName: string;
@@ -457,7 +458,7 @@ export async function resolveFilterDisplayNames(
 // Category configurations for fetchGroupAssignments
 // ============================================================================
 
-const EXPAND_CATEGORY_CONFIGS: ExpandCategoryConfig[] = [
+export const EXPAND_CATEGORY_CONFIGS: ExpandCategoryConfig[] = [
   {
     category: 'deviceConfiguration',
     endpoint: '/deviceManagement/deviceConfigurations',
@@ -469,13 +470,6 @@ const EXPAND_CATEGORY_CONFIGS: ExpandCategoryConfig[] = [
     category: 'compliancePolicy',
     endpoint: '/deviceManagement/deviceCompliancePolicies',
     extractName: (o) => o.displayName,
-    extractDescription: (o) => o.description,
-    extractLastModified: (o) => o.lastModifiedDateTime,
-  },
-  {
-    category: 'configurationPolicy',
-    endpoint: '/deviceManagement/configurationPolicies',
-    extractName: (o) => o.name ?? o.displayName,
     extractDescription: (o) => o.description,
     extractLastModified: (o) => o.lastModifiedDateTime,
   },
@@ -530,7 +524,7 @@ const EXPAND_CATEGORY_CONFIGS: ExpandCategoryConfig[] = [
   },
 ];
 
-const BATCH_CATEGORY_CONFIGS: BatchCategoryConfig[] = [
+export const BATCH_CATEGORY_CONFIGS: BatchCategoryConfig[] = [
   {
     category: 'mobileApp',
     listEndpoint: '/beta/deviceAppManagement/mobileApps',
@@ -559,6 +553,18 @@ const BATCH_CATEGORY_CONFIGS: BatchCategoryConfig[] = [
     extractName: (o) => o.displayName,
     extractDescription: (o) => o.description,
     extractLastModified: (o) => o.lastModifiedDateTime,
+  },
+  {
+    category: 'configurationPolicy',
+    listEndpoint: '/beta/deviceManagement/configurationPolicies',
+    listSelect: 'id,name,description,platforms,lastModifiedDateTime,isAssigned',
+    listFilter: 'isAssigned eq true',
+    assignmentsPathFor: (id) =>
+      `/beta/deviceManagement/configurationPolicies/${id}/assignments`,
+    extractName: (o) => o.name,
+    extractDescription: (o) => o.description,
+    extractLastModified: (o) => o.lastModifiedDateTime,
+    extractPlatform: (o) => normalizeConfigurationPolicyPlatforms(o.platforms),
   },
 ];
 

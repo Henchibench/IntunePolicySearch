@@ -1,6 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Client } from '@microsoft/microsoft-graph-client';
 import { resolveTargetGroupSet } from './groupAssignmentService';
+import { EXPAND_CATEGORY_CONFIGS, BATCH_CATEGORY_CONFIGS } from './groupAssignmentService';
+
+describe('category registration', () => {
+  it('configurationPolicy uses BATCH mode (not EXPAND)', () => {
+    expect(EXPAND_CATEGORY_CONFIGS.map((c) => c.category)).not.toContain('configurationPolicy');
+    expect(BATCH_CATEGORY_CONFIGS.map((c) => c.category)).toContain('configurationPolicy');
+  });
+
+  it('configurationPolicy uses /beta endpoint with isAssigned filter and select', () => {
+    const cfg = BATCH_CATEGORY_CONFIGS.find((c) => c.category === 'configurationPolicy')!;
+    expect(cfg.listEndpoint).toBe('/beta/deviceManagement/configurationPolicies');
+    expect(cfg.listFilter).toBe('isAssigned eq true');
+    expect(cfg.listSelect).toBe('id,name,description,platforms,lastModifiedDateTime,isAssigned');
+    expect(cfg.assignmentsPathFor('p1')).toBe('/beta/deviceManagement/configurationPolicies/p1/assignments');
+  });
+});
 
 function makeMockClient(handlers: Record<string, () => unknown>): Client {
   return {
@@ -489,6 +505,105 @@ describe('processBatchCategory', () => {
     expect(rows).toHaveLength(1);
     expect(rows[0].platform).toBe('Windows');
     expect(rows[0].appType).toBe('Win32');
+  });
+
+  it('configurationPolicy: extracts platform from policies via normalizer', async () => {
+    const cfg = BATCH_CATEGORY_CONFIGS.find((c) => c.category === 'configurationPolicy')!;
+    const policies = [
+      { id: 'p-win', name: 'Win', platforms: 'windows10' },
+      { id: 'p-ios', name: 'iOS', platforms: 'iOS' },
+      { id: 'p-mac', name: 'Mac', platforms: 'macOS' },
+      { id: 'p-and', name: 'And', platforms: 'android' },
+    ];
+    const { client } = batchClient({
+      listPages: [policies],
+      batchResponses: [
+        policies.map((_, i) => ({
+          id: String(i + 1),
+          status: 200,
+          body: {
+            value: [
+              {
+                id: `a-${i}`,
+                target: {
+                  '@odata.type': '#microsoft.graph.groupAssignmentTarget',
+                  groupId: 'g1',
+                },
+              },
+            ],
+          },
+        })),
+      ],
+    });
+
+    const rows = await processBatchCategory(client, cfg, {
+      targetIds: new Set(['g1']),
+      selectedGroupId: 'g1',
+      parentGroupsById: new Map(),
+      signal: new AbortController().signal,
+    });
+
+    expect(rows).toHaveLength(4);
+    const byId = Object.fromEntries(rows.map((r) => [r.id, r.platform]));
+    expect(byId).toEqual({
+      'p-win': 'Windows',
+      'p-ios': 'iOS',
+      'p-mac': 'macOS',
+      'p-and': 'Android',
+    });
+    expect(rows.every((r) => r.category === 'configurationPolicy')).toBe(true);
+    expect(rows.every((r) => r.intent === 'include')).toBe(true);
+  });
+
+  it('configurationPolicy: handles include + exclude assignments on the same policy', async () => {
+    const cfg = BATCH_CATEGORY_CONFIGS.find((c) => c.category === 'configurationPolicy')!;
+    const { client } = batchClient({
+      listPages: [
+        [{ id: 'p1', name: 'P', platforms: 'windows10' }],
+      ],
+      batchResponses: [
+        [
+          {
+            id: '1',
+            status: 200,
+            body: {
+              value: [
+                {
+                  id: 'a1',
+                  target: {
+                    '@odata.type': '#microsoft.graph.groupAssignmentTarget',
+                    groupId: 'g1',
+                  },
+                },
+                {
+                  id: 'a2',
+                  target: {
+                    '@odata.type': '#microsoft.graph.exclusionGroupAssignmentTarget',
+                    groupId: 'parent1',
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      ],
+    });
+
+    const rows = await processBatchCategory(client, cfg, {
+      targetIds: new Set(['g1', 'parent1']),
+      selectedGroupId: 'g1',
+      parentGroupsById: new Map([
+        ['parent1', { id: 'parent1', displayName: 'Parent' }],
+      ]),
+      signal: new AbortController().signal,
+    });
+
+    expect(rows).toHaveLength(2);
+    const direct = rows.find((r) => r.source.kind === 'direct')!;
+    const parent = rows.find((r) => r.source.kind === 'parent')!;
+    expect(direct.intent).toBe('include');
+    expect(parent.intent).toBe('exclude');
+    expect(parent.source.kind === 'parent' && parent.source.groupName).toBe('Parent');
   });
 
   it('tolerates per-item batch failures', async () => {
