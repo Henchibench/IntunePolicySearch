@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   loadSavedViews,
   saveView,
@@ -6,8 +6,21 @@ import {
   type SavedView,
 } from './savedViews';
 
+// Node 24 ships a Proxy-based localStorage that is incompatible with jsdom.
+// Create a proper in-memory Storage to use via window.localStorage.
+const store = new Map<string, string>();
+const storageMock: Storage = {
+  getItem: (key: string) => store.get(key) ?? null,
+  setItem: (key: string, value: string) => { store.set(key, value); },
+  removeItem: (key: string) => { store.delete(key); },
+  clear: () => store.clear(),
+  key: (index: number) => [...store.keys()][index] ?? null,
+  get length() { return store.size; },
+};
+
 beforeEach(() => {
-  localStorage.clear();
+  store.clear();
+  Object.defineProperty(window, 'localStorage', { value: storageMock, writable: true, configurable: true });
 });
 
 describe('savedViews', () => {

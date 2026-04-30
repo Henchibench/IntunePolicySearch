@@ -9,9 +9,14 @@ export interface SavedView {
 
 const KEY = (tenantId: string) => `groupLookup.savedViews.${tenantId}`;
 
+/** Use window.localStorage explicitly — Node 24's built-in localStorage is not a full Web Storage API. */
+function storage(): Storage {
+  return window.localStorage;
+}
+
 export function loadSavedViews(tenantId: string): SavedView[] {
   try {
-    const raw = localStorage.getItem(KEY(tenantId));
+    const raw = storage().getItem(KEY(tenantId));
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : [];
@@ -23,10 +28,10 @@ export function loadSavedViews(tenantId: string): SavedView[] {
 export function saveView(tenantId: string, view: SavedView): void {
   const all = loadSavedViews(tenantId).filter((v) => v.name !== view.name);
   all.push(view);
-  localStorage.setItem(KEY(tenantId), JSON.stringify(all));
+  storage().setItem(KEY(tenantId), JSON.stringify(all));
 }
 
 export function deleteView(tenantId: string, name: string): void {
   const all = loadSavedViews(tenantId).filter((v) => v.name !== name);
-  localStorage.setItem(KEY(tenantId), JSON.stringify(all));
+  storage().setItem(KEY(tenantId), JSON.stringify(all));
 }
