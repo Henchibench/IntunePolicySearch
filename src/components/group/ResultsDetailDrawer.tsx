@@ -39,6 +39,9 @@ export function ResultsDetailDrawer({ row, open, onOpenChange }: ResultsDetailDr
               {row.platform && (
                 <div><span className="text-muted-foreground">Platform:</span> {row.platform}</div>
               )}
+              {row.appType && (
+                <div><span className="text-muted-foreground">App type:</span> {row.appType}</div>
+              )}
               {row.filter && (
                 <div>
                   <span className="text-muted-foreground">Filter:</span>{' '}
