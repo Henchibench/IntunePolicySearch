@@ -252,6 +252,7 @@ export type IntunePlatform =
   | 'iOS'
   | 'Android'
   | 'macOS'
+  | 'Web'
   | 'All Platforms';
 
 export interface GroupAssignmentResult {
@@ -260,6 +261,7 @@ export interface GroupAssignmentResult {
   name: string;
   description?: string;
   platform?: IntunePlatform;
+  appType?: string;
   intent: AssignmentIntent;
   appIntent?: AppInstallIntent;
   source: GroupAssignmentSource;
