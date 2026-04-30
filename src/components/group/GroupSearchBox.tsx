@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Loader2, ListPlus } from 'lucide-react';
+import { Loader2, ListPlus } from 'lucide-react';
 import {
   Command,
   CommandEmpty,
@@ -29,16 +29,16 @@ export function GroupSearchBox({ onSelect, autoFocus = false }: GroupSearchBoxPr
   return (
     <div className="w-full max-w-2xl">
       <Command shouldFilter={false} className="rounded-lg border shadow-sm">
-        <div className="flex items-center px-3 border-b">
-          <Search className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" />
+        <div className="relative">
           <CommandInput
             value={query}
             onValueChange={setQuery}
             placeholder="Search groups by display name…"
             autoFocus={autoFocus}
-            className="flex-1 outline-none bg-transparent py-3 text-sm"
           />
-          {isLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+          {isLoading && (
+            <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground pointer-events-none" />
+          )}
         </div>
         <CommandList>
           {query.trim().length < 2 ? (
