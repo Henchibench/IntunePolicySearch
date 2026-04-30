@@ -438,6 +438,59 @@ describe('processBatchCategory', () => {
     expect(listFilters).toEqual(['isAssigned eq true']);
   });
 
+  it('populates platform and appType fields when @odata.type is win32LobApp', async () => {
+    const winApp = {
+      id: 'app1',
+      displayName: 'Acme Win32',
+      '@odata.type': '#microsoft.graph.win32LobApp',
+    };
+    const { client } = batchClient({
+      listPages: [[winApp]],
+      batchResponses: [
+        [
+          {
+            id: '1',
+            status: 200,
+            body: {
+              value: [
+                {
+                  id: 'a1',
+                  target: {
+                    '@odata.type': '#microsoft.graph.groupAssignmentTarget',
+                    groupId: 'g1',
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      ],
+    });
+
+    const { classifyMobileApp } = await import('@/lib/intuneAppTypes');
+    const realMobileAppConfig: BatchCategoryConfig = {
+      category: 'mobileApp',
+      listEndpoint: '/beta/deviceAppManagement/mobileApps',
+      listSelect: 'id,displayName,lastModifiedDateTime,@odata.type,isAssigned',
+      listFilter: 'isAssigned eq true',
+      assignmentsPathFor: (id) => `/beta/deviceAppManagement/mobileApps/${id}/assignments`,
+      extractName: (o: any) => o.displayName,
+      extractPlatform: (o: any) => classifyMobileApp(o['@odata.type'])?.platform,
+      extractAppType: (o: any) => classifyMobileApp(o['@odata.type'])?.appType,
+    };
+
+    const rows = await processBatchCategory(client, realMobileAppConfig, {
+      targetIds: new Set(['g1']),
+      selectedGroupId: 'g1',
+      parentGroupsById: new Map(),
+      signal: new AbortController().signal,
+    });
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].platform).toBe('Windows');
+    expect(rows[0].appType).toBe('Win32');
+  });
+
   it('tolerates per-item batch failures', async () => {
     const { client } = batchClient({
       listPages: [

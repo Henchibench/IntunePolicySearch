@@ -8,6 +8,7 @@ import type {
   IntunePlatform,
   ParentGroupRef,
 } from '@/types/graph';
+import { classifyMobileApp } from '@/lib/intuneAppTypes';
 
 export interface ResolvedTargetGroupSet {
   groupName: string;
@@ -172,6 +173,7 @@ export interface ExpandCategoryConfig {
   extractName: (obj: any) => string;
   extractDescription?: (obj: any) => string | undefined;
   extractPlatform?: (obj: any) => IntunePlatform | undefined;
+  extractAppType?: (obj: any) => string | undefined;
   extractLastModified?: (obj: any) => string | undefined;
   extractAppIntent?: (assignment: any) => AppInstallIntent | undefined;
 }
@@ -228,6 +230,7 @@ function buildRowsFromObject(
       name: config.extractName(obj),
       description: config.extractDescription?.(obj),
       platform: config.extractPlatform?.(obj),
+      appType: config.extractAppType?.(obj),
       intent: isExclude ? 'exclude' : 'include',
       appIntent: config.extractAppIntent?.(a),
       source: classifySource(groupId, ctx),
@@ -256,6 +259,7 @@ export interface BatchCategoryConfig {
   extractName: (obj: any) => string;
   extractDescription?: (obj: any) => string | undefined;
   extractPlatform?: (obj: any) => IntunePlatform | undefined;
+  extractAppType?: (obj: any) => string | undefined;
   extractLastModified?: (obj: any) => string | undefined;
   extractAppIntent?: (assignment: any) => AppInstallIntent | undefined;
 }
@@ -309,6 +313,7 @@ export async function processBatchCategory(
     extractName: config.extractName,
     extractDescription: config.extractDescription,
     extractPlatform: config.extractPlatform,
+    extractAppType: config.extractAppType,
     extractLastModified: config.extractLastModified,
     extractAppIntent: config.extractAppIntent,
   };
@@ -510,13 +515,17 @@ const EXPAND_CATEGORY_CONFIGS: ExpandCategoryConfig[] = [
 const BATCH_CATEGORY_CONFIGS: BatchCategoryConfig[] = [
   {
     category: 'mobileApp',
-    listEndpoint: '/deviceAppManagement/mobileApps',
-    listSelect: 'id,displayName,lastModifiedDateTime',
+    listEndpoint: '/beta/deviceAppManagement/mobileApps',
+    listSelect: 'id,displayName,lastModifiedDateTime,@odata.type,isAssigned',
     listFilter: 'isAssigned eq true',
     assignmentsPathFor: (id) =>
-      `/deviceAppManagement/mobileApps/${id}/assignments`,
+      `/beta/deviceAppManagement/mobileApps/${id}/assignments`,
     extractName: (o) => o.displayName,
     extractLastModified: (o) => o.lastModifiedDateTime,
+    extractPlatform: (o) =>
+      classifyMobileApp(o['@odata.type'])?.platform,
+    extractAppType: (o) =>
+      classifyMobileApp(o['@odata.type'])?.appType,
     extractAppIntent: (a) => {
       const v = (a?.intent as string | undefined)?.toLowerCase();
       if (v === 'available' || v === 'required' || v === 'uninstall') return v;
