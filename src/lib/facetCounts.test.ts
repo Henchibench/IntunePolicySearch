@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeFacetCounts, type FilterState } from './facetCounts';
+import { computeFacetCounts, applyAllFilters, type FilterState } from './facetCounts';
 import type { GroupAssignmentResult } from '@/types/graph';
 
 const emptyFilters: FilterState = {
@@ -67,5 +67,32 @@ describe('computeFacetCounts', () => {
 
   it('returns an empty map when row set is empty', () => {
     expect(computeFacetCounts([], emptyFilters, 'category').size).toBe(0);
+  });
+});
+
+describe('applyAllFilters', () => {
+  it('returns every row when no filters are set', () => {
+    expect(applyAllFilters(rows, emptyFilters)).toHaveLength(rows.length);
+  });
+
+  it('narrows by a single dimension', () => {
+    const out = applyAllFilters(rows, { ...emptyFilters, platform: ['iOS'] });
+    expect(out).toHaveLength(2);
+    expect(out.every((r) => r.platform === 'iOS')).toBe(true);
+  });
+
+  it('AND-combines multiple dimensions', () => {
+    const out = applyAllFilters(rows, {
+      ...emptyFilters,
+      category: ['mobileApp'],
+      intent: ['include'],
+    });
+    expect(out.map((r) => r.id).sort()).toEqual(['1', '2', '3']);
+  });
+
+  it('drops rows missing a filtered dimension value', () => {
+    // row 4 (compliancePolicy) has no appType — must be dropped when appType filter is set.
+    const out = applyAllFilters(rows, { ...emptyFilters, appType: ['Win32'] });
+    expect(out.map((r) => r.id)).toEqual(['3']);
   });
 });

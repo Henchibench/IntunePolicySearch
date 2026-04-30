@@ -33,6 +33,10 @@ function getDimensionValue(
       return row.appType;
     case 'intent':
       return row.intent;
+    default: {
+      const _exhaustive: never = dim;
+      return _exhaustive;
+    }
   }
 }
 
