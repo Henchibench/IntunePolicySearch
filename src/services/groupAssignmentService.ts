@@ -458,64 +458,7 @@ export async function resolveFilterDisplayNames(
 // Category configurations for fetchGroupAssignments
 // ============================================================================
 
-export const EXPAND_CATEGORY_CONFIGS: ExpandCategoryConfig[] = [
-  {
-    category: 'compliancePolicy',
-    endpoint: '/deviceManagement/deviceCompliancePolicies',
-    extractName: (o) => o.displayName,
-    extractDescription: (o) => o.description,
-    extractLastModified: (o) => o.lastModifiedDateTime,
-  },
-  {
-    category: 'appProtection',
-    endpoint: '/deviceAppManagement/managedAppPolicies',
-    extractName: (o) => o.displayName,
-    extractDescription: (o) => o.description,
-    extractLastModified: (o) => o.lastModifiedDateTime,
-  },
-  {
-    category: 'appConfiguration',
-    endpoint: '/deviceAppManagement/mobileAppConfigurations',
-    extractName: (o) => o.displayName,
-    extractDescription: (o) => o.description,
-    extractLastModified: (o) => o.lastModifiedDateTime,
-  },
-  {
-    category: 'platformScript',
-    endpoint: '/deviceManagement/deviceManagementScripts',
-    extractName: (o) => o.displayName,
-    extractDescription: (o) => o.description,
-    extractLastModified: (o) => o.lastModifiedDateTime,
-  },
-  {
-    category: 'remediationScript',
-    endpoint: '/deviceManagement/deviceHealthScripts',
-    extractName: (o) => o.displayName,
-    extractDescription: (o) => o.description,
-    extractLastModified: (o) => o.lastModifiedDateTime,
-  },
-  {
-    category: 'complianceScript',
-    endpoint: '/deviceManagement/deviceComplianceScripts',
-    extractName: (o) => o.displayName,
-    extractDescription: (o) => o.description,
-    extractLastModified: (o) => o.lastModifiedDateTime,
-  },
-  {
-    category: 'autopilotProfile',
-    endpoint: '/deviceManagement/windowsAutopilotDeploymentProfiles',
-    extractName: (o) => o.displayName,
-    extractDescription: (o) => o.description,
-    extractLastModified: (o) => o.lastModifiedDateTime,
-  },
-  {
-    category: 'enrollmentConfig',
-    endpoint: '/deviceManagement/deviceEnrollmentConfigurations',
-    extractName: (o) => o.displayName,
-    extractDescription: (o) => o.description,
-    extractLastModified: (o) => o.lastModifiedDateTime,
-  },
-];
+export const EXPAND_CATEGORY_CONFIGS: ExpandCategoryConfig[] = [];
 
 export const BATCH_CATEGORY_CONFIGS: BatchCategoryConfig[] = [
   {
@@ -568,6 +511,86 @@ export const BATCH_CATEGORY_CONFIGS: BatchCategoryConfig[] = [
     extractDescription: (o) => o.description,
     extractLastModified: (o) => o.lastModifiedDateTime,
     extractPlatform: (o) => normalizeConfigurationPolicyPlatforms(o.platforms),
+  },
+  {
+    category: 'compliancePolicy',
+    listEndpoint: '/deviceManagement/deviceCompliancePolicies',
+    listSelect: 'id,displayName,description,lastModifiedDateTime',
+    assignmentsPathFor: (id) =>
+      `/deviceManagement/deviceCompliancePolicies/${id}/assignments`,
+    extractName: (o) => o.displayName,
+    extractDescription: (o) => o.description,
+    extractLastModified: (o) => o.lastModifiedDateTime,
+  },
+  {
+    category: 'appProtection',
+    listEndpoint: '/deviceAppManagement/managedAppPolicies',
+    listSelect: 'id,displayName,description,lastModifiedDateTime',
+    assignmentsPathFor: (id) =>
+      `/deviceAppManagement/managedAppPolicies/${id}/assignments`,
+    extractName: (o) => o.displayName,
+    extractDescription: (o) => o.description,
+    extractLastModified: (o) => o.lastModifiedDateTime,
+  },
+  {
+    category: 'appConfiguration',
+    listEndpoint: '/deviceAppManagement/mobileAppConfigurations',
+    listSelect: 'id,displayName,description,lastModifiedDateTime',
+    assignmentsPathFor: (id) =>
+      `/deviceAppManagement/mobileAppConfigurations/${id}/assignments`,
+    extractName: (o) => o.displayName,
+    extractDescription: (o) => o.description,
+    extractLastModified: (o) => o.lastModifiedDateTime,
+  },
+  {
+    category: 'platformScript',
+    listEndpoint: '/deviceManagement/deviceManagementScripts',
+    listSelect: 'id,displayName,description,lastModifiedDateTime',
+    assignmentsPathFor: (id) =>
+      `/deviceManagement/deviceManagementScripts/${id}/assignments`,
+    extractName: (o) => o.displayName,
+    extractDescription: (o) => o.description,
+    extractLastModified: (o) => o.lastModifiedDateTime,
+  },
+  {
+    category: 'remediationScript',
+    listEndpoint: '/deviceManagement/deviceHealthScripts',
+    listSelect: 'id,displayName,description,lastModifiedDateTime',
+    assignmentsPathFor: (id) =>
+      `/deviceManagement/deviceHealthScripts/${id}/assignments`,
+    extractName: (o) => o.displayName,
+    extractDescription: (o) => o.description,
+    extractLastModified: (o) => o.lastModifiedDateTime,
+  },
+  {
+    category: 'complianceScript',
+    listEndpoint: '/deviceManagement/deviceComplianceScripts',
+    listSelect: 'id,displayName,description,lastModifiedDateTime',
+    assignmentsPathFor: (id) =>
+      `/deviceManagement/deviceComplianceScripts/${id}/assignments`,
+    extractName: (o) => o.displayName,
+    extractDescription: (o) => o.description,
+    extractLastModified: (o) => o.lastModifiedDateTime,
+  },
+  {
+    category: 'autopilotProfile',
+    listEndpoint: '/deviceManagement/windowsAutopilotDeploymentProfiles',
+    listSelect: 'id,displayName,description,lastModifiedDateTime',
+    assignmentsPathFor: (id) =>
+      `/deviceManagement/windowsAutopilotDeploymentProfiles/${id}/assignments`,
+    extractName: (o) => o.displayName,
+    extractDescription: (o) => o.description,
+    extractLastModified: (o) => o.lastModifiedDateTime,
+  },
+  {
+    category: 'enrollmentConfig',
+    listEndpoint: '/deviceManagement/deviceEnrollmentConfigurations',
+    listSelect: 'id,displayName,description,lastModifiedDateTime',
+    assignmentsPathFor: (id) =>
+      `/deviceManagement/deviceEnrollmentConfigurations/${id}/assignments`,
+    extractName: (o) => o.displayName,
+    extractDescription: (o) => o.description,
+    extractLastModified: (o) => o.lastModifiedDateTime,
   },
 ];
 

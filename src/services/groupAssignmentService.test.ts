@@ -29,6 +29,23 @@ describe('category registration', () => {
     expect(cfg.listSelect).toBe('id,displayName,description,lastModifiedDateTime,@odata.type');
     expect(cfg.assignmentsPathFor('p1')).toBe('/deviceManagement/deviceConfigurations/p1/assignments');
   });
+
+  it('all remaining categories use BATCH mode (not EXPAND)', () => {
+    const expected = [
+      'compliancePolicy',
+      'appProtection',
+      'appConfiguration',
+      'platformScript',
+      'remediationScript',
+      'complianceScript',
+      'autopilotProfile',
+      'enrollmentConfig',
+    ];
+    const batch = BATCH_CATEGORY_CONFIGS.map((c) => c.category);
+    const expand = EXPAND_CATEGORY_CONFIGS.map((c) => c.category);
+    expect(batch).toEqual(expect.arrayContaining(expected));
+    for (const c of expected) expect(expand).not.toContain(c);
+  });
 });
 
 function makeMockClient(handlers: Record<string, () => unknown>): Client {
