@@ -1,33 +1,41 @@
-import { Badge } from '@/components/ui/badge';
-import { ALL_INTUNE_OBJECT_CATEGORIES, type GroupAssignmentResult, type IntuneObjectCategory, type ParentGroupRef } from '@/types/graph';
+import {
+  ALL_INTUNE_OBJECT_CATEGORIES,
+  type IntuneObjectCategory,
+  type ParentGroupRef,
+} from '@/types/graph';
 import { categoryLabel } from './GroupTypeBadge';
+import { FilterChipGroup, type FilterChipOption } from './FilterChipGroup';
+import type { FilterState } from '@/lib/facetCounts';
 
 export interface ResultsSummaryProps {
   groupName: string;
   parentGroups: ParentGroupRef[];
-  results: GroupAssignmentResult[];
+  categoryOptions: FilterChipOption[];
+  filters: FilterState;
+  onFiltersChange: (next: FilterState) => void;
+  includeCount: number;
+  excludeCount: number;
+  totalCount: number;
   onSelectParent: (groupId: string) => void;
-  onCategoryChipClick: (category: IntuneObjectCategory) => void;
 }
 
 export function ResultsSummary({
   groupName,
   parentGroups,
-  results,
+  categoryOptions,
+  filters,
+  onFiltersChange,
+  includeCount,
+  excludeCount,
+  totalCount,
   onSelectParent,
-  onCategoryChipClick,
 }: ResultsSummaryProps) {
-  const counts = countByCategory(results);
-  const total = results.length;
-  const includes = results.filter((r) => r.intent === 'include').length;
-  const excludes = total - includes;
-
   return (
     <section className="space-y-3">
       <div className="space-y-1">
         <h2 className="text-2xl font-semibold">{groupName}</h2>
         <div className="text-sm text-muted-foreground">
-          {total} connections · {includes} included · {excludes} excluded
+          {totalCount} connections · {includeCount} included · {excludeCount} excluded
         </div>
       </div>
       {parentGroups.length > 0 && (
@@ -45,28 +53,22 @@ export function ResultsSummary({
           ))}
         </div>
       )}
-      <div className="flex flex-wrap gap-2">
-        {ALL_INTUNE_OBJECT_CATEGORIES.filter((c) => (counts[c] ?? 0) > 0).map(
-          (c) => (
-            <button
-              key={c}
-              type="button"
-              onClick={() => onCategoryChipClick(c)}
-              className="focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
-            >
-              <Badge variant="outline" className="cursor-pointer">
-                {categoryLabel(c)} · {counts[c]}
-              </Badge>
-            </button>
-          ),
-        )}
-      </div>
+      <FilterChipGroup
+        label="Category"
+        options={categoryOptions}
+        selected={filters.category}
+        onChange={(next) =>
+          onFiltersChange({ ...filters, category: next as IntuneObjectCategory[] })
+        }
+      />
     </section>
   );
 }
 
-function countByCategory(rows: GroupAssignmentResult[]) {
-  const m: Partial<Record<IntuneObjectCategory, number>> = {};
-  for (const r of rows) m[r.category] = (m[r.category] ?? 0) + 1;
-  return m;
+export function buildCategoryOptions(
+  counts: Map<string, number>,
+): FilterChipOption[] {
+  return ALL_INTUNE_OBJECT_CATEGORIES
+    .filter((c) => (counts.get(c) ?? 0) > 0)
+    .map((c) => ({ value: c, label: categoryLabel(c), count: counts.get(c) ?? 0 }));
 }

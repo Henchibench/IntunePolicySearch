@@ -1,15 +1,15 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useMsal } from '@azure/msal-react';
 import { Header } from '@/components/Header';
 import { GroupSearchBox } from '@/components/group/GroupSearchBox';
 import { CategoryProgressList } from '@/components/group/CategoryProgressList';
-import { ResultsSummary } from '@/components/group/ResultsSummary';
+import { ResultsSummary, buildCategoryOptions } from '@/components/group/ResultsSummary';
 import { ResultsTable } from '@/components/group/ResultsTable';
 import { ResultsDetailDrawer } from '@/components/group/ResultsDetailDrawer';
 import { useGroupAssignments } from '@/hooks/useGroupAssignments';
 import { ALL_INTUNE_OBJECT_CATEGORIES, type GroupAssignmentResult } from '@/types/graph';
 import type { EntraGroupMatch } from '@/hooks/useEntraGroupSearch';
-import type { FilterState } from '@/lib/facetCounts';
+import { computeFacetCounts, type FilterState } from '@/lib/facetCounts';
 
 export default function GroupLookupPage() {
   const { accounts } = useMsal();
@@ -27,6 +27,21 @@ export default function GroupLookupPage() {
   const { perCategory, results, parentGroups, fatalError } = useGroupAssignments(
     selected?.id ?? null,
   );
+
+  const categoryCounts = useMemo(
+    () => computeFacetCounts(results, filters, 'category'),
+    [results, filters],
+  );
+  const categoryOptions = useMemo(
+    () => buildCategoryOptions(categoryCounts),
+    [categoryCounts],
+  );
+
+  const includeCount = useMemo(
+    () => results.filter((r) => r.intent === 'include').length,
+    [results],
+  );
+  const excludeCount = results.length - includeCount;
 
   const allDone = ALL_INTUNE_OBJECT_CATEGORIES.every(
     (c) => perCategory[c].status === 'done' || perCategory[c].status === 'error',
@@ -72,13 +87,15 @@ export default function GroupLookupPage() {
                 <ResultsSummary
                   groupName={selected.displayName}
                   parentGroups={parentGroups}
-                  results={results}
+                  categoryOptions={categoryOptions}
+                  filters={filters}
+                  onFiltersChange={setFilters}
+                  includeCount={includeCount}
+                  excludeCount={excludeCount}
+                  totalCount={results.length}
                   onSelectParent={(gid) => {
                     const parent = parentGroups.find((p) => p.id === gid);
                     if (parent) setSelected({ id: parent.id, displayName: parent.displayName });
-                  }}
-                  onCategoryChipClick={() => {
-                    /* no-op for v1; clicking the chip is decorative until we wire filter */
                   }}
                 />
                 <ResultsTable
