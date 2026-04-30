@@ -31,7 +31,7 @@ vi.mock('@/hooks/useAuth', () => ({
 // Variable name must start with `mock` for vitest's vi.mock hoisting to allow
 // referencing it inside the factory.
 const mockBuilder: Record<string, unknown> = { get: mockGet };
-for (const m of ['header', 'count', 'filter', 'select', 'top'] as const) {
+for (const m of ['header', 'count', 'filter', 'search', 'select', 'top'] as const) {
   mockBuilder[m] = () => mockBuilder;
 }
 vi.mock('@microsoft/microsoft-graph-client', () => ({

@@ -59,15 +59,18 @@ export function useEntraGroupSearch(query: string) {
         const client = Client.initWithMiddleware({
           authProvider: { getAccessToken: async () => await getAccessToken() },
         });
-        const escaped = query.replace(/'/g, "''");
-        const filterClause = `contains(displayName,'${escaped}')`;
+        // Graph /groups doesn't support $filter=contains, but $search supports
+        // tokenised substring matching when used with ConsistencyLevel: eventual.
+        // Wrap the value in quotes per the search spec; escape embedded quotes.
+        const escaped = query.replace(/"/g, '\\"');
+        const searchClause = `"displayName:${escaped}"`;
         const top = mode === 'full' ? FULL_PAGE_SIZE : TYPEAHEAD_TOP;
 
         const firstPage = (await client
           .api('/groups')
           .header('ConsistencyLevel', 'eventual')
           .count(true)
-          .filter(filterClause)
+          .search(searchClause)
           .select('id,displayName,mail,description')
           .top(top)
           .get()) as GraphGroupListResponse;
