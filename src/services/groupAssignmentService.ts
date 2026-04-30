@@ -434,7 +434,7 @@ export const BATCH_CATEGORY_CONFIGS: BatchCategoryConfig[] = [
   {
     category: 'deviceConfiguration',
     listEndpoint: '/deviceManagement/deviceConfigurations',
-    listSelect: 'id,displayName,description,lastModifiedDateTime,@odata.type',
+    listSelect: 'id,displayName,description,lastModifiedDateTime',
     assignmentsPathFor: (id) =>
       `/deviceManagement/deviceConfigurations/${id}/assignments`,
     extractName: (o) => o.displayName,
@@ -443,11 +443,10 @@ export const BATCH_CATEGORY_CONFIGS: BatchCategoryConfig[] = [
   },
   {
     category: 'mobileApp',
-    listEndpoint: '/beta/deviceAppManagement/mobileApps',
-    listSelect: 'id,displayName,lastModifiedDateTime,@odata.type,isAssigned',
-    listFilter: 'isAssigned eq true',
+    listEndpoint: '/deviceAppManagement/mobileApps',
+    listSelect: 'id,displayName,lastModifiedDateTime',
     assignmentsPathFor: (id) =>
-      `/beta/deviceAppManagement/mobileApps/${id}/assignments`,
+      `/deviceAppManagement/mobileApps/${id}/assignments`,
     extractName: (o) => o.displayName,
     extractLastModified: (o) => o.lastModifiedDateTime,
     extractPlatform: (o) =>
@@ -472,11 +471,11 @@ export const BATCH_CATEGORY_CONFIGS: BatchCategoryConfig[] = [
   },
   {
     category: 'configurationPolicy',
-    listEndpoint: '/beta/deviceManagement/configurationPolicies',
+    listEndpoint: '/deviceManagement/configurationPolicies',
     listSelect: 'id,name,description,platforms,lastModifiedDateTime,isAssigned',
     listFilter: 'isAssigned eq true',
     assignmentsPathFor: (id) =>
-      `/beta/deviceManagement/configurationPolicies/${id}/assignments`,
+      `/deviceManagement/configurationPolicies/${id}/assignments`,
     extractName: (o) => o.name,
     extractDescription: (o) => o.description,
     extractLastModified: (o) => o.lastModifiedDateTime,

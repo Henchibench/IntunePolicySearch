@@ -37,6 +37,11 @@ export function useGroupAssignments(
   const [fatalError, setFatalError] = useState<string | null>(null);
   const aborter = useRef<AbortController | null>(null);
 
+  // Keep a stable ref to getAccessToken so the effect doesn't re-run
+  // when MSAL refreshes its accounts array (which recreates getAccessToken).
+  const getAccessTokenRef = useRef(getAccessToken);
+  getAccessTokenRef.current = getAccessToken;
+
   useEffect(() => {
     if (aborter.current) aborter.current.abort();
     if (!groupId || !isAuthenticated) {
@@ -59,7 +64,8 @@ export function useGroupAssignments(
     (async () => {
       try {
         const client = Client.initWithMiddleware({
-          authProvider: { getAccessToken: async () => await getAccessToken() },
+          authProvider: { getAccessToken: async () => await getAccessTokenRef.current() },
+          defaultVersion: 'beta',
         });
         await fetchGroupAssignments(client, groupId, {
           signal: ac.signal,
@@ -85,7 +91,7 @@ export function useGroupAssignments(
     })();
 
     return () => ac.abort();
-  }, [groupId, isAuthenticated, getAccessToken]);
+  }, [groupId, isAuthenticated]);
 
   const results = Object.values(resultsByCat).flat();
   return { perCategory, results, parentGroups, isLoading, fatalError };

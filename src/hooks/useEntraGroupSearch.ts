@@ -33,6 +33,10 @@ export function useEntraGroupSearch(query: string) {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const aborter = useRef<AbortController | null>(null);
 
+  // Stable ref so the effect doesn't re-run when MSAL refreshes accounts.
+  const getAccessTokenRef = useRef(getAccessToken);
+  getAccessTokenRef.current = getAccessToken;
+
   useEffect(() => {
     setMode('typeahead');
   }, [query]);
@@ -57,7 +61,8 @@ export function useEntraGroupSearch(query: string) {
       aborter.current = ac;
       try {
         const client = Client.initWithMiddleware({
-          authProvider: { getAccessToken: async () => await getAccessToken() },
+          authProvider: { getAccessToken: async () => await getAccessTokenRef.current() },
+          defaultVersion: 'beta',
         });
         // Graph /groups doesn't support $filter=contains, but $search supports
         // tokenised substring matching when used with ConsistencyLevel: eventual.
@@ -108,7 +113,7 @@ export function useEntraGroupSearch(query: string) {
     return () => {
       if (timer.current) clearTimeout(timer.current);
     };
-  }, [query, mode, isAuthenticated, getAccessToken]);
+  }, [query, mode, isAuthenticated]);
 
   const expandToFullList = useCallback(() => setMode('full'), []);
 

@@ -25,17 +25,17 @@ describe('category registration', () => {
 
   it('configurationPolicy uses /beta endpoint with isAssigned filter and select', () => {
     const cfg = BATCH_CATEGORY_CONFIGS.find((c) => c.category === 'configurationPolicy')!;
-    expect(cfg.listEndpoint).toBe('/beta/deviceManagement/configurationPolicies');
+    expect(cfg.listEndpoint).toBe('/deviceManagement/configurationPolicies');
     expect(cfg.listFilter).toBe('isAssigned eq true');
     expect(cfg.listSelect).toBe('id,name,description,platforms,lastModifiedDateTime,isAssigned');
-    expect(cfg.assignmentsPathFor('p1')).toBe('/beta/deviceManagement/configurationPolicies/p1/assignments');
+    expect(cfg.assignmentsPathFor('p1')).toBe('/deviceManagement/configurationPolicies/p1/assignments');
   });
 
-  it('deviceConfiguration uses v1.0 endpoint with @odata.type in select', () => {
+  it('deviceConfiguration uses beta endpoint without @odata.type in select', () => {
     const cfg = BATCH_CATEGORY_CONFIGS.find((c) => c.category === 'deviceConfiguration')!;
     expect(cfg.listEndpoint).toBe('/deviceManagement/deviceConfigurations');
     expect(cfg.listFilter).toBeUndefined();
-    expect(cfg.listSelect).toBe('id,displayName,description,lastModifiedDateTime,@odata.type');
+    expect(cfg.listSelect).toBe('id,displayName,description,lastModifiedDateTime');
     expect(cfg.assignmentsPathFor('p1')).toBe('/deviceManagement/deviceConfigurations/p1/assignments');
   });
 });
@@ -508,10 +508,10 @@ describe('processBatchCategory', () => {
     const { classifyMobileApp } = await import('@/lib/intuneAppTypes');
     const realMobileAppConfig: BatchCategoryConfig = {
       category: 'mobileApp',
-      listEndpoint: '/beta/deviceAppManagement/mobileApps',
+      listEndpoint: '/deviceAppManagement/mobileApps',
       listSelect: 'id,displayName,lastModifiedDateTime,@odata.type,isAssigned',
       listFilter: 'isAssigned eq true',
-      assignmentsPathFor: (id) => `/beta/deviceAppManagement/mobileApps/${id}/assignments`,
+      assignmentsPathFor: (id) => `/deviceAppManagement/mobileApps/${id}/assignments`,
       extractName: (o: any) => o.displayName,
       extractPlatform: (o: any) => classifyMobileApp(o['@odata.type'])?.platform,
       extractAppType: (o: any) => classifyMobileApp(o['@odata.type'])?.appType,

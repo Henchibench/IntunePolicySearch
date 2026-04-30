@@ -7,7 +7,7 @@ const LABELS: Record<IntuneObjectCategory, string> = {
   compliancePolicy: 'Compliance Policy',
   configurationPolicy: 'Settings Catalog',
   appProtection: 'App Protection',
-  mobileApp: 'Mobile App',
+  mobileApp: 'Application',
   appConfiguration: 'App Configuration',
   endpointSecurity: 'Endpoint Security',
   platformScript: 'Platform Script',
