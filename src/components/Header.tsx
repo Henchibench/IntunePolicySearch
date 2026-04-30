@@ -1,4 +1,4 @@
-import { RefreshCw, LogIn, LogOut, User, Search, LayoutDashboard } from "lucide-react";
+import { RefreshCw, LogIn, LogOut, User, Search, LayoutDashboard, Users } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -51,6 +51,10 @@ export const Header = ({ onRefresh, isRefreshing = false }: HeaderProps) => {
             <NavLink to="/dashboard" className={navLinkClass}>
               <LayoutDashboard className="h-4 w-4" />
               Dashboard
+            </NavLink>
+            <NavLink to="/groups" className={navLinkClass}>
+              <Users className="h-4 w-4" />
+              Group Lookup
             </NavLink>
           </nav>
         </div>

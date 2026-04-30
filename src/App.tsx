@@ -9,6 +9,7 @@ import { MsalProvider } from "@azure/msal-react";
 import { msalConfig } from "@/services/authConfig";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
+import GroupLookup from "./pages/GroupLookup";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/filter" element={<Index />} />
             <Route path="/demo" element={<Index />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/groups" element={<GroupLookup />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
