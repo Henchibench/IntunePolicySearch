@@ -26,12 +26,18 @@ vi.mock('@/hooks/useAuth', () => ({
   }),
 }));
 
+// Self-referencing chainable builder for `client.api(...).header(...).count(...)
+// .filter(...).select(...).top(...).get()` — the new useEntraGroupSearch chain.
+// Variable name must start with `mock` for vitest's vi.mock hoisting to allow
+// referencing it inside the factory.
+const mockBuilder: Record<string, unknown> = { get: mockGet };
+for (const m of ['header', 'count', 'filter', 'select', 'top'] as const) {
+  mockBuilder[m] = () => mockBuilder;
+}
 vi.mock('@microsoft/microsoft-graph-client', () => ({
   Client: {
     initWithMiddleware: () => ({
-      api: () => ({
-        filter: () => ({ select: () => ({ top: () => ({ get: mockGet }) }) }),
-      }),
+      api: () => mockBuilder,
     }),
   },
 }));
@@ -238,6 +244,61 @@ describe('useEntraGroupSearch', () => {
     expect(harness.result.matches).toHaveLength(1);
     expect(harness.result.matches[0].displayName).toBe('Marketing-US');
     expect(mockGet).toHaveBeenCalledOnce();
+  });
+
+  it('exposes total and expandToFullList; full mode pages through nextLinks', async () => {
+    // Typeahead first (mode change is one fetch).
+    mockGet.mockResolvedValueOnce({
+      value: [
+        { id: 'g1', displayName: 'Group 1', mail: null },
+        { id: 'g2', displayName: 'Group 2', mail: null },
+      ],
+      '@odata.count': 60,
+      '@odata.nextLink': 'https://graph.example/groups?$skiptoken=2',
+    });
+
+    let query = '';
+    const harness = createHookHarness(() => useEntraGroupSearch(query));
+    harness.render();
+    harness.flushEffects();
+
+    harness.flushCleanups();
+    query = 'Mark';
+    harness.render();
+    harness.flushEffects();
+    await new Promise((r) => setTimeout(r, 400));
+    harness.render();
+
+    expect(harness.result.matches).toHaveLength(2);
+    expect(harness.result.total).toBe(60);
+    expect(harness.result.mode).toBe('typeahead');
+    expect(mockGet).toHaveBeenCalledTimes(1);
+
+    // Expand to full mode → fresh fetch with paging loop.
+    mockGet
+      .mockResolvedValueOnce({
+        value: [
+          { id: 'a1', displayName: 'A1', mail: null },
+          { id: 'a2', displayName: 'A2', mail: null },
+        ],
+        '@odata.count': 60,
+        '@odata.nextLink': 'https://graph.example/groups?$skiptoken=3',
+      })
+      .mockResolvedValueOnce({
+        value: [{ id: 'b1', displayName: 'B1', mail: null }],
+        '@odata.count': 60,
+      });
+
+    harness.result.expandToFullList();
+    harness.flushCleanups();
+    harness.render();
+    harness.flushEffects();
+    await new Promise((r) => setTimeout(r, 400));
+    harness.render();
+
+    expect(harness.result.mode).toBe('full');
+    expect(harness.result.matches).toHaveLength(3);
+    expect(mockGet).toHaveBeenCalledTimes(3);
   });
 
   it('returns empty matches for queries shorter than 2 chars', async () => {

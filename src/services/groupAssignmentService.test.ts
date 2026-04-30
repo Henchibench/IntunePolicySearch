@@ -325,8 +325,9 @@ describe('processBatchCategory', () => {
   function batchClient(opts: {
     listPages: any[][];
     batchResponses: any[][]; // one per $batch POST
-  }): { client: Client; postedBatches: any[] } {
+  }): { client: Client; postedBatches: any[]; listFilters: string[] } {
     const postedBatches: any[] = [];
+    const listFilters: string[] = [];
     let listIdx = 0;
     let batchIdx = 0;
     const client = {
@@ -350,8 +351,12 @@ describe('processBatchCategory', () => {
               listIdx < opts.listPages.length ? `next-${listIdx}` : undefined,
           };
         };
-        // self-referential builder for the list call: select/top/get all return the same builder
+        // self-referential builder: filter/select/top/get all return the same builder
         const builder: any = {
+          filter: (s: string) => {
+            listFilters.push(s);
+            return builder;
+          },
           select: () => builder,
           top: () => builder,
           get: async () => handler(),
@@ -359,7 +364,7 @@ describe('processBatchCategory', () => {
         return builder;
       },
     } as unknown as Client;
-    return { client, postedBatches };
+    return { client, postedBatches, listFilters };
   }
 
   it('lists objects then fetches assignments via $batch (≤20 per request)', async () => {
@@ -411,6 +416,26 @@ describe('processBatchCategory', () => {
       intent: 'include',
       appIntent: 'required',
     });
+  });
+
+  it('passes listFilter to the list endpoint when configured', async () => {
+    const filteredConfig: BatchCategoryConfig = {
+      ...config,
+      listFilter: 'isAssigned eq true',
+    };
+    const { client, listFilters } = batchClient({
+      listPages: [[]],
+      batchResponses: [],
+    });
+
+    await processBatchCategory(client, filteredConfig, {
+      targetIds: new Set(['g1']),
+      selectedGroupId: 'g1',
+      parentGroupsById: new Map(),
+      signal: new AbortController().signal,
+    });
+
+    expect(listFilters).toEqual(['isAssigned eq true']);
   });
 
   it('tolerates per-item batch failures', async () => {

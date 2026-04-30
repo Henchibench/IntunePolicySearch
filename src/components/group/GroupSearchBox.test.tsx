@@ -3,15 +3,24 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { GroupSearchBox } from './GroupSearchBox';
 
+const mockExpand = vi.fn();
+
 vi.mock('@/hooks/useEntraGroupSearch', () => ({
-  useEntraGroupSearch: (q: string) => ({
-    matches:
+  useEntraGroupSearch: (q: string) => {
+    const matches =
       q.length >= 2
         ? [{ id: 'g1', displayName: 'Marketing-US', mail: 'mkt@x.com' }]
-        : [],
-    isLoading: false,
-    error: null,
-  }),
+        : [];
+    return {
+      matches,
+      // Pretend the server reports many more matches than the typeahead returned.
+      total: q.length >= 2 ? 42 : null,
+      isLoading: false,
+      error: null,
+      mode: 'typeahead' as const,
+      expandToFullList: mockExpand,
+    };
+  },
 }));
 
 describe('GroupSearchBox', () => {
@@ -37,5 +46,17 @@ describe('GroupSearchBox', () => {
     expect(
       screen.getByText(/keep typing/i),
     ).toBeInTheDocument();
+  });
+
+  it('renders a "Show all matches" sentinel when total exceeds matches and triggers expandToFullList on click', async () => {
+    const user = userEvent.setup();
+    mockExpand.mockClear();
+    render(<GroupSearchBox onSelect={() => {}} />);
+    await user.type(screen.getByPlaceholderText(/search groups/i), 'Mar');
+
+    const sentinel = await screen.findByText(/Show all matches for "Mar" \(42\)/);
+    await user.click(sentinel);
+
+    expect(mockExpand).toHaveBeenCalledTimes(1);
   });
 });

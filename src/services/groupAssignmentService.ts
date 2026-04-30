@@ -251,6 +251,7 @@ export interface BatchCategoryConfig {
   category: IntuneObjectCategory;
   listEndpoint: string;
   listSelect?: string;
+  listFilter?: string;
   assignmentsPathFor: (objectId: string) => string;
   extractName: (obj: any) => string;
   extractDescription?: (obj: any) => string | undefined;
@@ -278,11 +279,15 @@ export async function processBatchCategory(
 
   do {
     if (ctx.signal.aborted) throw new Error('aborted');
-    const builder = nextLink
-      ? client.api(nextLink)
-      : config.listSelect
-        ? client.api(config.listEndpoint).select(config.listSelect).top(PAGE_SIZE)
-        : client.api(config.listEndpoint).top(PAGE_SIZE);
+    let builder: ReturnType<Client['api']>;
+    if (nextLink) {
+      builder = client.api(nextLink);
+    } else {
+      builder = client.api(config.listEndpoint);
+      if (config.listFilter) builder = builder.filter(config.listFilter);
+      if (config.listSelect) builder = builder.select(config.listSelect);
+      builder = builder.top(PAGE_SIZE);
+    }
     const page = (await builder.get()) as {
       value: any[];
       '@odata.nextLink'?: string;
@@ -507,6 +512,7 @@ const BATCH_CATEGORY_CONFIGS: BatchCategoryConfig[] = [
     category: 'mobileApp',
     listEndpoint: '/deviceAppManagement/mobileApps',
     listSelect: 'id,displayName,lastModifiedDateTime',
+    listFilter: 'isAssigned eq true',
     assignmentsPathFor: (id) =>
       `/deviceAppManagement/mobileApps/${id}/assignments`,
     extractName: (o) => o.displayName,
