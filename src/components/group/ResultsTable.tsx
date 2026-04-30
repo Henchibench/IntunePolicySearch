@@ -5,6 +5,7 @@ import {
   getFilteredRowModel,
   getSortedRowModel,
   useReactTable,
+  type Column,
   type ColumnDef,
   type ColumnFiltersState,
   type SortingState,
@@ -205,7 +206,7 @@ function SortHeader({
   column,
   children,
 }: {
-  column: any;
+  column: Column<GroupAssignmentResult, unknown>;
   children: React.ReactNode;
 }) {
   return (
