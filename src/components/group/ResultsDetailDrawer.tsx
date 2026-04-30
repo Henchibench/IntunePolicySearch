@@ -3,7 +3,10 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Button } from '@/components/ui/button';
 import { GroupTypeBadge } from './GroupTypeBadge';
 import { Badge } from '@/components/ui/badge';
+import { PolicySettingsSection } from './PolicySettingsSection';
+import { usePolicySettings } from '@/hooks/usePolicySettings';
 import type { GroupAssignmentResult } from '@/types/graph';
+import { Separator } from '@/components/ui/separator';
 
 export interface ResultsDetailDrawerProps {
   row: GroupAssignmentResult | null;
@@ -13,10 +16,11 @@ export interface ResultsDetailDrawerProps {
 
 export function ResultsDetailDrawer({ row, open, onOpenChange }: ResultsDetailDrawerProps) {
   const [showRaw, setShowRaw] = useState(false);
+  const { settings, isLoading, error } = usePolicySettings(open ? row : null);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
+      <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
         {row && (
           <>
             <SheetHeader className="space-y-2">
@@ -55,6 +59,17 @@ export function ResultsDetailDrawer({ row, open, onOpenChange }: ResultsDetailDr
                   {new Date(row.lastModified).toLocaleString()}
                 </div>
               )}
+
+              <Separator />
+
+              <PolicySettingsSection
+                settings={settings}
+                isLoading={isLoading}
+                error={error}
+              />
+
+              <Separator />
+
               <Button
                 variant="outline"
                 size="sm"
