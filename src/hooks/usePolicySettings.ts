@@ -46,6 +46,10 @@ const DETAIL_ENDPOINTS: Partial<Record<IntuneObjectCategory, DetailEndpoint>> = 
       return settings;
     },
   },
+  mobileApp: {
+    path: (id) => `/deviceAppManagement/mobileApps/${id}`,
+    extractor: (data) => extractGenericPolicySettings(data),
+  },
   appProtection: {
     path: (id) => `/deviceAppManagement/managedAppPolicies/${id}`,
     extractor: (data) => extractGenericPolicySettings(data),

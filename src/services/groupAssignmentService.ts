@@ -444,10 +444,11 @@ export const BATCH_CATEGORY_CONFIGS: BatchCategoryConfig[] = [
   {
     category: 'mobileApp',
     listEndpoint: '/deviceAppManagement/mobileApps',
-    listSelect: 'id,displayName,lastModifiedDateTime',
+    listSelect: 'id,displayName,description,lastModifiedDateTime',
     assignmentsPathFor: (id) =>
       `/deviceAppManagement/mobileApps/${id}/assignments`,
     extractName: (o) => o.displayName,
+    extractDescription: (o) => o.description,
     extractLastModified: (o) => o.lastModifiedDateTime,
     extractPlatform: (o) =>
       classifyMobileApp(o['@odata.type'])?.platform,

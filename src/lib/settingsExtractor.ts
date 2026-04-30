@@ -38,6 +38,12 @@ const SKIP_FIELDS = new Set([
   'detectionScriptContent',
   'remediationScriptContent',
   'scriptContent',
+  'largeIcon',
+  'categories',
+  'dependentAppCount',
+  'supersedingAppCount',
+  'supersededAppCount',
+  'uploadState',
 ]);
 
 // ---------------------------------------------------------------------------
