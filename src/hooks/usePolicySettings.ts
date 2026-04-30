@@ -5,6 +5,8 @@ import type { GroupAssignmentResult, PolicySetting, IntuneObjectCategory } from 
 import {
   extractConfigurationPolicySettings,
   extractGenericPolicySettings,
+  extractScriptContent,
+  type ScriptBlock,
 } from '@/lib/settingsExtractor';
 
 interface DetailEndpoint {
@@ -80,6 +82,7 @@ const DETAIL_ENDPOINTS: Partial<Record<IntuneObjectCategory, DetailEndpoint>> = 
 
 export interface UsePolicySettingsResult {
   settings: PolicySetting[];
+  scripts: ScriptBlock[];
   isLoading: boolean;
   error: string | null;
 }
@@ -89,6 +92,7 @@ export function usePolicySettings(
 ): UsePolicySettingsResult {
   const { getAccessToken } = useAuth();
   const [settings, setSettings] = useState<PolicySetting[]>([]);
+  const [scripts, setScripts] = useState<ScriptBlock[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const getAccessTokenRef = useRef(getAccessToken);
@@ -98,6 +102,7 @@ export function usePolicySettings(
   useEffect(() => {
     if (aborter.current) aborter.current.abort();
     setSettings([]);
+    setScripts([]);
     setError(null);
 
     if (!row) {
@@ -132,6 +137,7 @@ export function usePolicySettings(
 
         const extracted = endpoint.extractor(data);
         setSettings(extracted);
+        setScripts(extractScriptContent(data));
       } catch (e: unknown) {
         if (!ac.signal.aborted) {
           setError(e instanceof Error ? e.message : 'Failed to load settings');
@@ -144,5 +150,5 @@ export function usePolicySettings(
     return () => ac.abort();
   }, [row?.id, row?.category]);
 
-  return { settings, isLoading, error };
+  return { settings, scripts, isLoading, error };
 }

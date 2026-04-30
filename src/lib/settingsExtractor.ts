@@ -35,7 +35,61 @@ const SKIP_FIELDS = new Set([
   'deviceStatuses',
   'userStatuses',
   'deviceSettingStateSummaries',
+  'detectionScriptContent',
+  'remediationScriptContent',
+  'scriptContent',
 ]);
+
+// ---------------------------------------------------------------------------
+// Script content extraction
+// ---------------------------------------------------------------------------
+
+export interface ScriptBlock {
+  label: string;
+  content: string;
+}
+
+/**
+ * Decode base64 script fields from a Graph API response object.
+ * Returns decoded PowerShell scripts for display.
+ *
+ * - deviceHealthScripts have `detectionScriptContent` and `remediationScriptContent`
+ * - deviceManagementScripts have `scriptContent`
+ */
+export function extractScriptContent(obj: Record<string, unknown>): ScriptBlock[] {
+  const scripts: ScriptBlock[] = [];
+
+  if (typeof obj.detectionScriptContent === 'string' && obj.detectionScriptContent) {
+    scripts.push({
+      label: 'Detection Script',
+      content: decodeBase64(obj.detectionScriptContent),
+    });
+  }
+
+  if (typeof obj.remediationScriptContent === 'string' && obj.remediationScriptContent) {
+    scripts.push({
+      label: 'Remediation Script',
+      content: decodeBase64(obj.remediationScriptContent),
+    });
+  }
+
+  if (typeof obj.scriptContent === 'string' && obj.scriptContent) {
+    scripts.push({
+      label: 'Script',
+      content: decodeBase64(obj.scriptContent),
+    });
+  }
+
+  return scripts;
+}
+
+function decodeBase64(encoded: string): string {
+  try {
+    return atob(encoded);
+  } catch {
+    return '[Could not decode script content]';
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Public helpers

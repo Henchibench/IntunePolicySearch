@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { GroupTypeBadge } from './GroupTypeBadge';
 import { Badge } from '@/components/ui/badge';
 import { PolicySettingsSection } from './PolicySettingsSection';
+import { ScriptContentSection } from './ScriptContentSection';
 import { usePolicySettings } from '@/hooks/usePolicySettings';
 import type { GroupAssignmentResult } from '@/types/graph';
 import { Separator } from '@/components/ui/separator';
@@ -16,7 +17,7 @@ export interface ResultsDetailDrawerProps {
 
 export function ResultsDetailDrawer({ row, open, onOpenChange }: ResultsDetailDrawerProps) {
   const [showRaw, setShowRaw] = useState(false);
-  const { settings, isLoading, error } = usePolicySettings(open ? row : null);
+  const { settings, scripts, isLoading, error } = usePolicySettings(open ? row : null);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -67,6 +68,8 @@ export function ResultsDetailDrawer({ row, open, onOpenChange }: ResultsDetailDr
                 isLoading={isLoading}
                 error={error}
               />
+
+              {scripts.length > 0 && <ScriptContentSection scripts={scripts} />}
 
               <Separator />
 

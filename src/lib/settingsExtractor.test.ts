@@ -5,6 +5,7 @@ import {
   extractSettingsFromObject,
   extractConfigurationPolicySettings,
   extractGenericPolicySettings,
+  extractScriptContent,
 } from './settingsExtractor';
 
 // ---------------------------------------------------------------------------
@@ -266,5 +267,47 @@ describe('extractGenericPolicySettings', () => {
     expect(pwdSetting.category).toBe('Authentication');
     const fwSetting = result.find(r => r.key === 'Firewall Enabled')!;
     expect(fwSetting.category).toBe('Security');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// extractScriptContent
+// ---------------------------------------------------------------------------
+
+describe('extractScriptContent', () => {
+  it('decodes base64 detection and remediation scripts from deviceHealthScript', () => {
+    const obj = {
+      id: 'abc',
+      displayName: 'Test Script',
+      detectionScriptContent: btoa('Write-Host "Detecting..."'),
+      remediationScriptContent: btoa('Write-Host "Remediating..."'),
+    };
+    const scripts = extractScriptContent(obj);
+    expect(scripts).toHaveLength(2);
+    expect(scripts[0].label).toBe('Detection Script');
+    expect(scripts[0].content).toBe('Write-Host "Detecting..."');
+    expect(scripts[1].label).toBe('Remediation Script');
+    expect(scripts[1].content).toBe('Write-Host "Remediating..."');
+  });
+
+  it('decodes base64 scriptContent from deviceManagementScript', () => {
+    const obj = {
+      id: 'xyz',
+      scriptContent: btoa('Get-Process | Out-File report.txt'),
+    };
+    const scripts = extractScriptContent(obj);
+    expect(scripts).toHaveLength(1);
+    expect(scripts[0].label).toBe('Script');
+    expect(scripts[0].content).toBe('Get-Process | Out-File report.txt');
+  });
+
+  it('returns empty array when no script fields present', () => {
+    const obj = { id: 'no-scripts', displayName: 'A Policy' };
+    expect(extractScriptContent(obj)).toEqual([]);
+  });
+
+  it('skips empty string script fields', () => {
+    const obj = { detectionScriptContent: '', remediationScriptContent: '' };
+    expect(extractScriptContent(obj)).toEqual([]);
   });
 });
