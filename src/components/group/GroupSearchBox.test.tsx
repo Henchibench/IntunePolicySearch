@@ -24,12 +24,13 @@ vi.mock('@/hooks/useEntraGroupSearch', () => ({
 }));
 
 describe('GroupSearchBox', () => {
-  it('shows matches and fires onSelect with the selected group', async () => {
+  it('clears the input and collapses the dropdown when a group is picked', async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
     render(<GroupSearchBox onSelect={onSelect} />);
 
-    await user.type(screen.getByPlaceholderText(/search groups/i), 'Mar');
+    const input = screen.getByPlaceholderText(/search groups/i);
+    await user.type(input, 'Mar');
     await user.click(await screen.findByText('Marketing-US'));
 
     expect(onSelect).toHaveBeenCalledWith({
@@ -37,6 +38,9 @@ describe('GroupSearchBox', () => {
       displayName: 'Marketing-US',
       mail: 'mkt@x.com',
     });
+    expect(input).toHaveValue('');
+    expect(screen.getByText(/keep typing/i)).toBeInTheDocument();
+    expect(screen.queryByText('Marketing-US')).not.toBeInTheDocument();
   });
 
   it('displays an empty hint for short queries', async () => {

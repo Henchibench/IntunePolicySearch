@@ -53,7 +53,10 @@ export function GroupSearchBox({ onSelect, autoFocus = false }: GroupSearchBoxPr
                   <CommandItem
                     key={g.id}
                     value={g.id}
-                    onSelect={() => onSelect(g)}
+                    onSelect={() => {
+                      onSelect(g);
+                      setQuery('');
+                    }}
                     className="flex flex-col items-start gap-0.5"
                   >
                     <span className="font-medium">{g.displayName}</span>
