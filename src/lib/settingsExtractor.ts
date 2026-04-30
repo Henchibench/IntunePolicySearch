@@ -206,7 +206,7 @@ export function extractSettingsFromObject(
     settings.push({
       category,
       key: formatSettingKey(key),
-      value: typeof value === 'object' ? JSON.stringify(value) : String(value),
+      value: typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value),
       description: '',
     });
   }
@@ -263,6 +263,7 @@ function extractFromInstance(
   settingDefinitions: any[],
 ): PolicySetting[] {
   const results: PolicySetting[] = [];
+  const childResults: PolicySetting[] = [];
   const settingId: string = instance.settingDefinitionId || '';
 
   const definition = settingDefinitions.find((d: any) => d.id === settingId) ?? null;
@@ -287,7 +288,7 @@ function extractFromInstance(
     // Recurse into children
     const children: any[] = instance.choiceSettingValue.children ?? [];
     for (const child of children) {
-      results.push(
+      childResults.push(
         ...extractFromInstance(
           child,
           settingDefinitions, // pass the same definitions so children can find their metadata
@@ -296,14 +297,20 @@ function extractFromInstance(
     }
   } else if (instance.simpleSettingValue?.value !== undefined) {
     displayValue = String(instance.simpleSettingValue.value);
+  } else if (instance.simpleSettingCollectionValue && Array.isArray(instance.simpleSettingCollectionValue)) {
+    displayValue = (instance.simpleSettingCollectionValue as any[])
+      .map((v: any) => String(v.value ?? v))
+      .join(', ');
   }
 
+  // Push parent before children so the UI renders them in natural order
   results.push({
     category,
     key: settingName,
     value: displayValue,
     description,
   });
+  results.push(...childResults);
 
   return results;
 }
@@ -348,7 +355,7 @@ export function extractGenericPolicySettings(
     settings.push({
       category,
       key: formatSettingKey(key),
-      value: typeof value === 'object' ? JSON.stringify(value) : String(value),
+      value: typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value),
       description: '',
     });
   }
