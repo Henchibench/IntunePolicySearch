@@ -126,7 +126,18 @@ export async function fetchGroupAssignments(
   const runBatchCategory = async (config: BatchCategoryConfig) => {
     onCategoryStatus(config.category, { status: 'loading' });
     try {
-      const rows = await processBatchCategory(client, config, ctx);
+      let rows = await processBatchCategory(client, config, ctx);
+      if (config.category === 'deviceConfiguration') {
+        rows = deriveUpdateRingRows(rows);
+        const updateRingRows = rows.filter((r) => r.category === 'updateRing');
+        rows = rows.filter((r) => r.category !== 'updateRing');
+        onResults('updateRing', updateRingRows);
+        onCategoryStatus('updateRing', {
+          status: 'done',
+          count: updateRingRows.length,
+        });
+        allRows.push(...updateRingRows);
+      }
       onResults(config.category, rows);
       onCategoryStatus(config.category, {
         status: 'done',
@@ -134,10 +145,17 @@ export async function fetchGroupAssignments(
       });
       allRows.push(...rows);
     } catch (e: any) {
+      const errorMessage = humanizeError(e);
       onCategoryStatus(config.category, {
         status: 'error',
-        error: humanizeError(e),
+        error: errorMessage,
       });
+      if (config.category === 'deviceConfiguration') {
+        onCategoryStatus('updateRing', {
+          status: 'error',
+          error: errorMessage,
+        });
+      }
     }
   };
 
