@@ -1,5 +1,6 @@
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { EditorialCard } from "@/components/ui/EditorialCard";
+import { EyebrowLabel } from "@/components/ui/EyebrowLabel";
 
 interface TypeData {
   type: string;
@@ -11,54 +12,61 @@ interface PolicyTypeBarChartProps {
   data: TypeData[];
 }
 
-export function PolicyTypeBarChart({ data }: PolicyTypeBarChartProps) {
-  // Shorten labels for display
-  const shortLabels: Record<string, string> = {
-    "Device Configuration": "Device Config",
-    "Compliance Policy": "Compliance",
-    "App Protection": "App Protection",
-    "Configuration Policy": "Settings Catalog",
-  };
+const shortLabels: Record<string, string> = {
+  "Device Configuration": "Device Config",
+  "Compliance Policy": "Compliance",
+  "App Protection": "App Protection",
+  "Configuration Policy": "Settings Catalog",
+  "Group Policy": "Group Policy",
+  "Security Baseline": "Sec. Baseline",
+  "Enrollment Configuration": "Enrollment",
+};
 
+export function PolicyTypeBarChart({ data }: PolicyTypeBarChartProps) {
   const chartData = data.map((item) => ({
     ...item,
     shortType: shortLabels[item.type] || item.type,
   }));
 
   return (
-    <Card className="h-full">
-      <CardHeader>
-        <CardTitle className="text-lg font-semibold">Policies by Type</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="h-[320px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} layout="vertical" margin={{ left: 20, right: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
-              <XAxis type="number" />
-              <YAxis
-                type="category"
-                dataKey="shortType"
-                width={100}
-                tick={{ fontSize: 12 }}
-              />
-              <Tooltip
-                formatter={(value: number) => [value, "Policies"]}
-                contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "8px",
-                }}
-              />
-              <Bar dataKey="count" radius={[0, 4, 4, 0]}>
-                {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </CardContent>
-    </Card>
+    <EditorialCard radius="card" padding="lg" className="flex h-full flex-col">
+      <EyebrowLabel>Policies by Type</EyebrowLabel>
+
+      <div className="mt-4 h-[280px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={chartData} layout="vertical" margin={{ left: 0, right: 8 }}>
+            <XAxis
+              type="number"
+              tick={{ fontSize: 11, fill: "#696969" }}
+              axisLine={false}
+              tickLine={false}
+            />
+            <YAxis
+              type="category"
+              dataKey="shortType"
+              width={100}
+              tick={{ fontSize: 11, fontWeight: 450, fill: "#141413" }}
+              axisLine={false}
+              tickLine={false}
+            />
+            <Tooltip
+              formatter={(value: number) => [value, "Policies"]}
+              contentStyle={{
+                backgroundColor: "#FCFBFA",
+                border: "1px solid rgba(20,20,19,0.08)",
+                borderRadius: "20px",
+                fontSize: "12px",
+                fontWeight: 450,
+              }}
+            />
+            <Bar dataKey="count" radius={[0, 20, 20, 0]} barSize={18}>
+              {chartData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </EditorialCard>
   );
 }
