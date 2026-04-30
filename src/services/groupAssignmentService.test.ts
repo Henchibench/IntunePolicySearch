@@ -1,12 +1,26 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Client } from '@microsoft/microsoft-graph-client';
 import { resolveTargetGroupSet } from './groupAssignmentService';
-import { EXPAND_CATEGORY_CONFIGS, BATCH_CATEGORY_CONFIGS } from './groupAssignmentService';
+import { BATCH_CATEGORY_CONFIGS } from './groupAssignmentService';
 
 describe('category registration', () => {
-  it('configurationPolicy uses BATCH mode (not EXPAND)', () => {
-    expect(EXPAND_CATEGORY_CONFIGS.map((c) => c.category)).not.toContain('configurationPolicy');
-    expect(BATCH_CATEGORY_CONFIGS.map((c) => c.category)).toContain('configurationPolicy');
+  it('every category routes through BATCH mode', () => {
+    const expected = [
+      'configurationPolicy',
+      'deviceConfiguration',
+      'compliancePolicy',
+      'appProtection',
+      'appConfiguration',
+      'platformScript',
+      'remediationScript',
+      'complianceScript',
+      'autopilotProfile',
+      'enrollmentConfig',
+      'mobileApp',
+      'endpointSecurity',
+    ];
+    const batch = BATCH_CATEGORY_CONFIGS.map((c) => c.category);
+    expect(batch).toEqual(expect.arrayContaining(expected));
   });
 
   it('configurationPolicy uses /beta endpoint with isAssigned filter and select', () => {
@@ -17,34 +31,12 @@ describe('category registration', () => {
     expect(cfg.assignmentsPathFor('p1')).toBe('/beta/deviceManagement/configurationPolicies/p1/assignments');
   });
 
-  it('deviceConfiguration uses BATCH mode (not EXPAND)', () => {
-    expect(EXPAND_CATEGORY_CONFIGS.map((c) => c.category)).not.toContain('deviceConfiguration');
-    expect(BATCH_CATEGORY_CONFIGS.map((c) => c.category)).toContain('deviceConfiguration');
-  });
-
   it('deviceConfiguration uses v1.0 endpoint with @odata.type in select', () => {
     const cfg = BATCH_CATEGORY_CONFIGS.find((c) => c.category === 'deviceConfiguration')!;
     expect(cfg.listEndpoint).toBe('/deviceManagement/deviceConfigurations');
-    expect(cfg.listFilter).toBeUndefined();  // no isAssigned property on this resource
+    expect(cfg.listFilter).toBeUndefined();
     expect(cfg.listSelect).toBe('id,displayName,description,lastModifiedDateTime,@odata.type');
     expect(cfg.assignmentsPathFor('p1')).toBe('/deviceManagement/deviceConfigurations/p1/assignments');
-  });
-
-  it('all remaining categories use BATCH mode (not EXPAND)', () => {
-    const expected = [
-      'compliancePolicy',
-      'appProtection',
-      'appConfiguration',
-      'platformScript',
-      'remediationScript',
-      'complianceScript',
-      'autopilotProfile',
-      'enrollmentConfig',
-    ];
-    const batch = BATCH_CATEGORY_CONFIGS.map((c) => c.category);
-    const expand = EXPAND_CATEGORY_CONFIGS.map((c) => c.category);
-    expect(batch).toEqual(expect.arrayContaining(expected));
-    for (const c of expected) expect(expand).not.toContain(c);
   });
 });
 

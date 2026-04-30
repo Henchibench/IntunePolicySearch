@@ -87,43 +87,6 @@ export async function fetchGroupAssignments(
 
   const allRows: GroupAssignmentResult[] = [];
 
-  const runExpandCategory = async (config: ExpandCategoryConfig) => {
-    onCategoryStatus(config.category, { status: 'loading' });
-    try {
-      let rows = await processExpandCategory(client, config, ctx);
-      if (config.category === 'deviceConfiguration') {
-        rows = deriveUpdateRingRows(rows);
-        const updateRingRows = rows.filter((r) => r.category === 'updateRing');
-        rows = rows.filter((r) => r.category !== 'updateRing');
-        onResults('updateRing', updateRingRows);
-        onCategoryStatus('updateRing', {
-          status: 'done',
-          count: updateRingRows.length,
-        });
-        allRows.push(...updateRingRows);
-      }
-      onResults(config.category, rows);
-      onCategoryStatus(config.category, {
-        status: 'done',
-        count: rows.length,
-      });
-      allRows.push(...rows);
-    } catch (e: any) {
-      const errorMessage = humanizeError(e);
-      onCategoryStatus(config.category, {
-        status: 'error',
-        error: errorMessage,
-      });
-      if (config.category === 'deviceConfiguration') {
-        // updateRing is derived from deviceConfiguration; if that fails, mark updateRing too.
-        onCategoryStatus('updateRing', {
-          status: 'error',
-          error: errorMessage,
-        });
-      }
-    }
-  };
-
   const runBatchCategory = async (config: BatchCategoryConfig) => {
     onCategoryStatus(config.category, { status: 'loading' });
     try {
@@ -160,10 +123,9 @@ export async function fetchGroupAssignments(
     }
   };
 
-  await Promise.allSettled([
-    ...EXPAND_CATEGORY_CONFIGS.map((c) => runExpandCategory(c)),
-    ...BATCH_CATEGORY_CONFIGS.map((c) => runBatchCategory(c)),
-  ]);
+  await Promise.allSettled(
+    BATCH_CATEGORY_CONFIGS.map((c) => runBatchCategory(c)),
+  );
 
   if (signal.aborted) return;
 
@@ -456,9 +418,17 @@ export async function resolveFilterDisplayNames(
 
 // ============================================================================
 // Category configurations for fetchGroupAssignments
+//
+// All Intune /deviceManagement and /deviceAppManagement resources require a
+// separate /{id}/assignments call to retrieve group assignments — the list
+// endpoints do NOT support ?$expand=assignments. The expand parameter is
+// silently ignored, returning rows whose `assignments` field is absent and
+// causing every category to surface as "done · 0" with no error indicator.
+// When adding a new category, always check the resource's List API page on
+// Microsoft Learn and use the BATCH pattern below. The standalone
+// `processExpandCategory` helper and `ExpandCategoryConfig` type remain
+// exported for tests and any future endpoint that genuinely supports expand.
 // ============================================================================
-
-export const EXPAND_CATEGORY_CONFIGS: ExpandCategoryConfig[] = [];
 
 export const BATCH_CATEGORY_CONFIGS: BatchCategoryConfig[] = [
   {
@@ -595,7 +565,6 @@ export const BATCH_CATEGORY_CONFIGS: BatchCategoryConfig[] = [
 ];
 
 const ALL_CATEGORIES_FOR_PROGRESS: IntuneObjectCategory[] = [
-  ...EXPAND_CATEGORY_CONFIGS.map((c) => c.category),
   ...BATCH_CATEGORY_CONFIGS.map((c) => c.category),
   'updateRing',
 ];
