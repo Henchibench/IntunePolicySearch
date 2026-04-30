@@ -180,6 +180,9 @@ export function ResultsTable({
     columns,
     state: { sorting, columnFilters, globalFilter },
     onSortingChange: setSorting,
+    // The chip rows drive filters directly via onFiltersChange — react-table
+    // never mutates columnFilters from any built-in UI here. Kept as a fallback
+    // translator in case a column-header filter affordance is added later.
     onColumnFiltersChange: (updater) => {
       const next = typeof updater === 'function' ? updater(columnFilters) : updater;
       const newFilters: FilterState = {
