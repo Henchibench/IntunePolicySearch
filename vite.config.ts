@@ -8,6 +8,9 @@ export default defineConfig(({ mode }) => ({
     host: "localhost",
     port: 8080,
     historyApiFallback: true,
+    // WSL2 cannot reliably watch /mnt/c via inotify; fall back to polling so
+    // edits made from either side trigger HMR.
+    watch: { usePolling: true, interval: 300 },
   },
   plugins: [react()],
   resolve: {
