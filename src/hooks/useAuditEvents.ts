@@ -12,7 +12,10 @@ export function buildAuditFilter(
   to: Date,
   categories: string[],
 ): string {
-  let filter = `activityDateTime gt ${from.toISOString()} and activityDateTime lt ${to.toISOString()}`;
+  // Normalize 'to' to end-of-day (UTC) so calendar-picked dates include the full day
+  const toEnd = new Date(to);
+  toEnd.setUTCHours(23, 59, 59, 999);
+  let filter = `activityDateTime gt ${from.toISOString()} and activityDateTime lt ${toEnd.toISOString()}`;
 
   if (categories.length > 0) {
     const catClauses = categories.map(c => `category eq '${c}'`).join(' or ');
@@ -29,7 +32,7 @@ export interface UseAuditEventsResult {
   refetch: () => void;
 }
 
-export function useAuditEvents(filters: AuditFilters): UseAuditEventsResult {
+export function useAuditEvents(filters: AuditFilters, enabled = true): UseAuditEventsResult {
   const { getAccessToken } = useAuth();
   const [events, setEvents] = useState<AuditEvent[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -43,6 +46,10 @@ export function useAuditEvents(filters: AuditFilters): UseAuditEventsResult {
 
   useEffect(() => {
     if (aborter.current) aborter.current.abort();
+    if (!enabled) {
+      setIsLoading(false);
+      return;
+    }
     const ac = new AbortController();
     aborter.current = ac;
     setIsLoading(true);
@@ -83,7 +90,7 @@ export function useAuditEvents(filters: AuditFilters): UseAuditEventsResult {
 
     return () => ac.abort();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.from.getTime(), filters.to.getTime(), filters.categories.join(','), fetchTrigger]);
+  }, [filters.from.getTime(), filters.to.getTime(), filters.categories.join(','), fetchTrigger, enabled]);
 
   return { events, isLoading, error, refetch };
 }

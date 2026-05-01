@@ -55,7 +55,7 @@ export default function Audit() {
   }, [isAuthenticated]);
 
   // Fetch events
-  const { events, isLoading, error } = useAuditEvents(filters);
+  const { events, isLoading, error } = useAuditEvents(filters, isAuthenticated);
 
   // Resolve actor names
   const { actors } = useActorResolver(events);
@@ -151,7 +151,7 @@ export default function Audit() {
 
           {/* Error */}
           {error && (
-            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            <div className="rounded-2xl border border-signal/30 bg-signal/[0.10] p-3 text-sm text-signal-light">
               {error}
             </div>
           )}
