@@ -9,6 +9,7 @@ const navItems = [
   { to: "/policies", label: "Policies" },
   { to: "/dashboard", label: "Dashboard" },
   { to: "/dashboard/compliance", label: "Compliance" },
+  { to: "/audit", label: "Audit" },
   { to: "/groups", label: "Groups" },
 ];
 
