@@ -10,11 +10,13 @@ export class CacheService {
    */
   static savePolicies(policies: Policy[]): void {
     try {
+      // Strip rawGraphData to stay within localStorage's ~5 MB limit
+      const lightweight = policies.map(({ rawGraphData, ...rest }) => rest);
       const cacheData = {
-        policies,
+        policies: lightweight,
         timestamp: Date.now()
       };
-      
+
       localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
       console.log(`Cached ${policies.length} policies to localStorage`);
     } catch (error) {
