@@ -14,6 +14,7 @@ import Dashboard from "./pages/Dashboard";
 import DashboardCompliance from "./pages/DashboardCompliance";
 import GroupLookup from "./pages/GroupLookup";
 import Audit from "@/pages/Audit";
+import Drivers from "@/pages/Drivers";
 
 const queryClient = new QueryClient();
 const msalInstance = new PublicClientApplication(msalConfig);
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/dashboard/compliance" element={<DashboardCompliance />} />
             <Route path="/groups" element={<GroupLookup />} />
             <Route path="/audit" element={<Audit />} />
+            <Route path="/drivers" element={<Drivers />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </TooltipProvider>

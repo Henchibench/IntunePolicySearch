@@ -10,6 +10,7 @@ const navItems = [
   { to: "/dashboard", label: "Dashboard" },
   { to: "/dashboard/compliance", label: "Compliance" },
   { to: "/audit", label: "Audit" },
+  { to: "/drivers", label: "Drivers" },
   { to: "/groups", label: "Groups" },
 ];
 
