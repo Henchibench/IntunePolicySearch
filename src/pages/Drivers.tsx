@@ -67,7 +67,7 @@ export default function Drivers() {
   const [selected, setSelected] = useState<Driver | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const { drivers, profiles, catalog, isLoading, error } = useDrivers(isAuthenticated);
+  const { drivers, profiles, catalog, isLoading, error, inventoryErrors } = useDrivers(isAuthenticated);
 
   const manufacturers = useMemo(
     () => Array.from(new Set(drivers.map((d) => d.manufacturer))).sort(),
@@ -160,6 +160,12 @@ export default function Drivers() {
             </div>
           )}
 
+          {inventoryErrors.size > 0 && (
+            <div className="rounded-2xl border border-amber-300/40 bg-amber-50 p-3 text-sm text-amber-900">
+              Failed to load drivers for {inventoryErrors.size} profile{inventoryErrors.size === 1 ? '' : 's'}. Some data may be incomplete.
+            </div>
+          )}
+
           {isLoading && (
             <div className="py-12 text-center text-sm text-slate">Loading driver updates…</div>
           )}
@@ -183,7 +189,12 @@ export default function Drivers() {
             <>
               {pivot === 'all' && <DriverTable drivers={filtered} onDriverClick={handleClick} />}
               {pivot === 'byPolicy' && (
-                <DriverByPolicy profiles={profiles} drivers={filtered} onDriverClick={handleClick} />
+                <DriverByPolicy
+                  profiles={profiles}
+                  drivers={filtered}
+                  onDriverClick={handleClick}
+                  inventoryErrors={inventoryErrors}
+                />
               )}
             </>
           )}

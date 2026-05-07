@@ -41,8 +41,11 @@ export function buildDrivers(
         };
         grouped.set(groupKey, driver);
       } else {
-        driver.applicableDeviceCount += inv.applicableDeviceCount;
-        driver.deviceCount += inv.deviceCount;
+        // Take the max across policies rather than summing — summing double-counts
+        // devices that are in scope for multiple rings. Math.max is a lower-bound
+        // approximation but matches the Intune portal's per-policy view more closely.
+        driver.applicableDeviceCount = Math.max(driver.applicableDeviceCount, inv.applicableDeviceCount);
+        driver.deviceCount = Math.max(driver.deviceCount, inv.deviceCount);
       }
       driver.policies.push({
         profileId: profile.id,

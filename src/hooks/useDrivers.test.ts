@@ -56,6 +56,7 @@ describe('buildDrivers', () => {
     expect(drivers).toHaveLength(1);
     expect(drivers[0].policies).toHaveLength(2);
     expect(drivers[0].policies.map(p => p.profileName).sort()).toEqual(['Ring 1', 'Ring 2']);
+    expect(drivers[0].applicableDeviceCount).toBe(5);  // Max of (5, 5), not sum (10)
   });
 
   it('separates rows for different versions of the same driver', () => {

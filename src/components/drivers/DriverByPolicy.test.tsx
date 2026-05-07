@@ -52,4 +52,19 @@ describe('DriverByPolicy', () => {
     fireEvent.click(screen.getByRole('row', { name: /^A$/ }));
     expect(handler).toHaveBeenCalled();
   });
+
+  it('shows per-profile error when inventoryErrors contains the profile id', () => {
+    const profiles = [profile('p1', 'Ring 1')];
+    const drivers = [driver('A', 'p1', 'Ring 1')];
+    const inventoryErrors = new Map([['p1', 'Network timeout']]);
+    render(
+      <DriverByPolicy
+        profiles={profiles}
+        drivers={drivers}
+        onDriverClick={() => {}}
+        inventoryErrors={inventoryErrors}
+      />
+    );
+    expect(screen.getByText(/Failed to load drivers for this profile/)).toBeInTheDocument();
+  });
 });

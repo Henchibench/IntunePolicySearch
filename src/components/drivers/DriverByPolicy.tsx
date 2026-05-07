@@ -8,6 +8,7 @@ interface Props {
   profiles: DriverProfile[];
   drivers: Driver[];
   onDriverClick: (driver: Driver) => void;
+  inventoryErrors?: Map<string, string>;
 }
 
 interface PolicyGroup {
@@ -40,7 +41,7 @@ function buildGroups(profiles: DriverProfile[], drivers: Driver[]): PolicyGroup[
   return groups.sort((a, b) => b.needsReviewCount - a.needsReviewCount);
 }
 
-export function DriverByPolicy({ profiles, drivers, onDriverClick }: Props) {
+export function DriverByPolicy({ profiles, drivers, onDriverClick, inventoryErrors = new Map() }: Props) {
   const groups = buildGroups(profiles, drivers);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const toggle = (id: string) => {
@@ -70,7 +71,11 @@ export function DriverByPolicy({ profiles, drivers, onDriverClick }: Props) {
                 <span className="font-medium text-ink">{g.profile.displayName}</span>
                 <Badge variant="outline">{g.profile.approvalType === 'manual' ? 'Manual' : 'Automatic'}</Badge>
               </div>
-              <span className="text-xs text-slate">{summary}</span>
+              {inventoryErrors.has(g.profile.id) ? (
+                <span className="text-xs text-red-600">Failed to load drivers for this profile</span>
+              ) : (
+                <span className="text-xs text-slate">{summary}</span>
+              )}
             </button>
             {isOpen && (
               <div className="border-t border-border p-2">
