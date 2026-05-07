@@ -1,4 +1,4 @@
-import { contextBridge } from 'electron';
+import { contextBridge, ipcRenderer } from 'electron';
 
 // Read config from additionalArguments passed by the main process
 // This is synchronous and available before any page scripts run
@@ -15,3 +15,14 @@ contextBridge.exposeInMainWorld('__INTUNE_CONFIG__', {
 });
 
 contextBridge.exposeInMainWorld('__IS_ELECTRON__', true);
+
+contextBridge.exposeInMainWorld('driverCatalog', {
+  getStatus: () => ipcRenderer.invoke('driver-catalog:get-status'),
+  getEntries: () => ipcRenderer.invoke('driver-catalog:get-entries'),
+  sync: () => ipcRenderer.invoke('driver-catalog:sync'),
+  onSyncProgress: (cb: (data: { bytesReceived: number; totalBytes: number | null }) => void) => {
+    const listener = (_e: Electron.IpcRendererEvent, data: { bytesReceived: number; totalBytes: number | null }) => cb(data);
+    ipcRenderer.on('driver-catalog:sync-progress', listener);
+    return () => ipcRenderer.removeListener('driver-catalog:sync-progress', listener);
+  },
+});
