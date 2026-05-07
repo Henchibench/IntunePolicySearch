@@ -48,29 +48,32 @@ async function main() {
   console.log(`Downloading ${CATALOG_URL} → ${tmpCab}`);
   await downloadToFile(CATALOG_URL, tmpCab);
 
-  console.log('Extracting XML from CAB');
-  const xml = await extractXmlFromCab(tmpCab);
-  fs.unlinkSync(tmpCab);
+  try {
+    console.log('Extracting XML from CAB');
+    const xml = await extractXmlFromCab(tmpCab);
 
-  console.log('Parsing XML');
-  const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' });
-  const parsed = parser.parse(xml);
+    console.log('Parsing XML');
+    const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' });
+    const parsed = parser.parse(xml);
 
-  console.log('Normalizing entries');
-  const entries = normalizeCatalogXml(parsed, 'Dell Inc.');
-  console.log(`Normalized ${entries.length} entries`);
+    console.log('Normalizing entries');
+    const entries = normalizeCatalogXml(parsed, 'Dell Inc.');
+    console.log(`Normalized ${entries.length} entries`);
 
-  fs.mkdirSync(PUBLIC_DIR, { recursive: true });
-  fs.writeFileSync(OUT_JSON, JSON.stringify(entries));
-  fs.writeFileSync(
-    OUT_META,
-    JSON.stringify({
-      lastBaked: new Date().toISOString(),
-      entryCount: entries.length,
-      catalogSource: CATALOG_URL,
-    })
-  );
-  console.log(`Wrote ${OUT_JSON} and ${OUT_META}`);
+    fs.mkdirSync(PUBLIC_DIR, { recursive: true });
+    fs.writeFileSync(OUT_JSON, JSON.stringify(entries));
+    fs.writeFileSync(
+      OUT_META,
+      JSON.stringify({
+        lastBaked: new Date().toISOString(),
+        entryCount: entries.length,
+        catalogSource: CATALOG_URL,
+      })
+    );
+    console.log(`Wrote ${OUT_JSON} and ${OUT_META}`);
+  } finally {
+    fs.rmSync(tmpCab, { force: true });
+  }
 }
 
 main().catch((err) => {
