@@ -3,10 +3,12 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as https from 'node:https';
 import { tmpdir } from 'node:os';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import { XMLParser } from 'fast-xml-parser';
-// @ts-expect-error — `cab` ships without types
-import * as cab from 'cab';
 import { normalizeCatalogXml } from './lib/dell-catalog-normalize.js';
+
+const execFileAsync = promisify(execFile);
 
 const CATALOG_URL = 'https://downloads.dell.com/catalog/CatalogPC.cab';
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
@@ -32,15 +34,28 @@ function downloadToFile(url: string, dest: string): Promise<void> {
 }
 
 async function extractXmlFromCab(cabPath: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    cab.extract(cabPath, (err: Error | null, files: { name: string; data: Buffer }[]) => {
-      if (err) return reject(err);
-      const xmlEntry = files.find((f) => /\.xml$/i.test(f.name));
-      if (!xmlEntry) return reject(new Error('No XML file found inside CAB'));
-      // CatalogPC.xml ships as UTF-16 LE
-      resolve(xmlEntry.data.toString('utf16le'));
-    });
-  });
+  // Uses Windows built-in expand.exe. From WSL, this resolves via the Windows
+  // PATH if expand.exe is reachable. On non-Windows hosts, this script will
+  // fail with ENOENT; in that case, regenerate `public/driver-catalog.json`
+  // manually by running the Electron app's "Sync catalog" button and copying
+  // `<userData>/driver-catalog/dell.json` to `public/`.
+  const outDir = path.join(tmpdir(), `cab-extract-${Date.now()}`);
+  fs.mkdirSync(outDir, { recursive: true });
+
+  try {
+    await execFileAsync('expand.exe', ['-F:*.xml', cabPath, outDir]);
+
+    const files = fs.readdirSync(outDir);
+    const xmlFile = files.find((f) => /\.xml$/i.test(f));
+    if (!xmlFile) {
+      throw new Error('No XML file found inside CAB after extraction');
+    }
+    const xmlPath = path.join(outDir, xmlFile);
+    // CatalogPC.xml ships as UTF-16 LE
+    return fs.readFileSync(xmlPath).toString('utf16le');
+  } finally {
+    try { fs.rmSync(outDir, { recursive: true, force: true }); } catch { /* swallow */ }
+  }
 }
 
 async function main() {

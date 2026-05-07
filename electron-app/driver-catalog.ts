@@ -2,11 +2,13 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as https from 'node:https';
 import { tmpdir } from 'node:os';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import { app, ipcMain, BrowserWindow } from 'electron';
 import { XMLParser } from 'fast-xml-parser';
-// @ts-expect-error — `cab` ships without types
-import * as cab from 'cab';
 import { normalizeCatalogXml } from './lib/dell-catalog-normalize';
+
+const execFileAsync = promisify(execFile);
 
 const CATALOG_URL = 'https://downloads.dell.com/catalog/CatalogPC.cab';
 
@@ -87,14 +89,27 @@ function downloadWithProgress(
 }
 
 async function extractXml(cabPath: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    cab.extract(cabPath, (err: Error | null, files: { name: string; data: Buffer }[]) => {
-      if (err) return reject(err);
-      const xmlEntry = files.find((f) => /\.xml$/i.test(f.name));
-      if (!xmlEntry) return reject(new Error('No XML file found inside CAB'));
-      resolve(xmlEntry.data.toString('utf16le'));
-    });
-  });
+  // Use Windows built-in expand.exe (ships with every Windows install).
+  // The Electron app is Windows-only per electron-builder config.
+  const outDir = path.join(tmpdir(), `cab-extract-${Date.now()}`);
+  fs.mkdirSync(outDir, { recursive: true });
+
+  try {
+    // expand -F:*.xml <cab> <outDir>  → extracts only .xml entries
+    await execFileAsync('expand.exe', ['-F:*.xml', cabPath, outDir]);
+
+    const files = fs.readdirSync(outDir);
+    const xmlFile = files.find((f) => /\.xml$/i.test(f));
+    if (!xmlFile) {
+      throw new Error('No XML file found inside CAB after extraction');
+    }
+    const xmlPath = path.join(outDir, xmlFile);
+    // CatalogPC.xml ships as UTF-16 LE
+    return fs.readFileSync(xmlPath).toString('utf16le');
+  } finally {
+    // Best-effort cleanup of the extraction directory
+    try { fs.rmSync(outDir, { recursive: true, force: true }); } catch { /* swallow */ }
+  }
 }
 
 async function syncCatalog(window: BrowserWindow | null) {
