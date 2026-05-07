@@ -17,7 +17,9 @@
     "dist:win": "npm run build && npx electron-builder --win"
   },
   "dependencies": {
+    "cab": "^1.0.0",
     "electron-store": "^8.2.0",
+    "fast-xml-parser": "^5.7.3",
     "serve-handler": "^6.1.6"
   },
   "devDependencies": {
@@ -42,11 +44,15 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "portable",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ]
     },

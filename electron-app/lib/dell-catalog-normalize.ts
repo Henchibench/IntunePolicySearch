@@ -1,7 +1,21 @@
-// IMPORTANT: This file must stay in sync with `electron-app/lib/dell-catalog-normalize.ts`.
-// The duplicate exists because crossing the electron-app rootDir boundary breaks tsc.
-// Any change here MUST be mirrored there (and vice versa).
-import type { CatalogEntry } from '../../src/types/drivers';
+// IMPORTANT: This file must stay in sync with `scripts/lib/dell-catalog-normalize.ts`.
+// The duplicate exists to satisfy electron-app's tsc rootDir without widening it (which
+// would shift the dist-electron/ output layout). Any change here MUST be mirrored there
+// (and vice versa). The type below mirrors `CatalogEntry` in `src/types/drivers.ts`.
+
+interface CatalogEntry {
+  manufacturer: string;
+  driverClass: string;
+  name: string;
+  version: string | null;
+  releaseDate: string | null;
+  criticality: 'Urgent' | 'Recommended' | 'Optional' | 'Other';
+  fixes: string[];
+  knownIssues: string[];
+  supportedModels: string[];
+  supportedOperatingSystems: string[];
+  releaseNotesUrl: string | null;
+}
 
 export function buildDriverKey(manufacturer: string, driverClass: string, name: string): string {
   const norm = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
@@ -38,7 +52,7 @@ interface SoftwareComponentNode {
   Criticality?: { '@_value'?: string } | undefined;
   ImportantInfo?: { URL?: string } | undefined;
   SupportedSystems?: {
-    Brand?: { Model?: unknown | unknown[] } | { Model?: unknown }[];
+    Brand?: { Model?: unknown } | { Model?: unknown }[];
   };
   SupportedOperatingSystems?: { OperatingSystem?: unknown | unknown[] };
   Fixes?: { Fix?: unknown | unknown[] };

@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as http from 'http';
 import Store from 'electron-store';
 import handler from 'serve-handler';
+import { registerDriverCatalogIpc } from './driver-catalog';
 
 const store = new Store({
   schema: {
@@ -242,6 +243,8 @@ ipcMain.handle('launch-app', async () => {
   await loadApp();
   return true;
 });
+
+registerDriverCatalogIpc();
 
 // App lifecycle
 app.whenReady().then(createWindow);
