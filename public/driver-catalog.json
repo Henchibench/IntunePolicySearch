@@ -1,0 +1,15 @@
+[
+  {
+    "manufacturer": "Dell Inc.",
+    "driverClass": "Video",
+    "name": "Sample Intel Graphics Driver",
+    "version": "0.0.0.0",
+    "releaseDate": "2025-01-01",
+    "criticality": "Recommended",
+    "fixes": ["Stub entry — replace by running `npm run fetch-catalog`."],
+    "knownIssues": [],
+    "supportedModels": ["Sample Model"],
+    "supportedOperatingSystems": ["Microsoft Windows 11"],
+    "releaseNotesUrl": null
+  }
+]
