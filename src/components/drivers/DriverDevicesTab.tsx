@@ -1,7 +1,12 @@
+import { useMemo } from 'react';
 import { formatDistanceToNow } from 'date-fns';
+import { ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useDriverApplicableDevices } from '@/hooks/useDriverApplicableDevices';
+import { useAuth } from '@/hooks/useAuth';
+import { useManagedDevices } from '@/hooks/useManagedDevices';
+import { enrichWithDeviceMetadata } from '@/hooks/useDriverApplicableDevices.enrich';
 import type { DriverApplicableDevice } from '@/types/drivers';
 
 interface Props {
@@ -34,10 +39,25 @@ function safeRelative(iso: string): string {
   return formatDistanceToNow(d, { addSuffix: true });
 }
 
+function intuneDeviceUrl(deviceId: string): string {
+  return `https://intune.microsoft.com/#view/Microsoft_Intune_Devices/DeviceSettingsMenuBlade/~/overview/mdmDeviceId/${encodeURIComponent(deviceId)}`;
+}
+
 export function DriverDevicesTab({ catalogEntryId, enabled }: Props) {
   const { devices, totalCount, isLoading, error, retry } = useDriverApplicableDevices(
     catalogEntryId,
     enabled
+  );
+
+  const { dashboardService } = useAuth();
+  const { devices: managedDevices } = useManagedDevices(dashboardService);
+  const managedDeviceMap = useMemo(
+    () => new Map(managedDevices.map((d) => [d.id, d])),
+    [managedDevices]
+  );
+  const enriched = useMemo(
+    () => enrichWithDeviceMetadata(devices, managedDeviceMap),
+    [devices, managedDeviceMap]
   );
 
   if (isLoading) {
@@ -69,30 +89,47 @@ export function DriverDevicesTab({ catalogEntryId, enabled }: Props) {
   return (
     <div className="space-y-3">
       <div className="text-xs text-slate">
-        Showing {devices.length} of {totalCount} device{totalCount !== 1 ? 's' : ''}.
+        Showing {enriched.length} of {totalCount} device{totalCount !== 1 ? 's' : ''}.
       </div>
       <div role="table" className="overflow-hidden rounded-2xl border border-border">
         <div
           role="row"
-          className="grid grid-cols-[1fr_140px_1fr_140px] gap-3 border-b border-border bg-muted px-3 py-2 text-xs font-medium text-slate"
+          className="grid grid-cols-[1fr_140px_180px_1fr_140px] gap-3 border-b border-border bg-muted px-3 py-2 text-xs font-medium text-slate"
         >
           <div role="columnheader">Device</div>
           <div role="columnheader">Status</div>
+          <div role="columnheader">Hardware</div>
           <div role="columnheader">Policy</div>
           <div role="columnheader" className="text-right">Last scan</div>
         </div>
-        {devices.map((d) => (
+        {enriched.map((d) => (
           <div
             key={`${d.deviceId}|${d.policyName}`}
             role="row"
             aria-label={d.deviceName}
-            className="grid grid-cols-[1fr_140px_1fr_140px] items-center gap-3 border-b border-border px-3 py-2"
+            className="grid grid-cols-[1fr_140px_180px_1fr_140px] items-center gap-3 border-b border-border px-3 py-2"
           >
             <div role="cell">
-              <div className="font-medium text-ink">{d.deviceName || '—'}</div>
+              {d.deviceName ? (
+                <a
+                  href={intuneDeviceUrl(d.deviceId)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 font-medium text-ink hover:underline"
+                >
+                  {d.deviceName}
+                  <ExternalLink className="h-3 w-3 opacity-60" />
+                </a>
+              ) : (
+                <span className="font-medium text-ink">—</span>
+              )}
               <div className="text-xs text-slate">{d.upn || '—'}</div>
             </div>
             <div role="cell"><StateBadge device={d} /></div>
+            <div role="cell">
+              <div className="text-sm text-ink">{d.model || '—'}</div>
+              <div className="text-xs text-slate">{d.manufacturer || '—'}</div>
+            </div>
             <div role="cell" className="text-xs text-slate">{d.policyName || '—'}</div>
             <div role="cell" className="text-right text-xs text-slate">
               {safeRelative(d.lastWUScanTime)}
