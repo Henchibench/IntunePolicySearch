@@ -327,3 +327,93 @@ When the Devices endpoint is identified in a future investigation session, re-ve
 ## Implementation Plan
 
 See `docs/superpowers/plans/2026-05-15-driver-info-v1-1.md` for the task-by-task TDD plan, written 2026-05-15.
+
+---
+
+## Discovered Limitation (post-ship, 2026-05-15)
+
+**Symptom:** A driver in `approved` state with multiple applicable devices renders the device list correctly. A driver in `needsReview` state — even when `applicableDeviceCount > 0` — renders "No devices currently apply for this driver."
+
+This was initially mistaken for a merge bug (which led to commit `58f34c1` switching `inventoryId` to `inventoryIds[]` — a real but separate fix). After applying that fix, the symptom persisted, and the user identified the actual pattern: **approval status, not policy merge, drives whether rows return.**
+
+### Root cause hypothesis
+
+The endpoint we use is named `DriverUpdateDeviceStatus**By**Driver`. The "Status" in the name is the lead. The schema we observed:
+
+| Field | Type | Meaning |
+|---|---|---|
+| `CurrentDeviceUpdateState` / `_loc` | Int / String | Deployment state (8 = Installed, etc.) |
+| `CurrentDeviceUpdateSubstate` / `_loc` | Int / String | Sub-state of deployment |
+| `CurrentDeviceUpdateSubstateTime` | DateTime | When the device last changed state |
+| `AggregateState` / `_loc` | String | Worst-of state (Success / Error / etc.) |
+| `LastWUScanTime` | DateTime | Last WU check-in |
+
+Every field is **deployment-tracking**. There is no column for "is this driver applicable to this device but not yet offered". A `needsReview` driver has never been deployed → the report has nothing to report → 0 rows.
+
+The portal exposes the per-device list only for approved drivers via this endpoint. For `needsReview` drivers, the portal likely either (a) shows only the count, or (b) uses a different endpoint we haven't found yet.
+
+### What we observed empirically
+
+- F12-captured request on 2026-05-15 was for a driver whose first device row returned `CurrentDeviceUpdateState: 8 (Installed)` → that driver was `approved`. We never captured the portal behavior for a `needsReview` driver.
+- v1.2 commit `58f34c1` (multi-inventoryIds OR-filter fix) did not change the symptom for `needsReview` drivers — confirming this is not a filter-construction bug.
+- v1.2 commit `aa703ab` (card layout) and earlier commits are not implicated.
+
+### Open: needs F12 investigation
+
+To resolve, we need ONE more portal F12 capture, this time on a `needsReview` driver:
+
+1. Open Intune portal → Reports → Windows updates → Reports tab → Windows Driver Update Report tile.
+2. Use the driver picker to select a driver whose policy status is `needsReview` (the picker exposes status; pick one explicitly).
+3. F12 → Network tab → Fetch/XHR → Clear → click "Generate report" (or trigger whatever surfaces the device list, if any).
+4. Observe the outcome:
+
+| Portal behavior | Interpretation | Our action |
+|---|---|---|
+| **No request fires** (portal just shows the count or "no data") | Portal can't list devices for needsReview either. Hard API limitation. | Path A below. |
+| **Same `getCachedReport` request** with same body shape, returns 0 rows | Endpoint just doesn't carry the data for needsReview. Hard API limitation. | Path A below. |
+| **Different endpoint** (different URL, different report name) | There IS an applicability-only API we haven't found. | Path B below. |
+| **Same endpoint, different filter** (e.g., includes an `AggregateState` clause) | We can broaden our filter to include applicability. | Path C below. |
+
+### Remedial paths
+
+#### Path A — Limitation, improve empty-state UX (minimal effort)
+
+If the portal itself can't show device lists for needsReview drivers, we shouldn't pretend we can either. Replace the current empty-state message with an honest, useful one that surfaces what we DO know:
+
+```
+This driver is in 'needs review' state. Per-device deployment status
+becomes available after approval.
+
+Per Intune: 5 device(s) are currently applicable for this driver.
+
+[Open policy in Intune] (link to /windowsDriverUpdates view for the
+first policy in driver.policies)
+```
+
+Implementation: a small conditional branch in `DriverDevicesTab.tsx` that checks if all policy memberships for the driver are `needsReview` (or `declined` / `suspended` — any non-approved state) and renders the explanatory empty-state instead of the generic "No devices currently apply" message.
+
+Could also add a "Refresh" button that triggers `retry()` once a driver has been approved, so the user doesn't need to close + reopen the drawer.
+
+#### Path B — New endpoint (if F12 reveals one)
+
+Implement the discovered applicability endpoint. Likely candidates by naming convention:
+- `DriverUpdateApplicableDevicesByDriver`
+- `DriverUpdateDeviceApplicabilityByDriver`
+- `WindowsDriverUpdateApplicableDevices` (under `/admin/windows/updates/...`)
+
+Add a new hook (e.g., `useDriverApplicabilityDevices`) mirroring `useDriverApplicableDevices` but against the new endpoint. The Devices tab routes to the right hook based on driver approval status.
+
+#### Path C — Broader filter (if F12 reveals one)
+
+Modify `buildOrFilter` in `useDriverApplicableDevices.ts` to include whatever clause the portal uses to get applicable-but-not-deployed devices. Smallest code change of the three.
+
+### Recommendation
+
+Don't pick a path until the F12 investigation is done. The cost of guessing is implementing the wrong thing. Investigation takes ~5 minutes (open portal, click needsReview driver, check Network tab); implementing any of A/B/C takes considerably longer.
+
+### Notes for next session
+
+- The fix in commit `58f34c1` is correct and should stay regardless of which path we take here.
+- `useDriverApplicableDevices` is well-isolated; adding a parallel `useDriverApplicabilityDevices` (Path B) is straightforward.
+- Path A is a 30-minute change. Path C is 15 minutes if the filter is known. Path B is a half-day if the endpoint is well-shaped.
+- This limitation does NOT affect the original v1 goal ("show driver metadata + catalog enrichment"). v1.1 + v1.2's device list is best understood as a deployment-tracking lens. The "which devices need approval-pending drivers" use case is a separate concern.
