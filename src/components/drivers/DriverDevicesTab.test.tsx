@@ -126,8 +126,9 @@ describe('DriverDevicesTab', () => {
       totalCount: 1, isLoading: false, error: null, retry: () => {},
     });
     render(<DriverDevicesTab catalogEntryId="cat-1" enabled />);
-    // The Hardware cell should have two em-dashes (model and manufacturer both missing)
+    // When model is missing the card renders an em-dash in its place;
+    // manufacturer is simply omitted (no separator, no dash) so there is exactly one.
     const dashes = screen.getAllByText('—');
-    expect(dashes.length).toBeGreaterThanOrEqual(2);
+    expect(dashes.length).toBeGreaterThanOrEqual(1);
   });
 });

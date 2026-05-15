@@ -91,50 +91,48 @@ export function DriverDevicesTab({ catalogEntryId, enabled }: Props) {
       <div className="text-xs text-slate">
         Showing {enriched.length} of {totalCount} device{totalCount !== 1 ? 's' : ''}.
       </div>
-      <div role="table" className="overflow-hidden rounded-2xl border border-border">
-        <div
-          role="row"
-          className="grid grid-cols-[1fr_140px_180px_1fr_140px] gap-3 border-b border-border bg-muted px-3 py-2 text-xs font-medium text-slate"
-        >
-          <div role="columnheader">Device</div>
-          <div role="columnheader">Status</div>
-          <div role="columnheader">Hardware</div>
-          <div role="columnheader">Policy</div>
-          <div role="columnheader" className="text-right">Last scan</div>
-        </div>
+      <div className="space-y-3">
         {enriched.map((d) => (
-          <div
+          <article
             key={`${d.deviceId}|${d.policyName}`}
-            role="row"
             aria-label={d.deviceName}
-            className="grid grid-cols-[1fr_140px_180px_1fr_140px] items-center gap-3 border-b border-border px-3 py-2"
+            className="rounded-2xl border border-border bg-background p-3"
           >
-            <div role="cell">
-              {d.deviceName ? (
-                <a
-                  href={intuneDeviceUrl(d.deviceId)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 font-medium text-ink hover:underline"
-                >
-                  {d.deviceName}
-                  <ExternalLink className="h-3 w-3 opacity-60" />
-                </a>
-              ) : (
-                <span className="font-medium text-ink">—</span>
-              )}
-              <div className="text-xs text-slate">{d.upn || '—'}</div>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                {d.deviceName ? (
+                  <a
+                    href={intuneDeviceUrl(d.deviceId)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 font-medium text-ink hover:underline"
+                  >
+                    {d.deviceName}
+                    <ExternalLink className="h-3 w-3 opacity-60" />
+                  </a>
+                ) : (
+                  <span className="font-medium text-ink">—</span>
+                )}
+                <div className="text-xs text-slate">{d.upn || '—'}</div>
+              </div>
+              <StateBadge device={d} />
             </div>
-            <div role="cell"><StateBadge device={d} /></div>
-            <div role="cell">
-              <div className="text-sm text-ink">{d.model || '—'}</div>
-              <div className="text-xs text-slate">{d.manufacturer || '—'}</div>
+
+            <div className="mt-3 border-t border-border pt-3 space-y-1 text-xs text-slate">
+              <div>
+                <span className="text-ink">{d.model || '—'}</span>
+                {d.manufacturer ? (
+                  <>
+                    <span className="text-slate"> · </span>
+                    <span className="text-slate">{d.manufacturer}</span>
+                  </>
+                ) : null}
+              </div>
+              <div>
+                {d.policyName || '—'} · scanned {safeRelative(d.lastWUScanTime)}
+              </div>
             </div>
-            <div role="cell" className="text-xs text-slate">{d.policyName || '—'}</div>
-            <div role="cell" className="text-right text-xs text-slate">
-              {safeRelative(d.lastWUScanTime)}
-            </div>
-          </div>
+          </article>
         ))}
       </div>
     </div>
