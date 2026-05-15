@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Driver, DriverInventory } from '@/types/drivers';
 import { DriverCriticalityBadge } from './DriverCriticalityBadge';
+import { DriverDevicesTab } from './DriverDevicesTab';
 
 interface Props {
   driver: Driver | null;
@@ -31,6 +34,7 @@ function EyebrowLabel({ children }: { children: React.ReactNode }) {
 }
 
 export function DriverDetailDrawer({ driver, open, onOpenChange }: Props) {
+  const [activeTab, setActiveTab] = useState('overview');
   if (!driver) return null;
   const dellSearchUrl = `https://www.dell.com/support/search/results?q=${encodeURIComponent(driver.name)}`;
   const msUpdateUrl = `https://www.catalog.update.microsoft.com/Search.aspx?q=${encodeURIComponent(driver.name)}`;
@@ -53,7 +57,15 @@ export function DriverDetailDrawer({ driver, open, onOpenChange }: Props) {
           </div>
         </SheetHeader>
 
-        <div className="mt-6 space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
+          <TabsList>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="devices">
+              Devices ({driver.applicableDeviceCount})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="mt-4 space-y-6">
           <section className="space-y-2">
             <EyebrowLabel>OVERVIEW</EyebrowLabel>
             <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
@@ -159,7 +171,15 @@ export function DriverDetailDrawer({ driver, open, onOpenChange }: Props) {
               </a>
             </div>
           </section>
-        </div>
+          </TabsContent>
+
+          <TabsContent value="devices" className="mt-4">
+            <DriverDevicesTab
+              catalogEntryId={driver.inventoryId}
+              enabled={activeTab === 'devices'}
+            />
+          </TabsContent>
+        </Tabs>
       </SheetContent>
     </Sheet>
   );
