@@ -115,4 +115,8 @@ export interface DriverApplicableDevice {
   currentDeviceUpdateSubstateTime: string;
   /** When the device last scanned with Windows Update */
   lastWUScanTime: string;
+  /** Hardware manufacturer (e.g., "Dell Inc."). Optional — populated from managedDevices when available. */
+  manufacturer?: string;
+  /** Hardware model (e.g., "Latitude 5440"). Optional — populated from managedDevices when available. */
+  model?: string;
 }
