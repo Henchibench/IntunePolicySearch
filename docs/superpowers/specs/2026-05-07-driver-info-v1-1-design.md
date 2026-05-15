@@ -8,18 +8,77 @@ Read-only. Builds on v1; doesn't redesign it.
 
 ## What Changed Since the v1 Plan
 
-The v1 spec called out per-device drilldown as out-of-scope and pointed at `POST /deviceManagement/reports/getCachedReport` as the future implementation path. **That was the wrong API to plan around.** During v1.1 brainstorming we found a cleaner, OData-native path:
+The v1 spec called out per-device drilldown as out-of-scope and pointed at `POST /deviceManagement/reports/getCachedReport` as the future implementation path. After investigating against a real tenant on 2026-05-15, the actual API landscape turned out to be more nuanced than either the v1 spec OR the initial v1.1 brainstorm assumed.
+
+### What does NOT work
+
+**❌ `applicableContent` + `matchedDevices`** — initially looked like the cleanest path:
 
 ```http
 GET /beta/admin/windows/updates/deploymentAudiences/{audienceId}/applicableContent
   ?$expand=catalogEntry,matchedDevices
 ```
 
-This is part of the **Windows Update for Business deployment service** API (separate namespace from `/deviceManagement/windowsDriverUpdateProfiles/`). It returns driver/firmware catalog entries with a `matchedDevices` navigation property that lists exactly which Microsoft Entra devices match each entry. No 202+polling, just standard OData expand + continuation token pagination.
+Tested against tenant: `GET /beta/admin/windows/updates/deploymentAudiences/{profile.id}` returned **404 Not Found**. Microsoft has explicitly documented this as a known issue:
 
-Source: [Deploy a driver update using Windows Autopatch — step 5](https://learn.microsoft.com/graph/windowsupdates-manage-driver-update#step-5-get-inventory-of-driver-updates).
+> "Accessing and updating deployment audiences on deployment resources created via Intune is not currently supported. Listing deployment audience members and listing deployment audience exclusions returns 404 Not Found."
+> — https://learn.microsoft.com/graph/known-issues#accessing-and-updating-deployment-audiences-is-not-supported
 
-This v1.1 spec replaces the v1 spec's "deferred to v1.1" note about `getCachedReport`. We will **not** use `getCachedReport`.
+This rules out the entire `/admin/windows/updates/deploymentAudiences/...` namespace for Intune-managed driver update profiles, which is what our users have. The mapping question (profile.id → audience.id) is moot because the endpoint doesn't work for Intune-created audiences regardless of the mapping.
+
+### What partially works
+
+**⚠️ `getWindowsDriverUpdateAlertsPerPolicyPerDeviceReport`** — confirmed working endpoint, but returns the wrong subset of data:
+
+```http
+POST /beta/deviceManagement/reports/getWindowsDriverUpdateAlertsPerPolicyPerDeviceReport
+Content-Type: application/json
+
+{
+  "filter": "PolicyId eq '{profileId}'",
+  "skip": 0,
+  "top": 50
+}
+```
+
+Returns 200 OK with this response shape:
+
+```json
+{
+  "SessionId": "292d39ba-873f-4262-98c7-49dc8c2cdab7",
+  "TotalRowCount": 0,
+  "Schema": [
+    { "Column": "DeviceName",          "PropertyType": "String"   },
+    { "Column": "DriverName",          "PropertyType": "String"   },
+    { "Column": "DriverClass",         "PropertyType": "String"   },
+    { "Column": "Manufacturer",        "PropertyType": "String"   },
+    { "Column": "AlertSubtype",        "PropertyType": "Int32"    },
+    { "Column": "AlertId",             "PropertyType": "String"   },
+    { "Column": "Win32ErrorCode",      "PropertyType": "String"   },
+    { "Column": "UPN",                 "PropertyType": "String"   },
+    { "Column": "DriverReleaseDateUTC","PropertyType": "DateTime" },
+    { "Column": "IntuneDeviceId",      "PropertyType": "String"   }
+  ],
+  "Values": []
+}
+```
+
+**The catch:** this report only returns devices that have **alerts/errors** with a driver, not all devices for which the driver is *applicable*. Useful as a secondary "trouble-shooting" view, but does not answer the original user question: "which N devices need this driver?"
+
+### What we still need to find
+
+**⏳ A "Driver Updates Report" / applicable-devices endpoint.** The Intune portal has this view under Reports → Windows Updates → Reports → Windows Driver Update Report. It shows, for a selected driver, the devices it is applicable to with `Update State` values like *Offering / Installed / Cancelled / Needs attention*.
+
+Candidate endpoint names to test next session (POST with appropriate `filter`):
+- `getWindowsDriverUpdateDeviceStateReport`
+- `getWindowsDriverUpdateDeploymentStatusReport`
+- `getWindowsDriverUpdateDeviceStatusByDriverReport`
+- `getDriverUpdateDeviceStatusByPolicyReport`
+- Possibly via `POST /deviceManagement/reports/getCachedReport` with a specific `name` parameter
+
+The Intune portal JavaScript bundle (inspected via F12 → Sources) revealed the convention used for the **Feature Update** equivalent: `getWindowsUpdateAlertsPerPolicyPerDeviceReport`. The pattern strongly suggests a driver-update-device-state report exists by analogy.
+
+**Next investigation step (when we resume):** in Intune portal F12 → **Network** tab (not Sources), click into a driver in the Driver Update Report and capture the actual POST request to graph.microsoft.com. That request reveals the exact endpoint + body shape.
 
 ## Architecture
 
@@ -30,49 +89,60 @@ v1 (already shipped):
   windowsDriverUpdateProfiles → driverInventories (per profile)
                               → applicableDeviceCount (number only)
 
-v1.1 (this spec):
-  windowsDriverUpdateProfiles → deploymentAudiences (NEW: mapping)
-                              → applicableContent?$expand=catalogEntry,matchedDevices
-                              → matchedDevices[]
-                              → managedDevices/{id} (resolve to friendly metadata)
+v1.1 (target):
+  windowsDriverUpdateProfiles → driverInventories
+                              → {applicable-devices report endpoint TBD}
+                              → join via IntuneDeviceId to useManagedDevices
+                              → drawer-shown device list with status
+
+v1.1 secondary (already proven):
+  windowsDriverUpdateProfiles → driverInventories
+                              → getWindowsDriverUpdateAlertsPerPolicyPerDeviceReport
+                              → trouble-shooting tab in drawer
+                              → join via IntuneDeviceId to useManagedDevices
 ```
 
-### Three new pieces
+### Two surfaces in the drawer (target)
 
-1. **Profile → Audience mapping.** `windowsDriverUpdateProfile` and `deploymentAudience` are separate resources in different Graph namespaces. We need to determine the correspondence — how to find the audience ID for a given driver update profile.
+1. **"Devices" tab** — primary view. All devices the driver is applicable to. Sourced from the still-to-be-identified "Driver Updates Report" endpoint. Per row: device name, model, OS, last check-in, update state (Offering / Installed / Cancelled / Needs attention).
 
-2. **`applicableContent` fetch + per-driver `matchedDevices` drill-down.** Lazy: only fired when the user opens the drawer for a specific driver, not on page load. Avoids hitting the API for drivers the user never inspects.
+2. **"Issues" tab** — secondary view. Only devices with errors/alerts on this driver. Sourced from the **proven-working** `getWindowsDriverUpdateAlertsPerPolicyPerDeviceReport`. Per row: device name, alert subtype, Win32 error code, driver release date.
 
-3. **Device metadata join.** `matchedDevices` returns Entra device IDs. We resolve to friendly fields (name, model, OS, last check-in) via the existing `useManagedDevices` hook + `managedDevices/{id}`.
+The Issues tab can be implemented **today** with the data we have. The Devices tab needs one more investigation round to find the right endpoint.
 
 ## Open Investigation Items
 
-Three things must be answered against a real tenant before implementation can finalize. Best done by sniffing the Intune portal's network traffic in F12 + a quick Graph Explorer test.
+### 1. ✅ RESOLVED (2026-05-15): deploymentAudiences is dead for Intune-managed profiles
 
-### 1. How does a `windowsDriverUpdateProfile` map to a `deploymentAudience`?
+Tested. 404 on every Intune-created profile. Microsoft has confirmed this as a known bug. **Do not use this namespace.** See "What does NOT work" section above.
 
-Possibilities, in order of likelihood:
+### 2. ✅ RESOLVED (2026-05-15): Alerts-per-policy-per-device report works
 
-- **Direct property.** The profile resource has an undocumented or beta-only `deploymentAudienceId` field.
-- **Implicit by ID equality.** `windowsDriverUpdateProfile.id` IS the audience ID, and the resources are two views of the same underlying entity.
-- **Match via assignments.** Both share the same target group assignments, so we look up the audience whose assignments match the profile's.
-- **Separate mapping API.** A `/beta/admin/windows/updates/...` endpoint surfaces the relationship.
+Endpoint, body shape, response shape, and permission all confirmed against a real tenant. See "What partially works" section above for the verified contract.
 
-**Verification step:** Open Intune portal → Driver Updates → click into a profile while F12 is recording. Look for any request to `/admin/windows/updates/deploymentAudiences`. The response (or the URL) should reveal the mapping.
+### 3. ⏳ OPEN: Find the "applicable-devices" report endpoint
 
-### 2. What does `matchedDevices` actually return?
+This is the **remaining unknown**. The Intune portal clearly has this data (visible in its "Windows Driver Update Report" view). We just don't know the endpoint name yet.
 
-The docs say "Microsoft Entra devices that are applicable for each driver." Per device we need at least one of: `azureADDeviceId`, `intuneDeviceId`, `id`. Plus ideally: status (offered / installed / declined / error), last contact time.
+**Next investigation step:**
 
-If `matchedDevices` only returns IDs, we do the resolve via `managedDevices`. If it includes status + check-in we can render those directly without an extra fetch.
+1. Open Intune portal → **Reports** → **Windows updates** → **Reports** tab → **Windows Driver Update Report** tile
+2. F12 → **Network** tab (NOT Sources, NOT search-in-page) → filter on **Fetch/XHR** → **Clear**
+3. In the portal, select a driver update from the picker. The page makes a fresh request to load the device list.
+4. In Network tab, find the POST request to `graph.microsoft.com` triggered by selecting the driver. There will be exactly one matching request — its URL is the endpoint name.
+5. Right-click that request → **Copy** → **Copy as cURL** (or copy URL + body separately)
+6. Paste the URL + body to the implementation thread
 
-**Verification step:** `GET /beta/admin/windows/updates/deploymentAudiences/{id}/applicableContent/{contentId}/matchedDevices` against a known audience. Inspect the response shape.
+Until that's resolved, v1.1 can ship the Issues tab only (deferring the Devices tab to v1.2 if needed).
 
-### 3. Required permissions
+### 4. ⏳ OPEN: Required permissions
 
-The `/admin/windows/updates/` namespace is gated by `WindowsUpdates.Read.All` or `WindowsUpdates.ReadWrite.All`. Currently the app registration only has Intune permissions (`DeviceManagementConfiguration.Read.All`, `DeviceManagementManagedDevices.Read.All`, `DeviceManagementApps.Read.All`).
+Tested empirically — the `getWindowsDriverUpdateAlertsPerPolicyPerDeviceReport` call returned 200 with our existing v1 scopes:
+- `DeviceManagementConfiguration.Read.All`
+- `DeviceManagementManagedDevices.Read.All`
+- `DeviceManagementApps.Read.All`
 
-**Action:** Extend the app registration with `WindowsUpdates.Read.All` (delegated). Re-grant admin consent. Update `src/services/authConfig.ts` to request the new scope.
+No additional `WindowsUpdates.Read.All` scope was needed. **This means the entire v1.1 implementation may need zero new permissions** — assuming the applicable-devices endpoint (still TBD) uses the same `/deviceManagement/reports/` namespace as the alerts endpoint did, not the `/admin/windows/updates/` one. Confirm during step 3 above.
 
 ## Page Layout Changes
 
@@ -116,41 +186,53 @@ If we keep it as a section instead, the drawer becomes very long for drivers wit
 
 ## Data Fetching
 
-### Resolve audience mapping (one-time, on drawer open)
+### Issues tab (proven, ready to implement)
 
-Pseudo-code:
+```http
+POST /beta/deviceManagement/reports/getWindowsDriverUpdateAlertsPerPolicyPerDeviceReport
+Content-Type: application/json
 
-```ts
-async function resolveAudienceId(profileId: string): Promise<string | null> {
-  // Strategy depends on the answer to investigation item #1.
-  // Most likely: profile.id === audience.id, in which case this is a no-op.
-  // Otherwise: GET /beta/admin/windows/updates/deploymentAudiences and search
-  //            for the one matching profile by name / assignments.
+{
+  "filter": "PolicyId eq '{profileId}'",
+  "skip": 0,
+  "top": 50
 }
 ```
 
-Cached in a Map keyed by `profileId` for the session. Drawer opens for the same profile multiple times never re-resolve.
+Response shape (confirmed empirically):
 
-### Fetch applicable content + matched devices
-
-```http
-GET /beta/admin/windows/updates/deploymentAudiences/{audienceId}/applicableContent/{driverContentId}/matchedDevices?$top=100
+```json
+{
+  "SessionId": "...",
+  "TotalRowCount": 0,
+  "Schema": [ ... ],
+  "Values": [ /* rows matching Schema column order */ ]
+}
 ```
 
-`driverContentId` comes from the `applicableContent` collection — that's a separate query first time we open the drawer for any driver in this audience. Cache the (audience → applicableContent[]) lookup once per audience.
+Note the response uses a **Schema + Values column-store shape**, not a standard OData `value: [{...}]` array. The renderer must zip Schema with Values to get usable row objects.
 
-### Resolve device metadata
+Pagination via `skip` / `top`. Cache per `profileId` for the session.
 
-For each `matchedDevices` entry, look up via existing `useManagedDevices` cache. If not in cache, fetch `managedDevices/{id}?$select=deviceName,model,manufacturer,osVersion,lastSyncDateTime`. Batch up to 20 per request via `$batch` to avoid one-at-a-time round trips.
+**Filter to a single driver**: the report does not appear to support a `DriverName eq '...'` filter (untested but typical of these endpoints). The drawer will likely need to fetch ALL alerts for the policy, then filter client-side by `DriverName` matching the currently-viewed driver. Acceptable since alert counts are typically small.
+
+### Devices tab (endpoint TBD — Issues tab can ship first)
+
+Same shape as above is expected, just a different endpoint name. Implementation deferred until F12 investigation reveals the exact endpoint (see "Open Investigation Items" → #3).
+
+### Device metadata join
+
+For each `IntuneDeviceId` from the report, look up via existing `useManagedDevices` cache. If not in cache, fetch `managedDevices/{id}?$select=deviceName,model,manufacturer,osVersion,lastSyncDateTime`. Batch up to 20 per request via `$batch`.
+
+The report already includes `DeviceName`, `UPN`, `IntuneDeviceId` — so even without the metadata join we can render a usable list. The join adds model + OS + last check-in.
 
 ## Hooks
 
-| Hook | Purpose |
-|---|---|
-| `useDriverAudiences()` | Fetch all `deploymentAudiences` once, builds a profile-id → audience-id Map (strategy depends on investigation #1) |
-| `useDriverApplicableContent(audienceId)` | Fetch `applicableContent` for an audience; returns the per-driver content IDs |
-| `useDriverMatchedDevices(audienceId, driverContentId)` | Fetch `matchedDevices` paginated; returns devices + continuation token |
-| `useDriverDeviceMetadata(deviceIds)` | Resolves device metadata via batch managedDevices fetch |
+| Hook | Purpose | Endpoint dependency |
+|---|---|---|
+| `useDriverAlerts(profileId)` | Fetch the alerts report for a policy, normalize Schema+Values into row objects | ✅ Known: `getWindowsDriverUpdateAlertsPerPolicyPerDeviceReport` |
+| `useDriverApplicableDevices(profileId)` | Fetch the applicable-devices report | ⏳ Endpoint TBD |
+| `useDriverDeviceMetadata(intuneDeviceIds)` | Batch resolve managedDevices metadata | ✅ Existing pattern |
 
 All hooks are session-cached. None of them fire until the drawer is opened — keep the page snappy.
 
@@ -158,57 +240,56 @@ All hooks are session-cached. None of them fire until the drawer is opened — k
 
 | File | Status | Purpose |
 |---|---|---|
-| `src/types/drivers.ts` | Modify | Add `MatchedDevice`, `DeploymentAudience`, `DriverDevice` (joined) interfaces |
-| `src/hooks/useDriverAudiences.ts` | Create | Audience mapping |
-| `src/hooks/useDriverApplicableContent.ts` | Create | Applicable content per audience |
-| `src/hooks/useDriverMatchedDevices.ts` | Create | Per-driver device list with pagination |
-| `src/hooks/useDriverDeviceMetadata.ts` | Create | Batch resolve device metadata |
-| `src/components/drivers/DriverDevicesSection.tsx` | Create | The new "Devices" tab content |
-| `src/components/drivers/DriverDetailDrawer.tsx` | Modify | Wrap existing content in tabs, add Devices tab |
-| `src/services/authConfig.ts` | Modify | Add `WindowsUpdates.Read.All` scope |
-| `docs/Entra-Setup-Guide.md` | Modify | Document the new permission requirement |
+| `src/types/drivers.ts` | Modify | Add `DriverAlert`, `DriverDevice` (joined) interfaces |
+| `src/hooks/useDriverAlerts.ts` | Create | Issues report fetch + Schema/Values normalization |
+| `src/hooks/useDriverApplicableDevices.ts` | Create (later) | Applicable-devices report fetch (when endpoint known) |
+| `src/hooks/useDriverDeviceMetadata.ts` | Create | Batch resolve managedDevices metadata |
+| `src/components/drivers/DriverIssuesTab.tsx` | Create | The Issues tab content |
+| `src/components/drivers/DriverDevicesTab.tsx` | Create (later) | The Devices tab content |
+| `src/components/drivers/DriverDetailDrawer.tsx` | Modify | Wrap existing content in tabs (Overview / Issues / Devices) |
+
+No changes to `src/services/authConfig.ts` expected — existing v1 scopes were sufficient for the proven endpoint.
 
 ## Error Handling
 
-- **Audience mapping fails** (no audience found for profile): drawer shows "Device list not available for this profile" — graceful degradation. Overview tab still works fully.
-- **Permission denied** (e.g., `WindowsUpdates.Read.All` not granted yet): show a one-time admin warning at the top of the page: "Driver device drilldown requires the WindowsUpdates.Read.All permission. [Setup guide]" with link to docs.
-- **Empty `matchedDevices`**: show "No devices currently need this driver." instead of an empty list.
-- **Per-device metadata resolution fails**: fall back to showing the raw Entra device ID. The list still renders.
-- **Continuation token fetch fails**: show partial list + "Failed to load more devices" inline.
+- **Issues report returns empty**: show "No issues reported for devices using this driver." Useful, positive signal.
+- **Issues report fails**: inline error in the Issues tab; Overview tab unaffected.
+- **IntuneDeviceId metadata resolution fails**: fall back to showing the report's own DeviceName / UPN columns. The list still renders, just without model/OS enrichment.
+- **Schema mismatch (Microsoft changes report schema)**: log a console warning, render best-effort rows by index, surface a small "Some columns may not display correctly" note.
 
 ## Permissions
 
-Adds: `WindowsUpdates.Read.All` (delegated)
+**No new permissions required** for the proven (Issues) endpoint. Verified empirically on 2026-05-15 — the existing v1 scopes (`DeviceManagementConfiguration.Read.All`, `DeviceManagementManagedDevices.Read.All`, `DeviceManagementApps.Read.All`) returned 200.
 
-Documented in updated `docs/Entra-Setup-Guide.md` with screenshots of how to grant it.
+When the Devices endpoint is identified in a future investigation session, re-verify whether it needs additional scopes (unlikely but possible).
 
 ## Scope Boundaries
 
-**In scope (v1.1):**
-- Audience mapping investigation + implementation
-- Per-driver device list in the drawer
-- Device metadata resolution (name, model, OS, last sync)
-- Pagination via continuation tokens
-- Tab layout in drawer
-- New permission scope wired up
+**In scope (v1.1 — what we can do today):**
+- New "Issues" tab in the driver detail drawer
+- Schema+Values report normalization helper
+- IntuneDeviceId → managedDevices metadata join
+- Tab layout in drawer (Overview / Issues)
 
-**Out of scope (deferred):**
+**Deferred to v1.2 (pending F12 investigation):**
+- "Devices" tab listing all applicable devices for a driver — the original user ask. Blocked on identifying the right report endpoint.
+
+**Out of scope entirely:**
 - Bulk approve/decline from the device list (still read-only)
-- Filter/search within the device list (e.g., by model). Add later if list size warrants it.
+- Filter/search within the device list
 - Push notification when a device's status changes
-- Cross-driver views ("show me all drivers that affect device X") — that's a different IA, plausibly v1.2
+- Cross-driver views ("show me all drivers that affect device X") — different IA
+- The `/admin/windows/updates/deploymentAudiences/...` path — confirmed broken for Intune-managed profiles
 - Lenovo / HP / Microsoft catalog enrichment (still v2)
-- The `getCachedReport` fallback path for legacy tenants — assume the deployment service API is universally available; revisit only if a tenant reports unsupported
 
 ## Risks
 
-- **Audience mapping might not be 1:1.** If a single profile maps to multiple audiences (e.g., Intune fans out by platform/version), we'd need to query multiple audiences and merge. Investigation step #1 should reveal this.
-- **`/admin/windows/updates/` is beta and evolving.** Breaking changes possible. We accept that risk because the alternative (`getCachedReport`) is worse.
-- **Device list size for popular drivers.** A common driver could match thousands of devices. Pagination is mandatory; the UI must not try to render them all at once.
-- **Permission granting friction.** Asking the admin to add a new scope after v1 already shipped is real friction. Consider bundling into a "what's new" notice or onboarding refresh.
+- **Reports API is beta-shaped.** The Schema+Values column-store response shape is unusual for Graph and might evolve. We isolate the normalization in one place (`useDriverAlerts`) to limit blast radius if it changes.
+- **DriverName client-side filtering can be fragile.** If `DriverName` strings don't match exactly between `driverInventories` (v1) and the alerts report, filtering to "alerts for this specific driver" breaks. Risk-mitigated by normalizing/lowercasing on both sides.
+- **The Devices tab is the user's actual ask, and it's still blocked.** Shipping only the Issues tab means we technically resolve a smaller problem than the user originally raised. Should be communicated clearly when v1.1 ships.
 
 ## Implementation Plan
 
-To be written after the open investigation items are answered. The plan will include the same TDD discipline, file-per-task decomposition, and subagent-driven execution we used for v1.
+The Issues tab is implementable today. A short plan (TDD, subagent-driven, same discipline as v1) can be written immediately when the user is ready.
 
-The investigation items above are the prerequisite — without them, the plan would be writing against guesses. Recommended: a 30-minute exploration session against the user's tenant to nail down questions 1 and 2, then the plan writes itself.
+The Devices tab is gated on F12 investigation (Open Item #3). If that investigation is done in the same session, the plan can cover both tabs; otherwise v1.1 ships Issues only and Devices follows as v1.2.
