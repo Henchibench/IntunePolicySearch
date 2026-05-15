@@ -88,3 +88,31 @@ export interface CatalogStatus {
   entryCount: number;
   source: CatalogSource;
 }
+
+/** A row in the per-driver device list, normalized from the cached report response */
+export interface DriverApplicableDevice {
+  /** Intune device id */
+  deviceId: string;
+  /** Microsoft Entra device id */
+  aadDeviceId: string;
+  /** Friendly device name (e.g., "GPC-6XTRVV3") */
+  deviceName: string;
+  /** Primary user UPN */
+  upn: string;
+  /** Name of the WUfB profile that targets this device for this driver */
+  policyName: string;
+  /** Localized aggregate state (e.g., "Success", "Error", "In progress") */
+  aggregateState: string;
+  /** Numeric update state code */
+  currentDeviceUpdateState: number;
+  /** Localized update state (e.g., "Installed", "Offering", "Cancelled") */
+  currentDeviceUpdateStateLoc: string;
+  /** Numeric substate code */
+  currentDeviceUpdateSubstate: number;
+  /** Localized substate (e.g., "Update installed", "Update offered") */
+  currentDeviceUpdateSubstateLoc: string;
+  /** When the device most recently changed state for this driver */
+  currentDeviceUpdateSubstateTime: string;
+  /** When the device last scanned with Windows Update */
+  lastWUScanTime: string;
+}
