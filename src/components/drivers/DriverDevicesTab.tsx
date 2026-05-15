@@ -10,7 +10,7 @@ import { enrichWithDeviceMetadata } from '@/hooks/useDriverApplicableDevices.enr
 import type { DriverApplicableDevice } from '@/types/drivers';
 
 interface Props {
-  catalogEntryId: string | null;
+  catalogEntryIds: string[];
   enabled: boolean;
 }
 
@@ -43,9 +43,9 @@ function intuneDeviceUrl(deviceId: string): string {
   return `https://intune.microsoft.com/#view/Microsoft_Intune_Devices/DeviceSettingsMenuBlade/~/overview/mdmDeviceId/${encodeURIComponent(deviceId)}`;
 }
 
-export function DriverDevicesTab({ catalogEntryId, enabled }: Props) {
+export function DriverDevicesTab({ catalogEntryIds, enabled }: Props) {
   const { devices, totalCount, isLoading, error, retry } = useDriverApplicableDevices(
-    catalogEntryId,
+    catalogEntryIds,
     enabled
   );
 

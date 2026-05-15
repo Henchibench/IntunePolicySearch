@@ -46,7 +46,7 @@ describe('DriverDevicesTab', () => {
     mockHook.mockReturnValue({
       devices: [], totalCount: 0, isLoading: true, error: null, retry: () => {},
     });
-    render(<DriverDevicesTab catalogEntryId="cat-1" enabled />);
+    render(<DriverDevicesTab catalogEntryIds={["cat-1"]} enabled />);
     expect(screen.getByText(/Loading device report/i)).toBeInTheDocument();
   });
 
@@ -54,7 +54,7 @@ describe('DriverDevicesTab', () => {
     mockHook.mockReturnValue({
       devices: [], totalCount: 0, isLoading: false, error: null, retry: () => {},
     });
-    render(<DriverDevicesTab catalogEntryId="cat-1" enabled />);
+    render(<DriverDevicesTab catalogEntryIds={["cat-1"]} enabled />);
     expect(screen.getByText(/No devices currently apply/i)).toBeInTheDocument();
   });
 
@@ -63,7 +63,7 @@ describe('DriverDevicesTab', () => {
     mockHook.mockReturnValue({
       devices: [], totalCount: 0, isLoading: false, error: 'Boom', retry,
     });
-    render(<DriverDevicesTab catalogEntryId="cat-1" enabled />);
+    render(<DriverDevicesTab catalogEntryIds={["cat-1"]} enabled />);
     expect(screen.getByText(/Failed to load device report/i)).toBeInTheDocument();
     expect(screen.getByText(/Boom/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Retry/i })).toBeInTheDocument();
@@ -74,7 +74,7 @@ describe('DriverDevicesTab', () => {
       devices: [device({ deviceName: 'LAPTOP-A' }), device({ deviceName: 'LAPTOP-B', upn: 'b@x.com' })],
       totalCount: 2, isLoading: false, error: null, retry: () => {},
     });
-    render(<DriverDevicesTab catalogEntryId="cat-1" enabled />);
+    render(<DriverDevicesTab catalogEntryIds={["cat-1"]} enabled />);
     expect(screen.getByText('LAPTOP-A')).toBeInTheDocument();
     expect(screen.getByText('LAPTOP-B')).toBeInTheDocument();
     expect(screen.getAllByText(/Installed/).length).toBeGreaterThan(0);
@@ -103,7 +103,7 @@ describe('DriverDevicesTab', () => {
       devices: [device({ deviceId: 'd1', deviceName: 'LAPTOP-A' })],
       totalCount: 1, isLoading: false, error: null, retry: () => {},
     });
-    render(<DriverDevicesTab catalogEntryId="cat-1" enabled />);
+    render(<DriverDevicesTab catalogEntryIds={["cat-1"]} enabled />);
     expect(screen.getByText('Latitude 5440')).toBeInTheDocument();
     expect(screen.getByText('Dell Inc.')).toBeInTheDocument();
   });
@@ -113,7 +113,7 @@ describe('DriverDevicesTab', () => {
       devices: [device({ deviceId: 'd1', deviceName: 'LAPTOP-A' })],
       totalCount: 1, isLoading: false, error: null, retry: () => {},
     });
-    render(<DriverDevicesTab catalogEntryId="cat-1" enabled />);
+    render(<DriverDevicesTab catalogEntryIds={["cat-1"]} enabled />);
     const link = screen.getByRole('link', { name: /LAPTOP-A/ });
     expect(link).toHaveAttribute('href', expect.stringContaining('intune.microsoft.com'));
     expect(link).toHaveAttribute('href', expect.stringContaining('mdmDeviceId/d1'));
@@ -125,7 +125,7 @@ describe('DriverDevicesTab', () => {
       devices: [device({ deviceId: 'missing', deviceName: 'LAPTOP-A' })],
       totalCount: 1, isLoading: false, error: null, retry: () => {},
     });
-    render(<DriverDevicesTab catalogEntryId="cat-1" enabled />);
+    render(<DriverDevicesTab catalogEntryIds={["cat-1"]} enabled />);
     // When model is missing the card renders an em-dash in its place;
     // manufacturer is simply omitted (no separator, no dash) so there is exactly one.
     const dashes = screen.getAllByText('—');

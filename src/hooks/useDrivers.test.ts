@@ -57,6 +57,9 @@ describe('buildDrivers', () => {
     expect(drivers[0].policies).toHaveLength(2);
     expect(drivers[0].policies.map(p => p.profileName).sort()).toEqual(['Ring 1', 'Ring 2']);
     expect(drivers[0].applicableDeviceCount).toBe(5);  // Max of (5, 5), not sum (10)
+    expect(drivers[0].inventoryIds).toHaveLength(2);
+    expect(drivers[0].inventoryIds).toContain('p1-Sample-1.0');
+    expect(drivers[0].inventoryIds).toContain('p2-Sample-1.0');
   });
 
   it('separates rows for different versions of the same driver', () => {

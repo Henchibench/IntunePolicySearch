@@ -57,7 +57,7 @@ export type DriverKey = string;
 /** Joined driver row rendered in the UI */
 export interface Driver {
   key: DriverKey;
-  inventoryId: string;
+  inventoryIds: string[];
   name: string;
   manufacturer: string;
   driverClass: string;

@@ -175,7 +175,7 @@ export function DriverDetailDrawer({ driver, open, onOpenChange }: Props) {
 
           <TabsContent value="devices" className="mt-4">
             <DriverDevicesTab
-              catalogEntryId={driver.inventoryId}
+              catalogEntryIds={driver.inventoryIds}
               enabled={activeTab === 'devices'}
             />
           </TabsContent>

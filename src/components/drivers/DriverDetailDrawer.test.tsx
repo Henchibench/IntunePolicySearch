@@ -5,7 +5,7 @@ import type { Driver } from '@/types/drivers';
 
 const baseDriver: Driver = {
   key: 'dell inc.|video|sample',
-  inventoryId: 'inv1',
+  inventoryIds: ['inv1'],
   name: 'Sample Driver',
   manufacturer: 'Dell Inc.',
   driverClass: 'Video',

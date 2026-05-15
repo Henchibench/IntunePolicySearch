@@ -28,7 +28,7 @@ export function buildDrivers(
       if (!driver) {
         driver = {
           key,
-          inventoryId: inv.id,
+          inventoryIds: [inv.id],
           name: inv.name,
           manufacturer: inv.manufacturer,
           driverClass: inv.driverClass,
@@ -46,6 +46,9 @@ export function buildDrivers(
         // approximation but matches the Intune portal's per-policy view more closely.
         driver.applicableDeviceCount = Math.max(driver.applicableDeviceCount, inv.applicableDeviceCount);
         driver.deviceCount = Math.max(driver.deviceCount, inv.deviceCount);
+        if (!driver.inventoryIds.includes(inv.id)) {
+          driver.inventoryIds.push(inv.id);
+        }
       }
       driver.policies.push({
         profileId: profile.id,

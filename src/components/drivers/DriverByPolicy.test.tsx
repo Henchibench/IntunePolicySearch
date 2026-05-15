@@ -11,7 +11,7 @@ const profile = (id: string, name: string, approvalType: 'manual' | 'automatic' 
 
 const driver = (name: string, profileId: string, profileName: string, status: Driver['policies'][0]['approvalStatus'] = 'needsReview'): Driver => ({
   key: `dell inc.|video|${name.toLowerCase()}`,
-  inventoryId: `${profileId}-${name}`,
+  inventoryIds: [`${profileId}-${name}`],
   name, manufacturer: 'Dell Inc.', driverClass: 'Video', version: '1.0',
   releaseDateTime: '2025-01-01T00:00:00Z',
   applicableDeviceCount: 5, deviceCount: 10,

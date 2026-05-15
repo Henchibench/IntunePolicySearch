@@ -26,10 +26,17 @@ function escapeOData(s: string): string {
   return s.replace(/'/g, "''");
 }
 
-export function buildConfigBody(catalogEntryId: string) {
+function buildOrFilter(catalogEntryIds: string[]): string {
+  if (catalogEntryIds.length === 0) return '';
+  return catalogEntryIds
+    .map((id) => `CatalogEntryId eq '${escapeOData(id)}'`)
+    .join(' or ');
+}
+
+export function buildConfigBody(catalogEntryIds: string[]) {
   return {
     id: `${REPORT_NAME}_00000000-0000-0000-0000-000000000001`,
-    filter: `CatalogEntryId eq '${escapeOData(catalogEntryId)}'`,
+    filter: buildOrFilter(catalogEntryIds),
     orderBy: [] as string[],
     select: SELECT_COLUMNS,
     search: '',
@@ -39,7 +46,7 @@ export function buildConfigBody(catalogEntryId: string) {
 
 export function buildFetchBody(
   configId: string,
-  catalogEntryId: string,
+  catalogEntryIds: string[],
   top: number,
   skip: number
 ) {
@@ -49,7 +56,7 @@ export function buildFetchBody(
     skip,
     search: '',
     orderBy: [] as string[],
-    filter: `CatalogEntryId eq '${escapeOData(catalogEntryId)}'`,
+    filter: buildOrFilter(catalogEntryIds),
     select: SELECT_COLUMNS,
   };
 }
@@ -103,7 +110,7 @@ export interface UseDriverApplicableDevicesResult {
 }
 
 export function useDriverApplicableDevices(
-  catalogEntryId: string | null,
+  catalogEntryIds: string[],
   enabled: boolean
 ): UseDriverApplicableDevicesResult {
   const { getAccessToken } = useAuth();
@@ -117,7 +124,7 @@ export function useDriverApplicableDevices(
   tokenRef.current = getAccessToken;
 
   useEffect(() => {
-    if (!enabled || !catalogEntryId) return;
+    if (!enabled || catalogEntryIds.length === 0) return;
     let cancelled = false;
 
     (async () => {
@@ -132,7 +139,7 @@ export function useDriverApplicableDevices(
         });
 
         // Phase 1: configure
-        const configBody = buildConfigBody(catalogEntryId);
+        const configBody = buildConfigBody(catalogEntryIds);
         const phase1: CachedReportConfig = await client
           .api('/deviceManagement/reports/cachedReportConfigurations')
           .version('beta')
@@ -160,7 +167,7 @@ export function useDriverApplicableDevices(
 
         // Phase 3: fetch
         if (cancelled) return;
-        const fetchBody = buildFetchBody(configId, catalogEntryId, 50, 0);
+        const fetchBody = buildFetchBody(configId, catalogEntryIds, 50, 0);
         const phase3: CachedReportResponse = await client
           .api('/deviceManagement/reports/getCachedReport')
           .version('beta')
@@ -179,7 +186,7 @@ export function useDriverApplicableDevices(
     })();
 
     return () => { cancelled = true; };
-  }, [catalogEntryId, enabled, retryCount]);
+  }, [catalogEntryIds.join('|'), enabled, retryCount]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
     devices,

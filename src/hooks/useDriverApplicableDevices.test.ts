@@ -7,7 +7,7 @@ import {
 
 describe('buildConfigBody', () => {
   it('produces the configure-phase request body with a stable id', () => {
-    const body = buildConfigBody('abc-123');
+    const body = buildConfigBody(['abc-123']);
     expect(body.id).toMatch(/^DriverUpdateDeviceStatusByDriver_/);
     expect(body.filter).toBe("CatalogEntryId eq 'abc-123'");
     expect(body.select).toContain('DeviceName');
@@ -17,14 +17,19 @@ describe('buildConfigBody', () => {
   });
 
   it('escapes single quotes in the catalogEntryId by doubling them (OData rules)', () => {
-    const body = buildConfigBody("foo'bar");
+    const body = buildConfigBody(["foo'bar"]);
     expect(body.filter).toBe("CatalogEntryId eq 'foo''bar'");
+  });
+
+  it('builds an OR filter when multiple catalogEntryIds are provided', () => {
+    const body = buildConfigBody(['id1', 'id2']);
+    expect(body.filter).toBe("CatalogEntryId eq 'id1' or CatalogEntryId eq 'id2'");
   });
 });
 
 describe('buildFetchBody', () => {
   it('includes pagination parameters', () => {
-    const body = buildFetchBody('config-id', 'cat-id', 50, 100);
+    const body = buildFetchBody('config-id', ['cat-id'], 50, 100);
     expect(body.id).toBe('config-id');
     expect(body.top).toBe(50);
     expect(body.skip).toBe(100);
