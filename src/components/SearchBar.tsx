@@ -13,14 +13,14 @@ export const SearchBar = ({
   placeholder = "Search policies, settings, and configurations..." 
 }: SearchBarProps) => {
   return (
-    <div className="relative flex items-center gap-2">
-      <Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-slate" />
+    <div className="relative flex items-center">
+      <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
       <Input
         type="text"
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="pl-10"
+        className="pl-9"
       />
     </div>
   );

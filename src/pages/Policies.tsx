@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { PillNav } from "@/components/PillNav";
 import { UtilityRow } from "@/components/UtilityRow";
-import { EyebrowLabel } from "@/components/ui/EyebrowLabel";
 import { SearchBar } from "@/components/SearchBar";
 import { FilterDropdown } from "@/components/FilterDropdown";
 import { PolicyCard } from "@/components/PolicyCard";
@@ -174,15 +173,15 @@ const Policies = () => {
   };
 
   return (
-    <div className="min-h-screen bg-canvas">
+    <div className="min-h-screen bg-background">
       <div className="px-6">
         <PillNav />
         <UtilityRow onRefresh={handleRefresh} isRefreshing={isRefreshing} />
       </div>
 
-      <main className="mx-auto mt-12 max-w-[1240px] px-8 pb-24">
-        <EyebrowLabel>POLICIES</EyebrowLabel>
-        <h1 className="mt-3 text-[44px] font-medium leading-tight tracking-tight2 text-ink">
+      <main className="mx-auto mt-12 max-w-[1280px] px-6 pb-24">
+        <p className="text-xs font-semibold text-primary">Policies</p>
+        <h1 className="mt-2 text-xl font-semibold text-foreground">
           Search every Intune policy.
         </h1>
 
@@ -208,15 +207,15 @@ const Policies = () => {
 
           {/* Demo mode notification */}
           {!isAuthenticated && (
-            <Card className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
+            <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-amber-800 dark:text-amber-200">
-                  <Shield className="h-5 w-5" />
+                <CardTitle className="flex items-center gap-2 text-base font-semibold text-foreground">
+                  <Shield className="h-5 w-5 text-[#F7630C]" />
                   Demo Mode
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                <p className="text-sm text-amber-700 dark:text-amber-300">
+                <p className="text-sm text-muted-foreground">
                   You're viewing demo data. Sign in with your Microsoft account to connect to Intune and view your actual policies.
                 </p>
               </CardContent>
@@ -225,15 +224,15 @@ const Policies = () => {
 
           {/* Cache status notification */}
           {isAuthenticated && CacheService.getCacheInfo() && (
-            <Card className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
+            <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-blue-800 dark:text-blue-200">
-                  <Database className="h-5 w-5" />
+                <CardTitle className="flex items-center gap-2 text-base font-semibold text-foreground">
+                  <Database className="h-5 w-5 text-primary" />
                   Cached Data
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                <p className="text-sm text-blue-700 dark:text-blue-300">
+                <p className="text-sm text-muted-foreground">
                   Showing cached data from {CacheService.getCacheInfo()?.age} minutes ago.
                   Click refresh to fetch the latest policies from Intune.
                 </p>
@@ -261,7 +260,7 @@ const Policies = () => {
           )}
 
           {/* Search and Filters Section - Sticky */}
-          <div className="sticky top-0 z-10 bg-canvas/95 backdrop-blur-sm border-b border-border pb-6 mb-6">
+          <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border pb-6 mb-6">
             <div className="space-y-6 pt-6">
               <SearchBar
                 value={searchTerm}
@@ -300,7 +299,7 @@ const Policies = () => {
                     )}
                     {searchTerm && (
                       <span className="ml-1">
-                        for "<span className="font-medium text-foreground">{searchTerm}</span>"
+                        for "<span className="font-semibold text-foreground">{searchTerm}</span>"
                       </span>
                     )}
                   </div>

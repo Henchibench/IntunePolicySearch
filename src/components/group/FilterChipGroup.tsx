@@ -1,5 +1,4 @@
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
 
 export interface FilterChipOption {
   value: string;
@@ -42,11 +41,11 @@ export function FilterChipGroup({
             type="button"
             onClick={() => toggle(o.value)}
             aria-pressed={active}
-            className="focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+            className="rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Badge
               variant={active ? 'default' : 'outline'}
-              className={cn('cursor-pointer', active && 'shadow-sm')}
+              className="cursor-pointer rounded-md"
             >
               {o.label} · {o.count}
             </Badge>

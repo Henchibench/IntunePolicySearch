@@ -68,11 +68,11 @@ function SettingsGroup({
   const [expanded, setExpanded] = useState(true);
 
   return (
-    <div className="rounded-xl border border-border bg-lifted overflow-hidden">
+    <div className="rounded-2xl border border-border bg-lifted overflow-hidden">
       <button
         type="button"
         onClick={() => setExpanded((e) => !e)}
-        className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground hover:bg-canvas transition-colors"
+        className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm font-semibold text-foreground hover:bg-muted transition-colors"
       >
         {expanded ? (
           <ChevronDown className="h-3.5 w-3.5" />
@@ -89,12 +89,12 @@ function SettingsGroup({
           {settings.map((s, i) => (
             <div key={`${s.key}-${i}`} className="px-4 py-2.5 text-sm">
               <div className="flex items-start justify-between gap-4">
-                <span className="font-medium text-ink">{s.key}</span>
+                <span className="font-semibold text-foreground">{s.key}</span>
                 <span className={cn(
                   'shrink-0 text-right',
-                  s.value === 'Enabled' && 'text-emerald-700',
+                  s.value === 'Enabled' && 'text-success',
                   s.value === 'Disabled' && 'text-muted-foreground',
-                  s.value !== 'Enabled' && s.value !== 'Disabled' && 'text-ink/80',
+                  s.value !== 'Enabled' && s.value !== 'Disabled' && 'text-foreground/80',
                 )}>
                   {s.value}
                 </span>

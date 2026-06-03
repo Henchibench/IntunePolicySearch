@@ -24,9 +24,9 @@ export const FilterDropdown = ({
 }: FilterDropdownProps) => {
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium text-foreground">{label}</label>
+      <label className="text-sm font-semibold text-foreground">{label}</label>
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className="inline-flex h-10 items-center gap-2 rounded-[20px] border-[1.5px] border-input bg-transparent px-4 text-[14px] font-[450] text-ink hover:bg-ink/[0.04]">
+        <SelectTrigger className="inline-flex h-8 items-center gap-2 rounded-md border border-input bg-card px-3 text-sm font-normal text-foreground hover:bg-accent">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>

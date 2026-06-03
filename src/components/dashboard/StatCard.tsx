@@ -16,7 +16,7 @@ export function StatCard({ title, value, icon: Icon, color, className }: StatCar
     <EditorialCard
       radius="card"
       padding="lg"
-      className={cn("flex min-h-[120px] flex-col justify-between", className)}
+      className={cn("flex min-h-[120px] flex-col justify-between bg-card shadow-card", className)}
     >
       <div className="flex items-center justify-between">
         <EyebrowLabel withDot={false}>{title}</EyebrowLabel>
@@ -28,7 +28,7 @@ export function StatCard({ title, value, icon: Icon, color, className }: StatCar
         </div>
       </div>
       <div
-        className="mt-3 text-[36px] font-medium leading-none tracking-tight2"
+        className="mt-3 text-[32px] font-semibold leading-none"
         style={{ color }}
       >
         {value.toLocaleString()}

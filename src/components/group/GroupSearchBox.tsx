@@ -28,7 +28,7 @@ export function GroupSearchBox({ onSelect, autoFocus = false }: GroupSearchBoxPr
 
   return (
     <div className="w-full max-w-2xl">
-      <Command shouldFilter={false} className="rounded-lg border shadow-sm">
+      <Command shouldFilter={false} className="rounded-2xl border shadow-card">
         <div className="relative">
           <CommandInput
             value={query}
@@ -59,7 +59,7 @@ export function GroupSearchBox({ onSelect, autoFocus = false }: GroupSearchBoxPr
                     }}
                     className="flex flex-col items-start gap-0.5"
                   >
-                    <span className="font-medium">{g.displayName}</span>
+                    <span className="font-semibold">{g.displayName}</span>
                     <span className="text-xs text-muted-foreground">
                       {g.mail || g.description || g.id}
                     </span>

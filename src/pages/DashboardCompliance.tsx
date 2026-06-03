@@ -12,7 +12,6 @@ import { DeviceDrawer } from "@/components/dashboard/DeviceDrawer";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ManagedDevice } from "@/types/managedDevice";
-import { EyebrowLabel } from "@/components/ui/EyebrowLabel";
 
 const VALID_PIVOTS: PivotKey[] = ["reason", "platform", "user"];
 
@@ -127,14 +126,14 @@ export default function DashboardCompliance() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-canvas">
+      <div className="min-h-screen bg-background">
         <div className="px-6">
           <PillNav />
           <UtilityRow />
         </div>
-        <main className="mx-auto mt-12 max-w-[1240px] px-8 pb-24">
-          <EyebrowLabel>INTUNE POLICY SEARCH</EyebrowLabel>
-          <h1 className="mt-3 text-[44px] font-medium leading-tight tracking-tight2 text-ink">
+        <main className="mx-auto mt-12 max-w-[1280px] px-6 pb-24">
+          <p className="text-xs font-semibold text-primary">Intune Policy Search</p>
+          <h1 className="mt-2 text-xl font-semibold text-foreground">
             Sign in to view compliance.
           </h1>
         </main>
@@ -143,23 +142,23 @@ export default function DashboardCompliance() {
   }
 
   return (
-    <div className="min-h-screen bg-canvas">
+    <div className="min-h-screen bg-background">
       <div className="px-6">
         <PillNav />
         <UtilityRow onRefresh={refresh} isRefreshing={isLoading} />
       </div>
-      <main className="mx-auto mt-12 max-w-[1240px] px-8 pb-24 space-y-4">
+      <main className="mx-auto mt-12 max-w-[1280px] px-6 pb-24 space-y-4">
         <Link to="/dashboard" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ChevronLeft className="h-4 w-4" /> Back to dashboard
         </Link>
 
-        <EyebrowLabel>COMPLIANCE</EyebrowLabel>
-        <h1 className="mt-3 text-[44px] font-medium leading-tight tracking-tight2 text-ink">
+        <p className="text-xs font-semibold text-primary">Compliance</p>
+        <h1 className="mt-2 text-xl font-semibold text-foreground">
           Every device, every policy.
         </h1>
 
         {error && (
-          <div className="rounded-2xl border border-signal/30 bg-signal/[0.10] p-3 text-sm text-signal-light">
+          <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
             Failed to load devices: {error}
           </div>
         )}
@@ -184,7 +183,7 @@ export default function DashboardCompliance() {
               )}
             </div>
             {refineError && (
-              <div className="rounded-2xl border border-signal/30 bg-signal/[0.10] p-2 text-sm text-signal-light">
+              <div className="rounded-md border border-destructive/30 bg-destructive/10 p-2 text-sm text-destructive">
                 Refine failed: {refineError}
               </div>
             )}
@@ -201,7 +200,7 @@ export default function DashboardCompliance() {
                 onSelect={id => setDevice(id)}
               />
             ) : (
-              <div className="rounded-md border bg-card p-6 text-sm text-muted-foreground">
+              <div className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
                 Select a group to see its devices.
               </div>
             )}

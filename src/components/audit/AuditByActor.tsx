@@ -26,9 +26,9 @@ function formatRelativeTime(dateString: string): string {
 
 function operationColor(op: string): string {
   const lower = op.toLowerCase();
-  if (lower === 'create' || lower === 'post') return 'bg-emerald-500';
-  if (lower === 'delete') return 'bg-red-500';
-  return 'bg-amber-500';
+  if (lower === 'create' || lower === 'post') return 'bg-success';
+  if (lower === 'delete') return 'bg-destructive';
+  return 'bg-warning';
 }
 
 interface ActorGroup {
@@ -65,7 +65,7 @@ export function AuditByActor({ events, actors, onEventClick }: AuditByActorProps
 
   if (groups.length === 0) {
     return (
-      <div className="py-12 text-center text-sm text-slate">
+      <div className="py-12 text-center text-sm text-muted-foreground">
         No audit events found for this time range.
       </div>
     );
@@ -90,20 +90,20 @@ function ActorGroupSection({
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="rounded-xl border border-border bg-lifted overflow-hidden">
+    <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
       <button
         type="button"
         onClick={() => setExpanded(e => !e)}
-        className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground hover:bg-canvas transition-colors"
+        className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-muted-foreground hover:bg-accent transition-colors"
       >
         {expanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-        <div className="normal-case min-w-0">
-          <span className="text-sm font-medium text-ink block truncate">{group.displayName}</span>
+        <div className="min-w-0">
+          <span className="text-sm font-semibold text-foreground block truncate">{group.displayName}</span>
           {group.upn && group.upn !== group.displayName && (
-            <span className="text-[11px] text-slate block truncate">{group.upn}</span>
+            <span className="text-[11px] text-muted-foreground block truncate">{group.upn}</span>
           )}
         </div>
-        <span className="ml-auto tabular-nums text-muted-foreground/60">{group.events.length}</span>
+        <span className="ml-auto tabular-nums text-muted-foreground">{group.events.length}</span>
       </button>
       {expanded && (
         <div className="divide-y divide-border">
@@ -114,14 +114,14 @@ function ActorGroupSection({
                 key={event.id}
                 type="button"
                 onClick={() => onEventClick(event)}
-                className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm hover:bg-canvas transition-colors"
+                className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm hover:bg-accent transition-colors"
               >
-                <span className="w-20 shrink-0 text-xs tabular-nums text-slate">
+                <span className="w-20 shrink-0 text-xs tabular-nums text-muted-foreground">
                   {formatRelativeTime(event.activityDateTime)}
                 </span>
                 <span className={cn('h-2 w-2 shrink-0 rounded-full', operationColor(event.activityOperationType))} />
-                <span className="flex-1 truncate text-ink">{event.activity}</span>
-                <span className="hidden sm:block text-xs text-slate truncate">{resourceName}</span>
+                <span className="flex-1 truncate text-foreground">{event.activity}</span>
+                <span className="hidden sm:block text-xs text-muted-foreground truncate">{resourceName}</span>
               </button>
             );
           })}

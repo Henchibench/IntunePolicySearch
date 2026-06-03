@@ -16,7 +16,7 @@ export function PlatformDonutChart({ data }: PlatformDonutChartProps) {
   const total = data.reduce((sum, item) => sum + item.count, 0);
 
   return (
-    <EditorialCard radius="card" padding="lg" className="flex h-full flex-col">
+    <EditorialCard radius="card" padding="lg" className="flex h-full flex-col bg-card shadow-card">
       <EyebrowLabel>Policies by Platform</EyebrowLabel>
 
       <div className="mt-4 h-[240px]">
@@ -43,11 +43,12 @@ export function PlatformDonutChart({ data }: PlatformDonutChartProps) {
                 name,
               ]}
               contentStyle={{
-                backgroundColor: "#FCFBFA",
-                border: "1px solid rgba(20,20,19,0.08)",
-                borderRadius: "20px",
+                backgroundColor: "hsl(var(--card))",
+                color: "hsl(var(--foreground))",
+                border: "1px solid hsl(var(--border))",
+                borderRadius: "4px",
                 fontSize: "12px",
-                fontWeight: 450,
+                fontWeight: 400,
               }}
             />
           </PieChart>
@@ -57,13 +58,13 @@ export function PlatformDonutChart({ data }: PlatformDonutChartProps) {
       {/* Legend */}
       <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5">
         {data.map((entry) => (
-          <div key={entry.platform} className="flex items-center gap-1.5 text-xs font-[450] text-slate">
+          <div key={entry.platform} className="flex items-center gap-1.5 text-xs text-slate">
             <span
               className="inline-block size-2 rounded-full"
               style={{ backgroundColor: entry.color }}
             />
             {entry.platform}
-            <span className="tabular-nums font-medium text-ink">
+            <span className="tabular-nums font-semibold text-ink">
               {entry.count}
             </span>
           </div>
@@ -71,10 +72,10 @@ export function PlatformDonutChart({ data }: PlatformDonutChartProps) {
       </div>
 
       <div className="mt-4 border-t border-border pt-3 text-center">
-        <span className="text-[28px] font-medium leading-none tracking-tight2 text-ink">
+        <span className="text-[28px] font-semibold leading-none text-ink">
           {total}
         </span>
-        <span className="ml-2 text-xs font-[450] text-slate">total policies</span>
+        <span className="ml-2 text-xs text-slate">total policies</span>
       </div>
     </EditorialCard>
   );

@@ -19,7 +19,7 @@ export const ThemeToggle = () => {
       variant="ghost"
       size="sm"
       onClick={toggleTheme}
-      className="group p-2 rounded-pill hover:bg-ink/5 transition-colors"
+      className="group p-2 rounded-md hover:bg-accent transition-colors"
       aria-label="Toggle dark mode"
     >
       <div

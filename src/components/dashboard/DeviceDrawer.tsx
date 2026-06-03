@@ -30,23 +30,23 @@ export function DeviceDrawer({ device, open, onOpenChange }: DeviceDrawerProps) 
 
   const compliancePillClass =
     device.complianceState === "compliant"
-      ? "inline-flex items-center rounded-pill bg-success/15 px-3 py-1 text-[11.5px] font-medium text-success"
+      ? "inline-flex items-center rounded-md bg-success/10 px-3 py-1 text-[11.5px] font-semibold text-success"
       : device.complianceState === "noncompliant" || device.complianceState === "nonCompliant"
-      ? "inline-flex items-center rounded-pill bg-signal/[0.18] px-3 py-1 text-[11.5px] font-medium text-signal-light"
+      ? "inline-flex items-center rounded-md bg-destructive/10 px-3 py-1 text-[11.5px] font-semibold text-destructive"
       : device.complianceState === "inGracePeriod"
-      ? "inline-flex items-center rounded-pill bg-signal-light/[0.12] px-3 py-1 text-[11.5px] font-medium text-signal-light"
-      : "inline-flex items-center rounded-pill bg-ink/[0.06] px-3 py-1 text-[11.5px] font-medium text-ink";
+      ? "inline-flex items-center rounded-md bg-warning/10 px-3 py-1 text-[11.5px] font-semibold text-warning"
+      : "inline-flex items-center rounded-md bg-muted px-3 py-1 text-[11.5px] font-semibold text-foreground";
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="w-[760px] max-w-[92vw] sm:max-w-none rounded-l-3xl border-l border-border bg-lifted p-7 shadow-drawer-light dark:shadow-drawer flex flex-col"
+        className="w-[760px] max-w-[92vw] sm:max-w-none border-l border-border bg-card p-7 shadow-drawer-light dark:shadow-drawer flex flex-col"
       >
         {/* Header */}
         <div>
-          <EyebrowLabel>DEVICE</EyebrowLabel>
-          <h2 className="mt-1.5 text-[28px] font-medium leading-tight tracking-tight2 text-ink">
+          <EyebrowLabel>Device</EyebrowLabel>
+          <h2 className="mt-1.5 text-[24px] font-semibold leading-tight text-ink">
             {device.deviceName}
           </h2>
           <p className="mt-1 text-[13px] text-slate">
@@ -59,12 +59,12 @@ export function DeviceDrawer({ device, open, onOpenChange }: DeviceDrawerProps) 
               {device.complianceState}
             </span>
             {/* OS + version pill */}
-            <span className="inline-flex items-center rounded-pill bg-ink/[0.06] px-3 py-1 text-[11.5px] font-medium text-ink">
+            <span className="inline-flex items-center rounded-md bg-muted px-3 py-1 text-[11.5px] font-semibold text-foreground">
               {device.operatingSystem}
               {device.osVersion ? ` · ${device.osVersion}` : ""}
             </span>
             {/* Ownership pill */}
-            <span className="inline-flex items-center rounded-pill bg-link/15 px-3 py-1 text-[11.5px] font-medium text-link">
+            <span className="inline-flex items-center rounded-md bg-primary/10 px-3 py-1 text-[11.5px] font-semibold text-link">
               {device.managedDeviceOwnerType ?? "Unknown"}
             </span>
           </div>
@@ -89,7 +89,7 @@ export function DeviceDrawer({ device, open, onOpenChange }: DeviceDrawerProps) 
           <hr />
 
           {error && (
-            <div className="rounded-2xl border border-signal/30 bg-signal/[0.10] p-2 text-sm text-signal-light">
+            <div className="rounded-md border border-destructive/30 bg-destructive/10 p-2 text-sm text-destructive">
               Failed to load: {error}
               <Button onClick={() => load(device.id, device.userPrincipalName)} variant="link" size="sm" className="ml-2">
                 Retry

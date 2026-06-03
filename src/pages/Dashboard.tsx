@@ -8,7 +8,6 @@ import { PlatformDonutChart } from "@/components/dashboard/PlatformDonutChart";
 import { PolicyTypeBarChart } from "@/components/dashboard/PolicyTypeBarChart";
 import { UnassignedPoliciesTable } from "@/components/dashboard/UnassignedPoliciesTable";
 import { RecentlyModifiedTable } from "@/components/dashboard/RecentlyModifiedTable";
-import { EyebrowLabel } from "@/components/ui/EyebrowLabel";
 import { useAuth } from "@/hooks/useAuth";
 import { useManagedDevices } from "@/hooks/useManagedDevices";
 import { usePolicyStats } from "@/hooks/usePolicyStats";
@@ -70,14 +69,14 @@ export default function Dashboard() {
   /* ── Unauthenticated state ── */
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-canvas">
+      <div className="min-h-screen bg-background">
         <div className="px-6">
           <PillNav />
           <UtilityRow />
         </div>
-        <main className="mx-auto mt-12 max-w-[1240px] px-8 pb-24">
-          <EyebrowLabel>INTUNE POLICY SEARCH</EyebrowLabel>
-          <h1 className="mt-3 text-[44px] font-medium leading-tight tracking-tight2 text-ink">
+        <main className="mx-auto mt-12 max-w-[1280px] px-6 pb-24">
+          <p className="text-xs font-semibold text-primary">Intune Policy Search</p>
+          <h1 className="mt-2 text-xl font-semibold text-foreground">
             Sign in to view the dashboard.
           </h1>
         </main>
@@ -86,20 +85,20 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-canvas">
+    <div className="min-h-screen bg-background">
       <div className="px-6">
         <PillNav />
         <UtilityRow onRefresh={handleRefresh} isRefreshing={isLoading} />
       </div>
-      <main className="mx-auto mt-12 max-w-[1240px] px-8 pb-24">
-        <EyebrowLabel>DASHBOARD</EyebrowLabel>
-        <h1 className="mt-3 text-[44px] font-medium leading-tight tracking-tight2 text-ink">
+      <main className="mx-auto mt-12 max-w-[1280px] px-6 pb-24">
+        <p className="text-xs font-semibold text-primary">Dashboard</p>
+        <h1 className="mt-2 text-xl font-semibold text-foreground">
           Your Intune estate at a glance.
         </h1>
 
         <div className="mt-8 space-y-4">
           {(devicesError || policiesError) && (
-            <div className="rounded-2xl border border-signal/30 bg-signal/[0.10] p-3 text-sm text-signal-light">
+            <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
               {devicesError && <p>Failed to load devices: {devicesError}</p>}
               {policiesError && <p>Failed to load policies: {policiesError}</p>}
             </div>
@@ -129,13 +128,13 @@ export default function Dashboard() {
 
         {/* ── Policy Health ── */}
         <div className="mt-16">
-          <EyebrowLabel>POLICY HEALTH</EyebrowLabel>
-          <h2 className="mt-3 text-[28px] font-medium leading-tight tracking-tight2 text-ink">
+          <p className="text-xs font-semibold text-primary">Policy Health</p>
+          <h2 className="mt-2 text-lg font-semibold text-foreground">
             Policy landscape overview.
           </h2>
 
           {policiesLoading && policies.length === 0 ? (
-            <div className="mt-8 flex items-center gap-3 text-sm font-[450] text-slate">
+            <div className="mt-8 flex items-center gap-3 text-sm text-muted-foreground">
               <Loader2 className="size-4 animate-spin" />
               Loading policies from Intune...
             </div>
@@ -147,31 +146,31 @@ export default function Dashboard() {
                   title="Total"
                   value={policyStats.total}
                   icon={FileStack}
-                  color="#141413"
+                  color="#242424"
                 />
                 <StatCard
                   title="Device Config"
                   value={getTypeCount("Device Configuration")}
                   icon={Settings}
-                  color="#3860BE"
+                  color="#0F6CBD"
                 />
                 <StatCard
                   title="Compliance"
                   value={getTypeCount("Compliance Policy")}
                   icon={ShieldCheck}
-                  color="#5CC58A"
+                  color="#107C10"
                 />
                 <StatCard
                   title="App Protection"
                   value={getTypeCount("App Protection")}
                   icon={AppWindow}
-                  color="#CF4500"
+                  color="#F7630C"
                 />
                 <StatCard
                   title="Settings Catalog"
                   value={getTypeCount("Configuration Policy")}
                   icon={Settings}
-                  color="#9A3A0A"
+                  color="#616161"
                 />
               </div>
 

@@ -23,8 +23,8 @@ export function DeviceTable({ devices, selectedDeviceId, onSelect }: DeviceTable
   });
 
   return (
-    <EditorialCard radius="frame" padding="lg" className="flex flex-col overflow-hidden">
-      <div className="sticky top-0 z-10 grid grid-cols-[2fr_1.4fr_1fr_0.8fr_0.8fr] gap-4 border-b border-border bg-lifted py-3 text-[10.5px] font-bold uppercase tracking-eyebrow text-slate">
+    <EditorialCard radius="frame" padding="lg" className="flex flex-col overflow-hidden bg-card shadow-card">
+      <div className="sticky top-0 z-10 grid grid-cols-[2fr_1.4fr_1fr_0.8fr_0.8fr] gap-4 border-b border-border bg-muted py-3 text-xs font-semibold text-foreground">
         <div>Device</div>
         <div>User</div>
         <div>Platform</div>
@@ -44,7 +44,7 @@ export function DeviceTable({ devices, selectedDeviceId, onSelect }: DeviceTable
                   key={device.id}
                   onClick={() => onSelect(device.id)}
                   className={cn(
-                    "absolute left-0 right-0 grid grid-cols-[2fr_1.4fr_1fr_0.8fr_0.8fr] gap-4 border-b border-border/50 px-3 py-3 text-[12.5px] font-[450] text-ink hover:bg-ink/[0.03] cursor-pointer items-center text-left",
+                    "absolute left-0 right-0 grid grid-cols-[2fr_1.4fr_1fr_0.8fr_0.8fr] gap-4 border-b border-border px-3 py-3 text-[13px] font-normal text-foreground hover:bg-accent/50 cursor-pointer items-center text-left",
                     selected && "bg-accent"
                   )}
                   style={{
@@ -58,12 +58,12 @@ export function DeviceTable({ devices, selectedDeviceId, onSelect }: DeviceTable
                   <div>
                     <span className={cn(
                       device.complianceState === "compliant"
-                        ? "inline-flex items-center rounded-pill bg-success/15 px-2.5 py-0.5 text-[11px] font-medium text-success"
+                        ? "inline-flex items-center rounded-md bg-success/10 px-2.5 py-0.5 text-[11px] font-semibold text-success"
                         : device.complianceState === "noncompliant" || device.complianceState === "nonCompliant"
-                        ? "inline-flex items-center rounded-pill bg-signal/[0.18] px-2.5 py-0.5 text-[11px] font-medium text-signal-light"
+                        ? "inline-flex items-center rounded-md bg-destructive/10 px-2.5 py-0.5 text-[11px] font-semibold text-destructive"
                         : device.complianceState === "inGracePeriod"
-                        ? "inline-flex items-center rounded-pill bg-signal-light/[0.12] px-2.5 py-0.5 text-[11px] font-medium text-signal-light"
-                        : "inline-flex items-center rounded-pill bg-ink/[0.06] px-2.5 py-0.5 text-[11px] font-medium text-ink"
+                        ? "inline-flex items-center rounded-md bg-warning/10 px-2.5 py-0.5 text-[11px] font-semibold text-warning"
+                        : "inline-flex items-center rounded-md bg-muted px-2.5 py-0.5 text-[11px] font-semibold text-foreground"
                     )}>
                       {device.complianceState}
                     </span>
