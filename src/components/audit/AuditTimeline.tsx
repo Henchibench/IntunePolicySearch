@@ -25,9 +25,9 @@ function formatRelativeTime(dateString: string): string {
 
 function operationColor(op: string): string {
   const lower = op.toLowerCase();
-  if (lower === 'create' || lower === 'post') return 'bg-emerald-500';
-  if (lower === 'delete') return 'bg-red-500';
-  return 'bg-amber-500'; // update, patch
+  if (lower === 'create' || lower === 'post') return 'bg-success';
+  if (lower === 'delete') return 'bg-destructive';
+  return 'bg-warning'; // update, patch
 }
 
 function getActorDisplay(event: AuditEvent, actors: Map<string, ResolvedActor>): { name: string; secondary: string } {
@@ -46,14 +46,14 @@ function getActorDisplay(event: AuditEvent, actors: Map<string, ResolvedActor>):
 export function AuditTimeline({ events, actors, onEventClick }: AuditTimelineProps) {
   if (events.length === 0) {
     return (
-      <div className="py-12 text-center text-sm text-slate">
+      <div className="py-12 text-center text-sm text-muted-foreground">
         No audit events found for this time range. Try widening the date range.
       </div>
     );
   }
 
   return (
-    <div className="rounded-xl border border-border bg-lifted overflow-hidden divide-y divide-border">
+    <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden divide-y divide-border">
       {events.map((event) => {
         const actor = getActorDisplay(event, actors);
         const resourceName = event.resources?.[0]?.displayName || event.displayName;
@@ -62,10 +62,10 @@ export function AuditTimeline({ events, actors, onEventClick }: AuditTimelinePro
             key={event.id}
             type="button"
             onClick={() => onEventClick(event)}
-            className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-canvas transition-colors"
+            className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-accent transition-colors"
           >
             {/* Time */}
-            <span className="w-20 shrink-0 text-xs tabular-nums text-slate">
+            <span className="w-20 shrink-0 text-xs tabular-nums text-muted-foreground">
               {formatRelativeTime(event.activityDateTime)}
             </span>
 
@@ -77,15 +77,15 @@ export function AuditTimeline({ events, actors, onEventClick }: AuditTimelinePro
 
             {/* Activity + resource */}
             <div className="min-w-0 flex-1">
-              <span className="font-medium text-ink truncate block">{event.activity}</span>
-              <span className="text-xs text-slate truncate block">{resourceName}</span>
+              <span className="font-semibold text-foreground truncate block">{event.activity}</span>
+              <span className="text-xs text-muted-foreground truncate block">{resourceName}</span>
             </div>
 
             {/* Actor */}
             <div className="hidden sm:block w-40 shrink-0 text-right">
-              <span className="text-xs text-ink truncate block">{actor.name}</span>
+              <span className="text-xs text-foreground truncate block">{actor.name}</span>
               {actor.secondary && (
-                <span className="text-[11px] text-slate truncate block">{actor.secondary}</span>
+                <span className="text-[11px] text-muted-foreground truncate block">{actor.secondary}</span>
               )}
             </div>
 

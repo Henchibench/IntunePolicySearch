@@ -30,14 +30,14 @@ export function RecentlyModifiedTable({ policies }: RecentlyModifiedTableProps) 
   const displayPolicies = policies.slice(0, 8);
 
   return (
-    <EditorialCard radius="card" padding="lg" className="flex h-full flex-col">
+    <EditorialCard radius="card" padding="lg" className="flex h-full flex-col bg-card shadow-card">
       <EyebrowLabel>
-        <Clock className="size-3 text-link" />
+        <Clock className="size-3 text-muted-foreground" />
         Recently Modified
       </EyebrowLabel>
 
       {policies.length === 0 ? (
-        <div className="mt-6 text-center text-sm font-[450] text-slate">
+        <div className="mt-6 text-center text-sm text-slate">
           No recent modifications.
         </div>
       ) : (
@@ -48,15 +48,15 @@ export function RecentlyModifiedTable({ policies }: RecentlyModifiedTableProps) 
               className="flex items-center justify-between gap-3 py-2.5"
             >
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[13px] font-medium text-ink">
+                <p className="truncate text-[13px] font-semibold text-ink">
                   {policy.name}
                 </p>
-                <span className="text-[10px] font-bold uppercase tracking-eyebrow text-slate">
+                <span className="text-[11px] text-slate">
                   {SHORT_TYPE[policy.type] || policy.type}
                 </span>
               </div>
               <div className="shrink-0 text-right">
-                <p className="text-[12px] font-[450] tabular-nums text-slate">
+                <p className="text-[12px] tabular-nums text-slate">
                   {formatRelativeTime(policy.lastModified)}
                 </p>
                 {policy.createdBy && policy.createdBy !== "Unknown" && (

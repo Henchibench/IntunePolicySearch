@@ -25,7 +25,7 @@ export function ResultsDetailDrawer({ row, open, onOpenChange }: ResultsDetailDr
         {row && (
           <>
             <SheetHeader className="space-y-2">
-              <SheetTitle className="text-lg">{row.name}</SheetTitle>
+              <SheetTitle className="text-2xl font-semibold">{row.name}</SheetTitle>
               <div className="flex flex-wrap items-center gap-2">
                 <GroupTypeBadge category={row.category} />
                 <Badge variant={row.intent === 'exclude' ? 'destructive' : 'default'}>
@@ -81,7 +81,7 @@ export function ResultsDetailDrawer({ row, open, onOpenChange }: ResultsDetailDr
                 {showRaw ? 'Hide raw JSON' : 'Raw JSON'}
               </Button>
               {showRaw && (
-                <pre className="rounded bg-muted p-3 text-xs overflow-x-auto">
+                <pre className="rounded-md border border-border bg-muted p-3 text-xs font-mono text-foreground overflow-x-auto">
                   {JSON.stringify(row.rawObject, null, 2)}
                 </pre>
               )}

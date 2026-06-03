@@ -10,8 +10,8 @@ interface UtilityRowProps {
 }
 
 /**
- * Quiet text-only row beneath the PillNav. Identity + connection state,
- * Refresh, ninja theme toggle. Right-aligned, max-width matches the pill.
+ * Quiet text-only row beneath the top nav. Identity + connection state,
+ * Refresh, ninja theme toggle. Right-aligned.
  */
 export function UtilityRow({ onRefresh, isRefreshing = false, className }: UtilityRowProps) {
   const { isAuthenticated, user } = useAuth();
@@ -19,7 +19,7 @@ export function UtilityRow({ onRefresh, isRefreshing = false, className }: Utili
   return (
     <div
       className={cn(
-        "mx-auto mt-3 flex max-w-[860px] items-center justify-end gap-5 px-7 text-[12px] text-slate",
+        "mx-auto mt-3 flex max-w-[1280px] items-center justify-end gap-5 px-6 text-[12px] text-muted-foreground",
         className,
       )}
     >
@@ -35,7 +35,7 @@ export function UtilityRow({ onRefresh, isRefreshing = false, className }: Utili
           type="button"
           onClick={onRefresh}
           disabled={isRefreshing}
-          className="inline-flex items-center gap-1.5 transition-colors hover:text-ink disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 transition-colors hover:text-foreground disabled:opacity-50"
         >
           <RefreshCw
             className={cn("size-3.5", isRefreshing && "animate-refresh-spin")}

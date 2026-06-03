@@ -10,7 +10,7 @@ interface GroupListProps {
 
 export function GroupList({ groups, selectedKey, onSelect, total }: GroupListProps) {
   return (
-    <div className="rounded-md border bg-card divide-y">
+    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card divide-y divide-border">
       {groups.length === 0 && (
         <div className="p-4 text-sm text-muted-foreground">No devices match.</div>
       )}
@@ -27,7 +27,7 @@ export function GroupList({ groups, selectedKey, onSelect, total }: GroupListPro
             )}
           >
             <div className="min-w-0 flex-1">
-              <div className="text-sm font-medium truncate">{g.label}</div>
+              <div className="text-sm font-semibold truncate">{g.label}</div>
               <div className="mt-1 h-1.5 rounded-full bg-muted overflow-hidden">
                 <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
               </div>

@@ -40,7 +40,7 @@ export function AuditDetailDrawer({ event, open, onOpenChange, actors }: AuditDe
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
         <SheetHeader className="space-y-2">
-          <SheetTitle className="text-lg">{event.activity}</SheetTitle>
+          <SheetTitle className="text-2xl font-semibold leading-8">{event.activity}</SheetTitle>
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="outline">{event.activityOperationType}</Badge>
             <Badge
@@ -55,27 +55,27 @@ export function AuditDetailDrawer({ event, open, onOpenChange, actors }: AuditDe
         <div className="mt-4 space-y-4 text-sm">
           {/* When */}
           <div>
-            <span className="text-slate">When:</span>{' '}
+            <span className="text-muted-foreground">When:</span>{' '}
             {formatFullTimestamp(event.activityDateTime)}
           </div>
 
           {/* Who */}
           <div>
-            <span className="text-slate">Who:</span>{' '}
-            <span className="font-medium">{actorName}</span>
+            <span className="text-muted-foreground">Who:</span>{' '}
+            <span className="font-semibold">{actorName}</span>
             {actorUpn && actorUpn !== actorName && (
-              <span className="ml-1 text-xs text-slate">({actorUpn})</span>
+              <span className="ml-1 text-xs text-muted-foreground">({actorUpn})</span>
             )}
           </div>
           {event.actor?.applicationDisplayName && (
             <div>
-              <span className="text-slate">Application:</span>{' '}
+              <span className="text-muted-foreground">Application:</span>{' '}
               {event.actor.applicationDisplayName}
             </div>
           )}
           {event.actor?.ipAddress && (
             <div>
-              <span className="text-slate">IP Address:</span>{' '}
+              <span className="text-muted-foreground">IP Address:</span>{' '}
               {event.actor.ipAddress}
             </div>
           )}
@@ -83,16 +83,16 @@ export function AuditDetailDrawer({ event, open, onOpenChange, actors }: AuditDe
           {/* Resource */}
           {resource && (
             <div>
-              <span className="text-slate">Resource:</span>{' '}
+              <span className="text-muted-foreground">Resource:</span>{' '}
               {resource.displayName}
-              <span className="ml-1 text-xs text-slate">({resource.type})</span>
+              <span className="ml-1 text-xs text-muted-foreground">({resource.type})</span>
             </div>
           )}
 
           {/* Correlation ID */}
           {event.correlationId && (
             <div>
-              <span className="text-slate">Correlation ID:</span>{' '}
+              <span className="text-muted-foreground">Correlation ID:</span>{' '}
               <span className="font-mono text-xs">{event.correlationId}</span>
             </div>
           )}
@@ -113,7 +113,7 @@ export function AuditDetailDrawer({ event, open, onOpenChange, actors }: AuditDe
             {showRaw ? 'Hide raw JSON' : 'Raw JSON'}
           </Button>
           {showRaw && (
-            <pre className="rounded bg-muted p-3 text-xs overflow-x-auto">
+            <pre className="rounded-md bg-muted p-3 text-xs font-mono overflow-x-auto">
               {JSON.stringify(event, null, 2)}
             </pre>
           )}

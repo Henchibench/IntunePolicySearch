@@ -96,7 +96,7 @@ export function ResultsTable({
         header: ({ column }) => (
           <SortHeader column={column}>Name</SortHeader>
         ),
-        cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
+        cell: ({ row }) => <span className="font-semibold">{row.original.name}</span>,
       },
       {
         accessorKey: 'category',
@@ -244,7 +244,7 @@ export function ResultsTable({
           placeholder="Search by name…"
           value={globalFilter}
           onChange={(e) => setGlobalFilter(e.target.value)}
-          className="max-w-xs h-9"
+          className="max-w-xs h-8"
         />
         <Button
           variant="ghost"
@@ -265,7 +265,7 @@ export function ResultsTable({
           />
         </div>
       </div>
-      <div className="rounded-md border overflow-x-auto">
+      <div className="rounded-2xl border overflow-x-auto shadow-card">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((hg) => (

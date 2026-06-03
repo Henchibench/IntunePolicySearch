@@ -98,24 +98,24 @@ export default function Audit() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-canvas">
+      <div className="min-h-screen bg-background">
         <PillNav />
         <div className="mx-auto max-w-7xl px-4 py-6">
           <UtilityRow />
-          <p className="mt-12 text-center text-sm text-slate">Sign in to view audit events.</p>
+          <p className="mt-12 text-center text-sm text-muted-foreground">Sign in to view audit events.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-canvas">
+    <div className="min-h-screen bg-background">
       <PillNav />
       <div className="mx-auto max-w-7xl px-4 py-6">
         <UtilityRow />
 
         <div className="mt-6 space-y-4">
-          <h1 className="text-2xl font-medium tracking-tight2 text-ink">Audit Log</h1>
+          <h1 className="text-xl font-semibold text-foreground">Audit Log</h1>
 
           {/* Filter bar */}
           <AuditFilterBar
@@ -126,7 +126,7 @@ export default function Audit() {
 
           {/* Pivot tabs */}
           <div className="flex items-center justify-between">
-            <div role="tablist" className="inline-flex gap-1 rounded-lg bg-muted p-1">
+            <div role="tablist" className="inline-flex gap-1 rounded-md bg-muted p-1">
               {PIVOT_TABS.map(t => (
                 <button
                   key={t.key}
@@ -136,7 +136,7 @@ export default function Audit() {
                   className={cn(
                     'px-3 py-1.5 rounded-md text-sm transition-colors',
                     pivot === t.key
-                      ? 'bg-background shadow-sm text-foreground'
+                      ? 'bg-background shadow-sm font-semibold text-foreground'
                       : 'text-muted-foreground hover:text-foreground',
                   )}
                 >
@@ -144,21 +144,21 @@ export default function Audit() {
                 </button>
               ))}
             </div>
-            <span className="text-xs tabular-nums text-slate">
+            <span className="text-xs tabular-nums text-muted-foreground">
               {filteredEvents.length} event{filteredEvents.length !== 1 ? 's' : ''}
             </span>
           </div>
 
           {/* Error */}
           {error && (
-            <div className="rounded-2xl border border-signal/30 bg-signal/[0.10] p-3 text-sm text-signal-light">
+            <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
               {error}
             </div>
           )}
 
           {/* Loading */}
           {isLoading && (
-            <div className="py-12 text-center text-sm text-slate">Loading audit events...</div>
+            <div className="py-12 text-center text-sm text-muted-foreground">Loading audit events...</div>
           )}
 
           {/* Results */}

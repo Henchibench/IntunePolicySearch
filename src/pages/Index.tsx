@@ -4,8 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { PillNav } from "@/components/PillNav";
 import { UtilityRow } from "@/components/UtilityRow";
 import { Footer } from "@/components/Footer";
-import { EyebrowLabel } from "@/components/ui/EyebrowLabel";
-import { OrbitalPortrait } from "@/components/landing/OrbitalPortrait";
+import { Button } from "@/components/ui/button";
 
 export default function Index() {
   const { isAuthenticated, isLoading, login } = useAuth();
@@ -22,47 +21,55 @@ export default function Index() {
   }
 
   return (
-    <div className="min-h-screen bg-canvas">
+    <div className="min-h-screen bg-background">
       <div className="px-6">
         <PillNav />
         <UtilityRow />
       </div>
 
-      <main className="relative mx-auto mt-20 max-w-[1240px] px-8">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-24 select-none text-center text-[120px] font-medium leading-none tracking-tight2 text-ink/[0.04] dark:text-ink/[0.05]"
-        >
-          Compliance.
-        </div>
-
-        <div className="relative grid grid-cols-1 items-center gap-16 md:grid-cols-2">
+      <main className="mx-auto mt-16 max-w-[1280px] px-6">
+        <section className="grid grid-cols-1 items-center gap-12 md:grid-cols-2">
           <div>
-            <EyebrowLabel>INTUNE POLICY SEARCH</EyebrowLabel>
-            <h1 className="mt-4 text-[64px] font-medium leading-none tracking-tight2 text-ink">
-              See every device.<br />Every policy.<br />No exports.
+            <p className="text-xs font-semibold uppercase text-primary">INTUNE POLICY SEARCH</p>
+            <h1 className="mt-3 text-4xl font-semibold leading-tight text-foreground sm:text-5xl">
+              See every device. Every policy. No exports.
             </h1>
-            <p className="mt-6 max-w-[44ch] text-[16px] font-[450] leading-relaxed text-charcoal">
+            <p className="mt-4 max-w-[44ch] text-sm leading-relaxed text-muted-foreground">
               A read-only window into your Intune tenant. Search policies, drill
               into compliance, find why a device is failing — without opening
               the portal.
             </p>
+            <div className="mt-8">
+              <Button onClick={login} variant="ink" size="lg">
+                Sign in to get started
+              </Button>
+            </div>
           </div>
 
-          <OrbitalPortrait onCta={login} />
-        </div>
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
+            <h2 className="text-lg font-semibold text-foreground">Connect your tenant</h2>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              Sign in with your Microsoft account to query Microsoft Graph
+              directly. Nothing is stored — every result is read live from your
+              tenant.
+            </p>
+            <Button onClick={login} variant="ink" className="mt-6 w-full">
+              Sign in with Microsoft
+            </Button>
+          </div>
+        </section>
 
-        <section className="mt-32">
-          <EyebrowLabel>WHAT IT DOES</EyebrowLabel>
-          <div className="mt-6 grid grid-cols-1 gap-10 md:grid-cols-3">
+        <section className="mt-24">
+          <p className="text-xs font-semibold text-primary">What it does</p>
+          <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-3">
             {[
               { h: "Policy search", b: "Find any compliance, configuration, or app-protection policy by name, platform, or assignment." },
               { h: "Compliance dashboard", b: "Live KPI tiles, virtualized device table, drill-down by policy or pivot." },
               { h: "Device deep-fetch", b: "On-demand per-setting failure reasons, batched against Microsoft Graph." },
             ].map((item) => (
-              <div key={item.h}>
-                <h3 className="text-[24px] font-medium tracking-tight2 text-ink">{item.h}</h3>
-                <p className="mt-2 text-[14px] font-[450] leading-relaxed text-charcoal">{item.b}</p>
+              <div key={item.h} className="rounded-2xl border border-border bg-card p-5 shadow-card">
+                <h3 className="text-base font-semibold text-foreground">{item.h}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.b}</p>
               </div>
             ))}
           </div>

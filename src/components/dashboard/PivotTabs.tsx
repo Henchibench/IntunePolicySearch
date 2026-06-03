@@ -15,7 +15,7 @@ const TABS: Array<{ key: PivotKey; label: string }> = [
 
 export function PivotTabs({ value, onChange }: PivotTabsProps) {
   return (
-    <div role="tablist" className="inline-flex gap-1 rounded-lg bg-muted p-1">
+    <div role="tablist" className="inline-flex gap-1 border-b border-border">
       {TABS.map(t => (
         <button
           key={t.key}
@@ -23,10 +23,10 @@ export function PivotTabs({ value, onChange }: PivotTabsProps) {
           aria-selected={value === t.key}
           onClick={() => onChange(t.key)}
           className={cn(
-            "px-3 py-1.5 rounded-md text-sm transition-colors",
+            "relative px-3 py-2 text-sm transition-colors after:absolute after:inset-x-2 after:bottom-0 after:h-0.5 after:rounded-full after:transition-colors",
             value === t.key
-              ? "bg-background shadow-sm text-foreground"
-              : "text-muted-foreground hover:text-foreground"
+              ? "font-semibold text-foreground after:bg-primary"
+              : "text-muted-foreground hover:text-foreground after:bg-transparent"
           )}
         >
           {t.label}
