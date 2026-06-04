@@ -2,7 +2,8 @@
 
 A fast, read-only console for exploring a Microsoft Intune tenant. What began as a policy search tool is now a multi-surface admin companion: search configuration policies down to the individual setting, browse a device and compliance dashboard, trace group assignments, and review the full audit history — all client-side, powered by the Microsoft Graph API and styled with **Microsoft Fluent 2**.
 
-![Dashboard Screenshot](intune_policy_search.png)
+![Intune Policy Search — landing (light theme)](docs/images/landing-light.png)
+![Intune Policy Search — landing (dark theme)](docs/images/landing-dark.png)
 
 > Read-only by design. The app only ever *reads* from Graph — it never creates, modifies, or deletes anything in your tenant.
 
