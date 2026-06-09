@@ -52,6 +52,12 @@
         }
       ]
     },
+    "nsis": {
+      "artifactName": "Intune-Policy-Search-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "Intune-Policy-Search-${version}-portable.${ext}"
+    },
     "mac": {
       "target": [
         {
@@ -59,7 +65,8 @@
           "arch": ["x64", "arm64"]
         }
       ],
-      "category": "public.app-category.developer-tools"
+      "category": "public.app-category.developer-tools",
+      "artifactName": "Intune-Policy-Search-${version}-${arch}.${ext}"
     },
     "linux": {
       "target": [
@@ -68,7 +75,8 @@
           "arch": ["x64"]
         }
       ],
-      "category": "Utility"
+      "category": "Utility",
+      "artifactName": "Intune-Policy-Search-${version}-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": false,

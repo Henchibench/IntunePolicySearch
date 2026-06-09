@@ -62,11 +62,13 @@ jobs:
         working-directory: electron-app
         run: npx tsc
 
+      # --publish never: the release job below uploads the installers;
+      # otherwise electron-builder self-publishes on tag builds and the
+      # release ends up with duplicate assets
       - name: Build installer
         working-directory: electron-app
-        run: npx electron-builder ${{ matrix.builder-args }}
+        run: npx electron-builder ${{ matrix.builder-args }} --publish never
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # No Apple Developer certificate available; ship unsigned mac builds
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
 
