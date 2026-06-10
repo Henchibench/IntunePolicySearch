@@ -186,6 +186,7 @@ export function DriverDetailDrawer({ driver, open, onOpenChange }: Props) {
             <DriverDevicesTab
               catalogEntryIds={driver.inventoryIds}
               enabled={activeTab === 'devices'}
+              applicableDeviceCount={driver.applicableDeviceCount}
               onLoaded={setDeviceCount}
             />
           </TabsContent>

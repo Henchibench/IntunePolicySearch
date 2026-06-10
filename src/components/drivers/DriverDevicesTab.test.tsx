@@ -50,12 +50,23 @@ describe('DriverDevicesTab', () => {
     expect(screen.getByText(/Loading device report/i)).toBeInTheDocument();
   });
 
-  it('renders the empty state when no devices', () => {
+  it('renders the genuine empty state when nothing is applicable', () => {
     mockHook.mockReturnValue({
       devices: [], totalCount: 0, isLoading: false, error: null, retry: () => {},
     });
-    render(<DriverDevicesTab catalogEntryIds={["cat-1"]} enabled />);
+    render(<DriverDevicesTab catalogEntryIds={["cat-1"]} enabled applicableDeviceCount={0} />);
     expect(screen.getByText(/No devices currently apply/i)).toBeInTheDocument();
+  });
+
+  it('explains the gap when devices are applicable but have no reported status', () => {
+    mockHook.mockReturnValue({
+      devices: [], totalCount: 0, isLoading: false, error: null, retry: () => {},
+    });
+    render(<DriverDevicesTab catalogEntryIds={["cat-1"]} enabled applicableDeviceCount={3} />);
+    // Must not contradict the list, which advertised applicable devices.
+    expect(screen.queryByText(/No devices currently apply/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/applicable to 3 device/i)).toBeInTheDocument();
+    expect(screen.getByText(/no.*reported.*status|approved and offered/i)).toBeInTheDocument();
   });
 
   it('renders an error state with a retry button', () => {

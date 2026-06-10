@@ -49,4 +49,11 @@ describe('DriverTable', () => {
     render(<DriverTable drivers={[]} onDriverClick={() => {}} />);
     expect(screen.getByText(/No drivers match/i)).toBeInTheDocument();
   });
+
+  it('labels the count column "Applicable" (it is the inventory applicable count, not the report list)', () => {
+    render(<DriverTable drivers={[driver({ applicableDeviceCount: 5 })]} onDriverClick={() => {}} />);
+    expect(screen.getByRole('columnheader', { name: 'Applicable' })).toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: 'Devices' })).not.toBeInTheDocument();
+    expect(screen.getByText('5')).toBeInTheDocument();
+  });
 });

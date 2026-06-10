@@ -43,13 +43,13 @@ export function DriverTable({ drivers, onDriverClick }: Props) {
   }
   return (
     <div role="table" className="overflow-hidden rounded-2xl border border-border">
-      <div role="row" className="grid grid-cols-[24px_1fr_120px_120px_120px_80px_80px] gap-3 border-b border-border bg-muted px-3 py-2 text-xs font-medium text-slate">
+      <div role="row" className="grid grid-cols-[24px_1fr_120px_120px_120px_96px_80px] gap-3 border-b border-border bg-muted px-3 py-2 text-xs font-medium text-slate">
         <div role="columnheader" aria-label="Criticality" />
         <div role="columnheader">Driver</div>
         <div role="columnheader">Version</div>
         <div role="columnheader">Released</div>
         <div role="columnheader">Approval</div>
-        <div role="columnheader" className="text-right">Devices</div>
+        <div role="columnheader" className="text-right">Applicable</div>
         <div role="columnheader" className="text-right">Policies</div>
       </div>
       {drivers.map((d) => (
@@ -58,7 +58,7 @@ export function DriverTable({ drivers, onDriverClick }: Props) {
           role="row"
           aria-label={d.name}
           onClick={() => onDriverClick(d)}
-          className="grid cursor-pointer grid-cols-[24px_1fr_120px_120px_120px_80px_80px] items-center gap-3 border-b border-border px-3 py-2 hover:bg-muted/50"
+          className="grid cursor-pointer grid-cols-[24px_1fr_120px_120px_120px_96px_80px] items-center gap-3 border-b border-border px-3 py-2 hover:bg-muted/50"
         >
           <div role="cell"><DriverCriticalityBadge criticality={d.catalog?.criticality ?? null} /></div>
           <div role="cell">

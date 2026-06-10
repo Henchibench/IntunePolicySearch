@@ -12,6 +12,9 @@ import type { DriverApplicableDevice } from '@/types/drivers';
 interface Props {
   catalogEntryIds: string[];
   enabled: boolean;
+  /** Inventory's applicable-device count. The status report below counts a
+   *  different population, so this is used only to explain an empty list. */
+  applicableDeviceCount?: number;
   /** Reports the report's total device count once a fetch completes, so the
    *  parent can label the tab with a number that matches this list. */
   onLoaded?: (totalCount: number) => void;
@@ -46,7 +49,7 @@ function intuneDeviceUrl(deviceId: string): string {
   return `https://intune.microsoft.com/#view/Microsoft_Intune_Devices/DeviceSettingsMenuBlade/~/overview/mdmDeviceId/${encodeURIComponent(deviceId)}`;
 }
 
-export function DriverDevicesTab({ catalogEntryIds, enabled, onLoaded }: Props) {
+export function DriverDevicesTab({ catalogEntryIds, enabled, applicableDeviceCount = 0, onLoaded }: Props) {
   const { devices, totalCount, isLoading, error, retry } = useDriverApplicableDevices(
     catalogEntryIds,
     enabled
@@ -94,6 +97,19 @@ export function DriverDevicesTab({ catalogEntryIds, enabled, onLoaded }: Props) 
   }
 
   if (devices.length === 0) {
+    // The status report is empty. If the inventory still says the driver is
+    // applicable to devices, explain the gap rather than contradict the list —
+    // applicable devices only appear here once the driver is approved and
+    // offered, so they have a reported update status.
+    if (applicableDeviceCount > 0) {
+      return (
+        <div className="py-8 text-center text-sm text-slate">
+          Applicable to {applicableDeviceCount} device{applicableDeviceCount !== 1 ? 's' : ''}, but
+          none have a reported update status yet. Devices appear here once the
+          driver is approved and offered to them.
+        </div>
+      );
+    }
     return (
       <div className="py-8 text-center text-sm text-slate">
         No devices currently apply for this driver.
