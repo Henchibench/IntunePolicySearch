@@ -86,7 +86,8 @@ export type CatalogSource = 'electron-sync' | 'baked' | 'none';
 export interface CatalogStatus {
   lastSyncedAt: string | null;
   entryCount: number;
-  source: CatalogSource;
+  /** What the Electron main process reports: a synced catalog on disk, or nothing */
+  source: 'synced' | 'none';
 }
 
 /** A row in the per-driver device list, normalized from the cached report response */
