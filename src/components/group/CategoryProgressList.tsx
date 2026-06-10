@@ -32,7 +32,7 @@ export function CategoryProgressList({
   );
 
   return (
-    <div className="rounded-lg border bg-card p-4 space-y-3">
+    <div className="rounded-2xl border bg-card p-4 space-y-3 shadow-card">
       <div className="space-y-1">
         <div className="text-base font-semibold">Inspecting {groupName}…</div>
         <div className="text-sm text-muted-foreground">
@@ -71,12 +71,12 @@ function StatusIcon({ state }: { state: CategoryState }) {
   if (state.status === 'loading')
     return <Loader2 className="h-4 w-4 animate-spin text-primary" />;
   if (state.status === 'done')
-    return <Check className="h-4 w-4 text-emerald-600" />;
+    return <Check className="h-4 w-4 text-success" />;
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <AlertCircle className="h-4 w-4 text-amber-600" />
+          <AlertCircle className="h-4 w-4 text-warning" />
         </TooltipTrigger>
         <TooltipContent>{state.error ?? 'Unknown error'}</TooltipContent>
       </Tooltip>

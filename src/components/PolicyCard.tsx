@@ -14,32 +14,32 @@ interface PolicyCardProps {
 
 const platformConfig = {
   Windows: {
-    color: "bg-lifted text-ink",
-    lightBg: "bg-lifted",
+    color: "bg-muted text-foreground",
+    lightBg: "bg-muted",
     border: "border-border",
     icon: Laptop,
   },
   iOS: {
-    color: "bg-lifted text-ink",
-    lightBg: "bg-lifted",
+    color: "bg-muted text-foreground",
+    lightBg: "bg-muted",
     border: "border-border",
     icon: Smartphone,
   },
   Android: {
-    color: "bg-lifted text-ink",
-    lightBg: "bg-lifted",
+    color: "bg-muted text-foreground",
+    lightBg: "bg-muted",
     border: "border-border",
     icon: Smartphone,
   },
   "All Platforms": {
-    color: "bg-lifted text-ink",
-    lightBg: "bg-lifted",
+    color: "bg-muted text-foreground",
+    lightBg: "bg-muted",
     border: "border-border",
     icon: AppWindow,
   },
   macOS: {
-    color: "bg-lifted text-ink",
-    lightBg: "bg-lifted",
+    color: "bg-muted text-foreground",
+    lightBg: "bg-muted",
     border: "border-border",
     icon: Laptop,
   },
@@ -60,7 +60,7 @@ const highlightText = (text: string, searchTerm: string) => {
   
   return parts.map((part, index) => 
     regex.test(part) ? (
-      <mark key={index} className="bg-primary-glow animate-search-highlight px-1 rounded">
+      <mark key={index} className="bg-[#EBF3FC] text-foreground animate-search-highlight px-1 rounded">
         {part}
       </mark>
     ) : part
@@ -120,31 +120,31 @@ export const PolicyCard = ({ policy, searchTerm = "" }: PolicyCardProps) => {
   }, {} as Record<string, PolicySetting[]>);
 
   return (
-    <EditorialCard radius="card" padding="lg" className="group transition-shadow hover:shadow-card cursor-pointer">
+    <EditorialCard radius="card" padding="lg" className="group rounded-2xl bg-card shadow-card transition-shadow hover:shadow-card cursor-pointer">
       {/* Card header */}
       <div className="pb-4">
         <div className="flex items-start justify-between">
           <div className="flex-1 space-y-3">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-lifted border border-border">
-                <PlatformIcon className="h-5 w-5 text-ink" />
+              <div className="p-2 rounded-md bg-muted border border-border">
+                <PlatformIcon className="h-5 w-5 text-charcoal" />
               </div>
               <div className="flex-1">
                 <EyebrowLabel className="mb-2">{policy.type}</EyebrowLabel>
-                <h3 className="text-[20px] font-medium leading-tight tracking-tight2 text-ink break-words">
+                <h3 className="text-[20px] font-semibold leading-tight text-foreground break-words">
                   {highlightText(policy.name, searchTerm)}
                 </h3>
-                <p className="mt-2 text-[14px] font-[450] leading-relaxed text-charcoal break-words">
+                <p className="mt-2 text-[14px] font-normal leading-relaxed text-charcoal break-words">
                   {highlightText(policy.description, searchTerm)}
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center rounded-pill bg-ink/[0.06] px-2.5 py-0.5 text-[11px] font-medium text-ink">
+              <span className="inline-flex items-center rounded bg-muted px-2.5 py-0.5 text-[11px] font-semibold text-foreground">
                 {policy.platform}
               </span>
-              <span className="inline-flex items-center gap-1 rounded-pill bg-ink/[0.06] px-2.5 py-0.5 text-[11px] font-medium text-ink">
+              <span className="inline-flex items-center gap-1 rounded bg-muted px-2.5 py-0.5 text-[11px] font-semibold text-foreground">
                 <TypeIcon className="h-3 w-3" />
                 {policy.type}
               </span>

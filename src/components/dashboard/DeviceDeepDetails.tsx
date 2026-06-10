@@ -12,16 +12,16 @@ export function DeviceDeepDetails({ details }: DeviceDeepDetailsProps) {
   return (
     <div>
       <section className="border-t border-border py-4 first:border-t-0 first:pt-0">
-        <EyebrowLabel>COMPLIANCE POLICIES ({compliance.length})</EyebrowLabel>
+        <EyebrowLabel>Compliance policies ({compliance.length})</EyebrowLabel>
         <div className="mt-3 space-y-3">
           {compliance.length === 0 && (
             <div className="text-slate text-[13px]">None</div>
           )}
           {compliance.map(p => (
-            <div key={p.id} className="rounded border border-border p-2">
+            <div key={p.id} className="rounded-md border border-border p-2">
               <div className="flex items-center justify-between">
-                <div className="font-[450] truncate text-ink">{p.displayName}</div>
-                <div className="text-xs font-[450] text-slate">{p.state}</div>
+                <div className="font-semibold truncate text-ink">{p.displayName}</div>
+                <div className="text-xs text-slate">{p.state}</div>
               </div>
               {p.settingStates && p.settingStates.length > 0 && (
                 <ul className="mt-1 ml-3 list-disc text-xs text-slate space-y-0.5">
@@ -29,7 +29,7 @@ export function DeviceDeepDetails({ details }: DeviceDeepDetailsProps) {
                     .filter(s => s.state !== "compliant" && s.state !== "notApplicable")
                     .map((s, i) => (
                       <li key={`${p.id}-s${i}`}>
-                        <span className="font-[450]">{s.settingName || s.setting}</span>
+                        <span className="font-semibold">{s.settingName || s.setting}</span>
                         {": "}{s.state}
                         {s.errorDescription ? ` — ${s.errorDescription}` : ""}
                       </li>
@@ -42,16 +42,16 @@ export function DeviceDeepDetails({ details }: DeviceDeepDetailsProps) {
       </section>
 
       <section className="border-t border-border py-4 first:border-t-0 first:pt-0">
-        <EyebrowLabel>CONFIGURATION PROFILES ({configuration.length})</EyebrowLabel>
+        <EyebrowLabel>Configuration profiles ({configuration.length})</EyebrowLabel>
         <div className="mt-3 space-y-3">
           {configuration.length === 0 && (
             <div className="text-slate text-[13px]">None</div>
           )}
           {configuration.map(c => (
-            <div key={c.id} className="rounded border border-border p-2">
+            <div key={c.id} className="rounded-md border border-border p-2">
               <div className="flex items-center justify-between">
-                <div className="font-[450] truncate text-ink">{c.displayName}</div>
-                <div className="text-xs font-[450] text-slate">{c.state}</div>
+                <div className="font-semibold truncate text-ink">{c.displayName}</div>
+                <div className="text-xs text-slate">{c.state}</div>
               </div>
             </div>
           ))}
@@ -59,38 +59,38 @@ export function DeviceDeepDetails({ details }: DeviceDeepDetailsProps) {
       </section>
 
       <section className="border-t border-border py-4 first:border-t-0 first:pt-0">
-        <EyebrowLabel>MANAGED APPS ({details.managedAppStates.length})</EyebrowLabel>
+        <EyebrowLabel>Managed apps ({details.managedAppStates.length})</EyebrowLabel>
         {details.managedAppStates.length === 0 ? (
           <div className="mt-3 text-slate text-[13px]">None deployed by Intune</div>
         ) : (
-          <div className="mt-3 rounded border border-border">
+          <div className="mt-3 overflow-hidden rounded-md border border-border">
             <table className="w-full text-xs">
-              <thead className="bg-ink/[0.06]">
+              <thead className="bg-muted">
                 <tr>
-                  <th className="text-left p-2 font-[450] text-ink">App</th>
-                  <th className="text-left p-2 font-[450] text-ink">Intent</th>
-                  <th className="text-left p-2 font-[450] text-ink">Install state</th>
-                  <th className="text-left p-2 font-[450] text-ink">Version</th>
+                  <th className="text-left p-2 font-semibold text-foreground">App</th>
+                  <th className="text-left p-2 font-semibold text-foreground">Intent</th>
+                  <th className="text-left p-2 font-semibold text-foreground">Install state</th>
+                  <th className="text-left p-2 font-semibold text-foreground">Version</th>
                 </tr>
               </thead>
               <tbody>
                 {details.managedAppStates.map(a => {
                   const installPillClass =
                     a.installState === "installed"
-                      ? "inline-flex items-center rounded-pill bg-success/15 px-2 py-0.5 text-[11px] font-medium text-success"
+                      ? "inline-flex items-center rounded-md bg-success/10 px-2 py-0.5 text-[11px] font-semibold text-success"
                       : a.installState === "failed" || a.installState === "uninstallFailed"
-                        ? "inline-flex items-center rounded-pill bg-signal/[0.18] px-2 py-0.5 text-[11px] font-medium text-signal-light"
+                        ? "inline-flex items-center rounded-md bg-destructive/10 px-2 py-0.5 text-[11px] font-semibold text-destructive"
                         : a.installState === "pendingInstall" || a.installState === "notInstalled"
-                          ? "inline-flex items-center rounded-pill bg-signal-light/[0.12] px-2 py-0.5 text-[11px] font-medium text-signal-light"
-                          : "inline-flex items-center rounded-pill bg-ink/[0.06] px-2 py-0.5 text-[11px] font-medium text-ink";
+                          ? "inline-flex items-center rounded-md bg-warning/10 px-2 py-0.5 text-[11px] font-semibold text-warning"
+                          : "inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-[11px] font-semibold text-foreground";
                   return (
                     <tr key={a.applicationId} className="border-t border-border">
-                      <td className="p-2 truncate max-w-[240px] text-ink font-[450]">{a.displayName}</td>
-                      <td className="p-2 text-slate font-[450]">{a.mobileAppIntent ?? "—"}</td>
+                      <td className="p-2 truncate max-w-[240px] text-ink">{a.displayName}</td>
+                      <td className="p-2 text-slate">{a.mobileAppIntent ?? "—"}</td>
                       <td className="p-2">
                         <span className={installPillClass}>{a.installState ?? "unknown"}</span>
                       </td>
-                      <td className="p-2 text-slate font-[450]">{a.displayVersion || "—"}</td>
+                      <td className="p-2 text-slate">{a.displayVersion || "—"}</td>
                     </tr>
                   );
                 })}
@@ -101,25 +101,25 @@ export function DeviceDeepDetails({ details }: DeviceDeepDetailsProps) {
       </section>
 
       <section className="border-t border-border py-4 first:border-t-0 first:pt-0">
-        <EyebrowLabel>DETECTED APPS ({details.detectedApps.length})</EyebrowLabel>
+        <EyebrowLabel>Detected apps ({details.detectedApps.length})</EyebrowLabel>
         {details.detectedApps.length === 0 ? (
           <div className="mt-3 text-slate text-[13px]">None</div>
         ) : (
-          <div className="mt-3 rounded border border-border">
+          <div className="mt-3 overflow-hidden rounded-md border border-border">
             <table className="w-full text-xs">
-              <thead className="bg-ink/[0.06]">
+              <thead className="bg-muted">
                 <tr>
-                  <th className="text-left p-2 font-[450] text-ink">Name</th>
-                  <th className="text-left p-2 font-[450] text-ink">Version</th>
-                  <th className="text-left p-2 font-[450] text-ink">Publisher</th>
+                  <th className="text-left p-2 font-semibold text-foreground">Name</th>
+                  <th className="text-left p-2 font-semibold text-foreground">Version</th>
+                  <th className="text-left p-2 font-semibold text-foreground">Publisher</th>
                 </tr>
               </thead>
               <tbody>
                 {details.detectedApps.map(a => (
                   <tr key={a.id} className="border-t border-border">
-                    <td className="p-2 truncate max-w-[200px] text-ink font-[450]">{a.displayName}</td>
-                    <td className="p-2 text-slate font-[450]">{a.version || "—"}</td>
-                    <td className="p-2 text-slate font-[450] truncate max-w-[150px]">{a.publisher || "—"}</td>
+                    <td className="p-2 truncate max-w-[200px] text-ink">{a.displayName}</td>
+                    <td className="p-2 text-slate">{a.version || "—"}</td>
+                    <td className="p-2 text-slate truncate max-w-[150px]">{a.publisher || "—"}</td>
                   </tr>
                 ))}
               </tbody>

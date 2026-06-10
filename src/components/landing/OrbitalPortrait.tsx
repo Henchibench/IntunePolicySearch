@@ -3,38 +3,20 @@ import { ArrowUpRight } from "lucide-react";
 interface OrbitalPortraitProps {
   /** Image URL — anything works, the component is decorative. */
   src?: string;
-  /** Click target for the satellite CTA. */
+  /** Click target for the CTA button. */
   onCta?: () => void;
   ctaLabel?: string;
 }
 
 /**
- * Decorative circular portrait with a traced signal-orange orbital arc and
- * a white "satellite" CTA dot docked on the right edge. Per spec "Index".
+ * Fluent 2 figure. A clean rectangular image container (Surface 2, 8px radius,
+ * 1px Stroke 2) with a plain Fluent primary CTA button beneath it. No orbital
+ * arc, no satellite dot, no circular photo mask.
  */
 export function OrbitalPortrait({ src, onCta, ctaLabel = "Sign in" }: OrbitalPortraitProps) {
   return (
-    <div className="relative mx-auto w-full max-w-[420px] aspect-square">
-      <svg
-        aria-hidden
-        viewBox="0 0 600 600"
-        className="absolute inset-0 -mx-[20%] -my-[8%] w-[140%] h-[116%] pointer-events-none"
-      >
-        <ellipse
-          cx="300"
-          cy="300"
-          rx="290"
-          ry="220"
-          fill="none"
-          stroke="hsl(var(--signal-light))"
-          strokeOpacity="0.55"
-          strokeWidth="1.2"
-          strokeDasharray="0"
-          transform="rotate(-12 300 300)"
-        />
-      </svg>
-
-      <div className="absolute inset-0 overflow-hidden rounded-pill bg-gradient-to-br from-signal-light/30 via-signal/20 to-canvas border border-border">
+    <div className="mx-auto flex w-full max-w-[420px] flex-col gap-4">
+      <div className="aspect-square w-full overflow-hidden rounded-2xl border border-border bg-muted">
         {src && (
           <img
             src={src}
@@ -48,10 +30,10 @@ export function OrbitalPortrait({ src, onCta, ctaLabel = "Sign in" }: OrbitalPor
       <button
         type="button"
         onClick={onCta}
-        aria-label={ctaLabel}
-        className="absolute right-[6%] top-[16%] inline-flex size-14 items-center justify-center rounded-pill bg-pure-white text-ink shadow-card transition-transform hover:scale-105"
+        className="inline-flex h-8 items-center justify-center gap-1.5 self-start rounded-md bg-primary px-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       >
-        <ArrowUpRight className="size-5" strokeWidth={1.6} />
+        {ctaLabel}
+        <ArrowUpRight className="size-4" strokeWidth={1.6} />
       </button>
     </div>
   );

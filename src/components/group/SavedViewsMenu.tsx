@@ -36,7 +36,7 @@ export function SavedViewsMenu({ tenantId, current, onApply }: SavedViewsMenuPro
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-72">
-        <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
           Saved views
         </div>
         {views.length === 0 ? (

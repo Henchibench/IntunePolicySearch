@@ -61,7 +61,7 @@ export function AuditFilterBar({ filters, onChange, availableCategories }: Audit
             key={p.label}
             type="button"
             onClick={() => setPreset(p.days)}
-            className="rounded-full border border-border px-3 py-1 text-xs font-medium text-slate hover:bg-lifted hover:text-ink transition-colors"
+            className="rounded-md border border-border px-3 py-1 text-xs font-semibold text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
           >
             {p.label}
           </button>
@@ -86,7 +86,7 @@ export function AuditFilterBar({ filters, onChange, availableCategories }: Audit
         </PopoverContent>
       </Popover>
 
-      <span className="text-xs text-slate">to</span>
+      <span className="text-xs text-muted-foreground">to</span>
 
       {/* To date picker */}
       <Popover open={toOpen} onOpenChange={setToOpen}>
@@ -112,7 +112,7 @@ export function AuditFilterBar({ filters, onChange, availableCategories }: Audit
           <Button variant="outline" size="sm" className="gap-1.5 text-xs">
             Category
             {filters.categories.length > 0 && (
-              <span className="rounded-full bg-ink text-canvas px-1.5 text-[10px] font-bold">
+              <span className="rounded-full bg-primary text-primary-foreground px-1.5 text-[10px] font-semibold">
                 {filters.categories.length}
               </span>
             )}
@@ -128,15 +128,15 @@ export function AuditFilterBar({ filters, onChange, availableCategories }: Audit
                 className={cn(
                   'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors',
                   filters.categories.includes(cat)
-                    ? 'bg-ink text-canvas'
-                    : 'text-ink hover:bg-lifted',
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-foreground hover:bg-accent',
                 )}
               >
                 {cat}
               </button>
             ))}
             {availableCategories.length === 0 && (
-              <p className="px-2 py-1.5 text-xs text-slate">Loading...</p>
+              <p className="px-2 py-1.5 text-xs text-muted-foreground">Loading...</p>
             )}
           </div>
         </PopoverContent>
@@ -148,7 +148,7 @@ export function AuditFilterBar({ filters, onChange, availableCategories }: Audit
         placeholder="Filter by actor..."
         value={filters.actorSearch}
         onChange={(e) => onChange({ ...filters, actorSearch: e.target.value })}
-        className="h-8 w-40 rounded-full text-xs"
+        className="h-8 w-40 rounded-md text-xs"
       />
 
       {/* Free-text search */}
@@ -157,7 +157,7 @@ export function AuditFilterBar({ filters, onChange, availableCategories }: Audit
         placeholder="Search events..."
         value={filters.freeText}
         onChange={(e) => onChange({ ...filters, freeText: e.target.value })}
-        className="h-8 w-48 rounded-full text-xs"
+        className="h-8 w-48 rounded-md text-xs"
       />
 
       {/* Clear filters */}
@@ -165,7 +165,7 @@ export function AuditFilterBar({ filters, onChange, availableCategories }: Audit
         <button
           type="button"
           onClick={clearAll}
-          className="flex items-center gap-1 text-xs text-slate hover:text-ink transition-colors"
+          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
           <X className="h-3 w-3" /> Clear
         </button>

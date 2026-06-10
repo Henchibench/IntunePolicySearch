@@ -15,8 +15,9 @@ const navItems = [
 ];
 
 /**
- * Slim floating pill navigation. Wordmark left, three centered nav links
- * (44px gap), circular sign-out icon-button right. Per spec "Navigation v5".
+ * Fluent 2 top tab navigation. Surface1 bar with a 1px bottom border, brand
+ * mark left, nav tabs with a 2px brand underline on the active item, and a
+ * sign-out / sign-in action on the right.
  */
 export function PillNav() {
   const { isAuthenticated, isLoading, login, logout } = useAuth();
@@ -24,28 +25,32 @@ export function PillNav() {
   return (
     <nav
       aria-label="Primary"
-      className="mx-auto mt-6 flex max-w-[860px] items-center justify-between gap-12 rounded-pill border border-border bg-lifted py-2.5 pl-8 pr-3 shadow-pill-light dark:shadow-pill"
+      className="flex items-center justify-between gap-8 border-b border-border bg-card px-6"
     >
-      <span className="text-[15px] font-medium tracking-tight2 text-ink">
-        Intune Policy
-      </span>
+      <div className="flex items-center gap-8">
+        <span className="text-[15px] font-semibold text-foreground">
+          Intune Policy
+        </span>
 
-      <div className="flex gap-11">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.end}
-            className={({ isActive }) =>
-              cn(
-                "py-1.5 text-[14px] tracking-tight2 text-ink transition-opacity",
-                isActive ? "font-medium opacity-100" : "font-[450] opacity-85 hover:opacity-100",
-              )
-            }
-          >
-            {item.label}
-          </NavLink>
-        ))}
+        <div className="flex gap-1">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.end}
+              className={({ isActive }) =>
+                cn(
+                  "border-b-2 px-3 py-3.5 text-[14px] transition-colors",
+                  isActive
+                    ? "border-primary font-semibold text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground",
+                )
+              }
+            >
+              {item.label}
+            </NavLink>
+          ))}
+        </div>
       </div>
 
       {isAuthenticated ? (
@@ -58,7 +63,7 @@ export function PillNav() {
           <LogOut className="size-4" strokeWidth={1.6} />
         </IconCircleButton>
       ) : (
-        <Button variant="ink" size="sm" onClick={login} disabled={isLoading}>
+        <Button variant="default" size="sm" onClick={login} disabled={isLoading}>
           <LogIn className="size-4" strokeWidth={1.6} />
           Sign in
         </Button>

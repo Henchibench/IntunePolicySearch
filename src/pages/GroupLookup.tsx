@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react';
 import { useMsal } from '@azure/msal-react';
 import { PillNav } from '@/components/PillNav';
 import { UtilityRow } from '@/components/UtilityRow';
-import { EyebrowLabel } from '@/components/ui/EyebrowLabel';
 import { GroupSearchBox } from '@/components/group/GroupSearchBox';
 import { CategoryProgressList } from '@/components/group/CategoryProgressList';
 import { ResultsSummary, buildCategoryOptions } from '@/components/group/ResultsSummary';
@@ -50,18 +49,18 @@ export default function GroupLookupPage() {
   );
 
   return (
-    <div className="min-h-screen bg-canvas">
+    <div className="min-h-screen bg-background">
       <div className="px-6">
         <PillNav />
         <UtilityRow />
       </div>
-      <main className="mx-auto mt-12 max-w-[1240px] px-8 pb-24 space-y-8">
+      <main className="mx-auto mt-12 max-w-[1280px] px-6 pb-24 space-y-8">
         <div>
-          <EyebrowLabel>GROUP LOOKUP</EyebrowLabel>
-          <h1 className="mt-3 text-[44px] font-medium leading-tight tracking-tight2 text-ink">
+          <p className="text-xs font-semibold text-primary">Group Lookup</p>
+          <h1 className="mt-2 text-xl font-semibold text-foreground">
             Search any Entra group.
           </h1>
-          <p className="mt-2 text-sm font-[450] text-slate">
+          <p className="mt-2 text-sm text-muted-foreground">
             Find every Intune object assigned to a group — policies, apps, configurations.
           </p>
         </div>
@@ -69,7 +68,7 @@ export default function GroupLookupPage() {
         <GroupSearchBox onSelect={setSelected} autoFocus />
 
         {fatalError && (
-          <div className="rounded-2xl border border-signal/30 bg-signal/[0.10] p-3 text-sm text-signal-light">
+          <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
             {fatalError}{' '}
             <button
               type="button"

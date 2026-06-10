@@ -17,23 +17,23 @@ export interface PolicyStats {
   recentlyModified: Policy[];
 }
 
-/* Editorial palette — warm tones that sit on cream canvas */
+/* Fluent 2 categorical palette — brand ramp + balanced shared hues */
 const TYPE_COLORS: Record<string, string> = {
-  "Device Configuration": "#3860BE",
-  "Compliance Policy": "#5CC58A",
-  "App Protection": "#CF4500",
-  "Configuration Policy": "#9A3A0A",
-  "Group Policy": "#696969",
-  "Security Baseline": "#F37338",
-  "Enrollment Configuration": "#555555",
+  "Device Configuration": "#0F6CBD",
+  "Compliance Policy": "#107C10",
+  "App Protection": "#8764B8",
+  "Configuration Policy": "#038387",
+  "Group Policy": "#616161",
+  "Security Baseline": "#F7630C",
+  "Enrollment Configuration": "#479EF5",
 };
 
 const PLATFORM_COLORS: Record<string, string> = {
-  Windows: "#3860BE",
-  iOS: "#5CC58A",
-  Android: "#CF4500",
-  macOS: "#9A3A0A",
-  "All Platforms": "#696969",
+  Windows: "#0F6CBD",
+  iOS: "#107C10",
+  Android: "#F7630C",
+  macOS: "#8764B8",
+  "All Platforms": "#616161",
 };
 
 export function usePolicyStats(policies: Policy[]): PolicyStats {
@@ -46,7 +46,7 @@ export function usePolicyStats(policies: Policy[]): PolicyStats {
     const byType = Object.entries(typeCounts).map(([type, count]) => ({
       type,
       count,
-      color: TYPE_COLORS[type] || "#696969",
+      color: TYPE_COLORS[type] || "#616161",
     }));
 
     const platformCounts = policies.reduce((acc, policy) => {
@@ -57,7 +57,7 @@ export function usePolicyStats(policies: Policy[]): PolicyStats {
     const byPlatform = Object.entries(platformCounts).map(([platform, count]) => ({
       platform,
       count,
-      color: PLATFORM_COLORS[platform] || "#696969",
+      color: PLATFORM_COLORS[platform] || "#616161",
     }));
 
     const unassigned = policies.filter(

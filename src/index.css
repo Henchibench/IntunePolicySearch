@@ -2,106 +2,106 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Microsoft Intune Dashboard Design System */
+/* Microsoft Fluent 2 (web) Design System — see DESIGN.md */
 
 @layer base {
   :root {
-    /* True canvas — DESIGN.md "Canvas Cream" */
-    --canvas: 30 14% 94%;            /* #F3F0EE */
-    --lifted: 30 25% 98%;            /* #FCFBFA */
-    --pure-white: 0 0% 100%;         /* pill nav, modal, satellites */
+    /* Canvas + surfaces — Fluent neutral backgrounds (light) */
+    --canvas: 240 11% 96%;           /* #F5F5F7 — tinted page canvas */
+    --lifted: 0 0% 98%;              /* #FAFAFA — Surface 2 */
+    --pure-white: 0 0% 100%;         /* #FFFFFF — Surface 1 (cards) */
 
-    /* Ink (text + primary CTA) */
-    --ink: 60 4% 8%;                 /* #141413 */
-    --charcoal: 240 1% 15%;          /* #262627 */
-    --slate: 0 0% 41%;               /* #696969 */
-    --dust: 30 10% 80%;              /* #D1CDC7 */
+    /* Foreground (text) */
+    --ink: 0 0% 14%;                 /* #242424 — Foreground 1 */
+    --charcoal: 0 0% 26%;            /* #424242 — Foreground 2 */
+    --slate: 0 0% 38%;               /* #616161 — Foreground 3 */
+    --dust: 0 0% 74%;                /* #BDBDBD — disabled */
 
-    /* Accent */
-    --signal: 19 100% 41%;           /* #CF4500 */
-    --signal-light: 18 89% 58%;      /* #F37338 */
-    --clay: 23 90% 32%;              /* #9A3A0A */
-    --link: 222 50% 49%;             /* #3860BE */
-    --success: 142 51% 57%;          /* #5CC58A */
-    --warning: 18 89% 58%;           /* same as signal-light */
+    /* Accent / status */
+    --signal: 25 92% 51%;            /* #F7630C — warning orange (legacy alias) */
+    --signal-light: 25 92% 51%;      /* #F7630C */
+    --clay: 16 99% 43%;              /* #DA3B01 — severe warning */
+    --link: 207 85% 40%;             /* #0F6CBD — brand blue */
+    --success: 120 77% 27%;          /* #107C10 */
+    --warning: 25 92% 51%;           /* #F7630C */
 
     /* Semantic mappings (kept for shadcn primitives) */
     --background: var(--canvas);
     --foreground: var(--ink);
-    --surface: var(--lifted);
+    --surface: var(--pure-white);
     --surface-foreground: var(--ink);
-    --card: var(--lifted);
+    --card: var(--pure-white);
     --card-foreground: var(--ink);
-    --card-hover: 30 14% 92%;
+    --card-hover: 0 0% 96%;          /* #F5F5F5 — subtle hover layer */
     --popover: var(--pure-white);
     --popover-foreground: var(--ink);
-    --primary: var(--ink);
-    --primary-foreground: var(--canvas);
-    --primary-glow: var(--signal-light);
+    --primary: 207 85% 40%;          /* #0F6CBD — brand primary */
+    --primary-foreground: 0 0% 100%; /* white text on brand */
+    --primary-glow: var(--primary);
     --secondary: var(--lifted);
     --secondary-foreground: var(--ink);
-    --muted: 30 14% 90%;
+    --muted: 0 0% 94%;               /* #F0F0F0 */
     --muted-foreground: var(--slate);
-    --accent: 30 14% 90%;
+    --accent: 0 0% 94%;              /* #F0F0F0 */
     --accent-foreground: var(--ink);
-    --destructive: var(--signal);
-    --destructive-foreground: var(--pure-white);
-    --success-foreground: var(--ink);
-    --warning-foreground: var(--ink);
-    --border: 60 4% 8% / 0.08;       /* ink at 8% */
-    --input: 60 4% 8% / 0.18;
-    --ring: var(--signal-light);
+    --destructive: 359 63% 51%;      /* #D13438 */
+    --destructive-foreground: 0 0% 100%;
+    --success-foreground: 0 0% 100%;
+    --warning-foreground: 0 0% 100%;
+    --border: 0 0% 88%;              /* #E0E0E0 — Stroke 2 */
+    --input: 0 0% 82%;               /* #D1D1D1 — Stroke 1 */
+    --ring: 207 85% 40%;             /* #0F6CBD — brand focus */
 
-    /* Geometry */
-    --radius: 1.25rem;               /* 20px — primary CTA radius */
-    --radius-pill: 999px;
-    --radius-card: 1.75rem;          /* 28px — KPI tile */
-    --radius-frame: 2rem;            /* 32px — table frame */
+    /* Geometry — Fluent radius scale */
+    --radius: 0.25rem;               /* 4px — controls */
+    --radius-pill: 9999px;
+    --radius-card: 0.5rem;           /* 8px — cards/dialogs */
+    --radius-frame: 0.5rem;          /* 8px — list containers */
     --header-height: 4.5rem;
   }
 
   .dark {
-    --canvas: 30 4% 5%;              /* #0B0A0A */
-    --lifted: 30 6% 9%;              /* #181715 */
-    --pure-white: 0 0% 100%;         /* still pure white inside drawers/modals on dark */
+    --canvas: 0 0% 8%;               /* #141414 */
+    --lifted: 0 0% 16%;              /* #292929 — Surface 2 */
+    --pure-white: 0 0% 12%;          /* #1F1F1F — Surface 1 */
 
-    --ink: 30 16% 90%;               /* #ECE7E2 — cream as text */
-    --charcoal: 30 14% 81%;          /* #B8B0A6 */
-    --slate: 30 8% 55%;              /* #948C84 */
-    --dust: 0 0% 33%;                /* #555555 */
+    --ink: 0 0% 100%;                /* #FFFFFF — Foreground 1 */
+    --charcoal: 0 0% 84%;            /* #D6D6D6 — Foreground 2 */
+    --slate: 0 0% 68%;               /* #ADADAD — Foreground 3 */
+    --dust: 0 0% 36%;                /* #5C5C5C — disabled */
 
-    --signal: 19 100% 41%;           /* unchanged */
-    --signal-light: 18 89% 58%;
-    --clay: 23 90% 32%;
-    --link: 220 70% 70%;             /* #7B9FE8 */
-    --success: 142 51% 57%;
-    --warning: 18 89% 58%;
+    --signal: 25 92% 51%;            /* #F7630C */
+    --signal-light: 25 92% 51%;
+    --clay: 16 99% 43%;              /* #DA3B01 */
+    --link: 210 90% 62%;             /* #479EF5 — brand text (dark) */
+    --success: 120 77% 27%;          /* #107C10 */
+    --warning: 25 92% 51%;           /* #F7630C */
 
     --background: var(--canvas);
     --foreground: var(--ink);
-    --surface: var(--lifted);
+    --surface: var(--pure-white);
     --surface-foreground: var(--ink);
-    --card: var(--lifted);
+    --card: var(--pure-white);
     --card-foreground: var(--ink);
-    --card-hover: 30 6% 13%;
-    --popover: var(--lifted);
+    --card-hover: 0 0% 24%;          /* #3D3D3D */
+    --popover: var(--pure-white);
     --popover-foreground: var(--ink);
-    --primary: var(--ink);
-    --primary-foreground: var(--canvas);
-    --primary-glow: var(--signal-light);
+    --primary: 207 81% 35%;          /* #115EA3 — brand primary (dark) */
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: var(--primary);
     --secondary: var(--lifted);
     --secondary-foreground: var(--ink);
-    --muted: 30 6% 14%;
+    --muted: 0 0% 16%;               /* #292929 */
     --muted-foreground: var(--slate);
-    --accent: 30 6% 14%;
+    --accent: 0 0% 16%;              /* #292929 */
     --accent-foreground: var(--ink);
-    --destructive: var(--signal);
-    --destructive-foreground: var(--pure-white);
-    --success-foreground: var(--canvas);
-    --warning-foreground: var(--canvas);
-    --border: 30 16% 90% / 0.08;
-    --input: 30 16% 90% / 0.18;
-    --ring: var(--signal-light);
+    --destructive: 359 63% 51%;      /* #D13438 */
+    --destructive-foreground: 0 0% 100%;
+    --success-foreground: 0 0% 100%;
+    --warning-foreground: 0 0% 100%;
+    --border: 0 0% 32%;              /* #525252 — Stroke 2 (dark) */
+    --input: 0 0% 40%;               /* #666666 — Stroke 1 (dark) */
+    --ring: 210 90% 62%;             /* #479EF5 — brand focus (dark) */
   }
 }
 
@@ -110,11 +110,10 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-feature-settings: "ss01", "cv01";
   }
 
-  h1, h2, h3, h4 { letter-spacing: -0.02em; font-weight: 500; }
-  p, li, dt, dd { font-weight: 450; line-height: 1.45; }
+  h1, h2, h3, h4 { font-weight: 600; }
+  p, li, dt, dd { font-weight: 400; line-height: 1.4; }
 }
 
 /* Custom animations for Intune Dashboard */
@@ -122,23 +121,23 @@
   .animate-search-highlight {
     @apply animate-pulse;
   }
-  
+
   .animate-card-expand {
     animation: expand 0.3s ease-out;
   }
-  
+
   .animate-card-collapse {
     animation: collapse 0.3s ease-out;
   }
-  
+
   .animate-refresh-spin {
     animation: spin 1s linear infinite;
   }
-  
+
   .rotate-360 {
     transform: rotate(360deg);
   }
-  
+
   .ninja-spin {
     animation: ninja-spin 0.6s ease-in-out;
   }

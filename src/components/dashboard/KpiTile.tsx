@@ -22,7 +22,7 @@ export function KpiTile({ label, value, subStat, to, disabled, tone = "default" 
   };
 
   const valueTone =
-    tone === "danger" ? "text-signal" : tone === "warning" ? "text-signal-light" : "text-ink";
+    tone === "danger" ? "text-destructive" : tone === "warning" ? "text-warning" : "text-ink";
 
   return (
     <EditorialCard
@@ -30,25 +30,25 @@ export function KpiTile({ label, value, subStat, to, disabled, tone = "default" 
       padding="lg"
       onClick={onClick}
       className={cn(
-        "flex min-h-[140px] flex-col justify-between transition-shadow",
+        "flex min-h-[140px] flex-col justify-between bg-card shadow-card transition-shadow",
         disabled
           ? "cursor-not-allowed opacity-50"
           : to
-            ? "cursor-pointer hover:shadow-card"
+            ? "cursor-pointer hover:shadow-pill-light"
             : "",
       )}
     >
       <EyebrowLabel>{label}</EyebrowLabel>
       <div
         className={cn(
-          "mt-4 text-[44px] font-medium leading-none tracking-tight3",
+          "mt-4 text-[40px] font-semibold leading-none",
           valueTone,
         )}
       >
         {value}
       </div>
       {subStat && (
-        <div className="mt-2 text-xs font-[450] text-slate">{subStat}</div>
+        <div className="mt-2 text-xs text-slate">{subStat}</div>
       )}
       {disabled && (
         <div className="mt-2 text-xs italic text-slate">Coming in v2</div>

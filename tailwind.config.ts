@@ -12,7 +12,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['"Sofia Sans"', "system-ui", "-apple-system", "Segoe UI", "Arial", "sans-serif"],
+        sans: ['"Segoe UI Variable"', '"Segoe UI"', "-apple-system", "BlinkMacSystemFont", "Roboto", '"Helvetica Neue"', "Arial", "sans-serif"],
       },
       colors: {
         canvas: "hsl(var(--canvas))",
@@ -47,20 +47,21 @@ export default {
         card: { DEFAULT: "hsl(var(--card))", foreground: "hsl(var(--card-foreground))", hover: "hsl(var(--card-hover))" },
       },
       borderRadius: {
-        sm: "0.5rem",
-        md: "0.75rem",
+        sm: "0.125rem",
+        md: "0.25rem",
         lg: "var(--radius)",
-        xl: "1.5rem",
+        xl: "0.375rem",
         "2xl": "var(--radius-card)",
         "3xl": "var(--radius-frame)",
         pill: "var(--radius-pill)",
       },
       boxShadow: {
-        pill: "0 24px 60px rgba(0,0,0,0.45)",
-        "pill-light": "0 18px 40px rgba(0,0,0,0.08)",
-        drawer: "-24px 0 60px rgba(0,0,0,0.5)",
-        "drawer-light": "-24px 0 60px rgba(0,0,0,0.12)",
-        card: "0 24px 48px rgba(0,0,0,0.08)",
+        /* Fluent 2 two-part shadows (ambient ring + key drop) */
+        pill: "0 0 2px rgba(0,0,0,0.12), 0 8px 16px rgba(0,0,0,0.14)",
+        "pill-light": "0 0 2px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.14)",
+        drawer: "0 0 8px rgba(0,0,0,0.12), 0 32px 64px rgba(0,0,0,0.14)",
+        "drawer-light": "0 0 8px rgba(0,0,0,0.12), 0 32px 64px rgba(0,0,0,0.14)",
+        card: "0 0 2px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.14)",
       },
       letterSpacing: {
         eyebrow: "0.08em",
