@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,9 @@ import type { DriverApplicableDevice } from '@/types/drivers';
 interface Props {
   catalogEntryIds: string[];
   enabled: boolean;
+  /** Reports the report's total device count once a fetch completes, so the
+   *  parent can label the tab with a number that matches this list. */
+  onLoaded?: (totalCount: number) => void;
 }
 
 function stateBadgeClasses(loc: string): string {
@@ -43,11 +46,23 @@ function intuneDeviceUrl(deviceId: string): string {
   return `https://intune.microsoft.com/#view/Microsoft_Intune_Devices/DeviceSettingsMenuBlade/~/overview/mdmDeviceId/${encodeURIComponent(deviceId)}`;
 }
 
-export function DriverDevicesTab({ catalogEntryIds, enabled }: Props) {
+export function DriverDevicesTab({ catalogEntryIds, enabled, onLoaded }: Props) {
   const { devices, totalCount, isLoading, error, retry } = useDriverApplicableDevices(
     catalogEntryIds,
     enabled
   );
+
+  // Report the count only on a real loading→done transition, so the parent
+  // label never flashes a premature "(0)" before the fetch has run.
+  const wasLoading = useRef(false);
+  useEffect(() => {
+    if (isLoading) {
+      wasLoading.current = true;
+    } else if (wasLoading.current && !error) {
+      wasLoading.current = false;
+      onLoaded?.(totalCount);
+    }
+  }, [isLoading, error, totalCount, onLoaded]);
 
   const { dashboardService } = useAuth();
   const { devices: managedDevices } = useManagedDevices(dashboardService);

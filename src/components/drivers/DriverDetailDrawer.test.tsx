@@ -1,7 +1,19 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { DriverDetailDrawer } from './DriverDetailDrawer';
 import type { Driver } from '@/types/drivers';
+
+// Stub the devices tab so the drawer tests don't pull in the report hook /
+// auth context. The stub exposes a button that fires onLoaded, letting us
+// drive the "count appears after the report loads" wiring.
+vi.mock('./DriverDevicesTab', () => ({
+  DriverDevicesTab: ({ onLoaded }: { onLoaded?: (n: number) => void }) => (
+    <button type="button" onClick={() => onLoaded?.(4)}>
+      stub-load-devices
+    </button>
+  ),
+}));
 
 const baseDriver: Driver = {
   key: 'dell inc.|video|sample',
@@ -67,5 +79,29 @@ describe('DriverDetailDrawer', () => {
     render(<DriverDetailDrawer driver={baseDriver} open onOpenChange={() => {}} />);
     expect(screen.getByRole('link', { name: /Dell support/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Microsoft Update Catalog/i })).toBeInTheDocument();
+  });
+
+  it('does not put applicableDeviceCount in the Devices tab label', () => {
+    // applicableDeviceCount (inventory) and the device-status report count
+    // are different populations; the tab must not advertise the inventory
+    // number, which routinely disagrees with the list it labels.
+    render(<DriverDetailDrawer driver={baseDriver} open onOpenChange={() => {}} />);
+    const tab = screen.getByRole('tab', { name: /Devices/ });
+    expect(tab).toHaveTextContent(/^Devices$/);
+    expect(tab).not.toHaveTextContent('5');
+  });
+
+  it('still shows applicable device count in the Overview tab', () => {
+    render(<DriverDetailDrawer driver={baseDriver} open onOpenChange={() => {}} />);
+    expect(screen.getByText('Applicable devices')).toBeInTheDocument();
+    expect(screen.getByText('5')).toBeInTheDocument();
+  });
+
+  it('shows the report total in the Devices tab label once it loads', async () => {
+    const user = userEvent.setup();
+    render(<DriverDetailDrawer driver={baseDriver} open onOpenChange={() => {}} />);
+    await user.click(screen.getByRole('tab', { name: /Devices/ }));
+    await user.click(screen.getByRole('button', { name: 'stub-load-devices' }));
+    expect(screen.getByRole('tab', { name: /Devices/ })).toHaveTextContent('Devices (4)');
   });
 });

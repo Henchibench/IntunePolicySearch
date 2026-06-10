@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -35,6 +35,15 @@ function EyebrowLabel({ children }: { children: React.ReactNode }) {
 
 export function DriverDetailDrawer({ driver, open, onOpenChange }: Props) {
   const [activeTab, setActiveTab] = useState('overview');
+  // Count for the Devices tab label comes from the device-status report
+  // (loaded lazily inside DriverDevicesTab), not from the inventory's
+  // applicableDeviceCount — the two measure different populations. Null until
+  // the report has loaded for the current driver.
+  const [deviceCount, setDeviceCount] = useState<number | null>(null);
+  useEffect(() => {
+    setDeviceCount(null);
+  }, [driver?.key]);
+
   if (!driver) return null;
   const dellSearchUrl = `https://www.dell.com/support/search/results?q=${encodeURIComponent(driver.name)}`;
   const msUpdateUrl = `https://www.catalog.update.microsoft.com/Search.aspx?q=${encodeURIComponent(driver.name)}`;
@@ -61,7 +70,7 @@ export function DriverDetailDrawer({ driver, open, onOpenChange }: Props) {
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="devices">
-              Devices ({driver.applicableDeviceCount})
+              Devices{deviceCount !== null ? ` (${deviceCount})` : ''}
             </TabsTrigger>
           </TabsList>
 
@@ -177,6 +186,7 @@ export function DriverDetailDrawer({ driver, open, onOpenChange }: Props) {
             <DriverDevicesTab
               catalogEntryIds={driver.inventoryIds}
               enabled={activeTab === 'devices'}
+              onLoaded={setDeviceCount}
             />
           </TabsContent>
         </Tabs>

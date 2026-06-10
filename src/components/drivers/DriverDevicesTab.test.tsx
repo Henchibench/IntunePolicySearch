@@ -120,6 +120,40 @@ describe('DriverDevicesTab', () => {
     expect(link).toHaveAttribute('target', '_blank');
   });
 
+  it('fires onLoaded with the total only after a loading→done transition', () => {
+    const onLoaded = vi.fn();
+    mockHook.mockReturnValue({
+      devices: [], totalCount: 0, isLoading: true, error: null, retry: () => {},
+    });
+    const { rerender } = render(
+      <DriverDevicesTab catalogEntryIds={["cat-1"]} enabled onLoaded={onLoaded} />
+    );
+    // Still loading — must not report a premature count.
+    expect(onLoaded).not.toHaveBeenCalled();
+
+    mockHook.mockReturnValue({
+      devices: [device(), device({ deviceId: 'd2' })],
+      totalCount: 2, isLoading: false, error: null, retry: () => {},
+    });
+    rerender(<DriverDevicesTab catalogEntryIds={["cat-1"]} enabled onLoaded={onLoaded} />);
+    expect(onLoaded).toHaveBeenCalledWith(2);
+  });
+
+  it('does not fire onLoaded when the load ends in an error', () => {
+    const onLoaded = vi.fn();
+    mockHook.mockReturnValue({
+      devices: [], totalCount: 0, isLoading: true, error: null, retry: () => {},
+    });
+    const { rerender } = render(
+      <DriverDevicesTab catalogEntryIds={["cat-1"]} enabled onLoaded={onLoaded} />
+    );
+    mockHook.mockReturnValue({
+      devices: [], totalCount: 0, isLoading: false, error: 'Boom', retry: () => {},
+    });
+    rerender(<DriverDevicesTab catalogEntryIds={["cat-1"]} enabled onLoaded={onLoaded} />);
+    expect(onLoaded).not.toHaveBeenCalled();
+  });
+
   it('falls back to em-dash when hardware info is missing', () => {
     mockHook.mockReturnValue({
       devices: [device({ deviceId: 'missing', deviceName: 'LAPTOP-A' })],
