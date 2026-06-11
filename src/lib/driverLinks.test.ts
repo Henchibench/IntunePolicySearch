@@ -20,6 +20,13 @@ describe('buildDriverLinks', () => {
     expect(links.some((l) => l.label === 'Search Intel downloads' && l.url.includes('intel.com'))).toBe(true);
   });
 
+  it('does not duplicate the version when the name already contains it', () => {
+    const links = buildDriverLinks({ name: 'Dell, Inc. - Firmware - 0.1.27.0', version: '0.1.27.0', manufacturer: 'Dell, Inc.' });
+    const mu = links.find((l) => l.label === 'Microsoft Update Catalog')!;
+    expect(mu.url).toContain(encodeURIComponent('Dell, Inc. - Firmware - 0.1.27.0'));
+    expect(mu.url).not.toContain(encodeURIComponent('0.1.27.0 0.1.27.0'));
+  });
+
   it('returns only the Microsoft link for vendors without a known site', () => {
     const links = buildDriverLinks({ name: 'Realtek MEDIA', version: '6.0.9835.3', manufacturer: 'Realtek Semiconductor Corp.' });
     expect(links).toHaveLength(1);

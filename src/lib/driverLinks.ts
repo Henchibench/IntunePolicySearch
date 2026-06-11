@@ -23,7 +23,12 @@ function vendorLink(manufacturer: string, query: string): DriverLink | null {
 }
 
 export function buildDriverLinks(driver: DriverLinkInput): DriverLink[] {
-  const query = `${driver.name} ${driver.version}`.trim();
+  // Intune driver names usually already embed the version (e.g.
+  // "Dell, Inc. - Firmware - 0.1.27.0"); only append it when it's missing so
+  // the search query doesn't carry a duplicate version token.
+  const query = driver.name.includes(driver.version)
+    ? driver.name.trim()
+    : `${driver.name} ${driver.version}`.trim();
   const links: DriverLink[] = [
     {
       label: 'Microsoft Update Catalog',
