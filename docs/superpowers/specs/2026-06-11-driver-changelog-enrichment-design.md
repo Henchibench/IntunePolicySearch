@@ -134,3 +134,38 @@ The contradictory "No catalog data" terminal state is removed.
   extraction (reachable from WSL; ENOENT on pure Linux CI). The CI bake step
   must run on a runner where CAB extraction works, or use a cross-platform CAB
   extractor. Flagged for the plan.
+
+---
+
+## Spike outcome & revision (2026-06-11)
+
+Both candidate structured sources were spiked against the live fleet. Result:
+**no programmatic source carries the actual changelog / "what it fixes" prose**
+for these WUfB drivers, so the design was deliberately reduced to the
+universal-links half.
+
+- **Dell `CatalogPC.xml`** (baked, 3683 real entries): has **no `<Fixes>`/
+  `<KnownIssues>` elements at all** (only Description + a per-component
+  `ImportantInfo` URL). Worse, of six fleet driver versions only one appears in
+  the catalog, and ambiguously — Intune's drivers are Microsoft-Update-published
+  while this is Dell's own Command-Update catalog, so versions don't line up.
+  **Abandoned.** The `fetch-catalog` script and Dell matcher were dropped.
+  (Note: the scaffolded fetch script also had real bugs — `__dirname` in ESM and
+  WSL path handling for `expand.exe` — which is why it had never actually run.)
+- **Microsoft Update Catalog**: matches **100%** of drivers reliably (its
+  title+version *are* the Intune name+version), and exposes version, date,
+  target OS/products, classification, and a direct deep link. But its
+  description is a thin auto-generated one-liner and the "More Information" link
+  is generic, not vendor release notes — **no real changelog**.
+
+**Shipped (both surfaces):** `buildDriverLinks` — every driver gets a Microsoft
+Update Catalog search link (lands on the exact update) plus a vendor support
+link (Dell/Intel) where the real release notes live. The drawer's dead-end
+"No catalog data" state is removed in favour of an always-present "Find release
+notes" block. The Dell structured-catalog section remains gated on
+`driver.catalog` (dormant) for any future source.
+
+**Deferred (user can request):** Electron-only live Microsoft Update Catalog
+lookup to show version/date/products + a direct GUID deep-link inline. Richer
+context (still not a changelog), desktop-only because the browser blocks the
+cross-origin fetch.
