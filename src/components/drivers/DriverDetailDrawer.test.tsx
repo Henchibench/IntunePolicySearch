@@ -70,9 +70,11 @@ describe('DriverDetailDrawer', () => {
     expect(screen.getByText(/Display freezes on hibernate/)).toBeInTheDocument();
   });
 
-  it('shows "No catalog data" line when catalog is null', () => {
+  it('shows a Find release notes block with Microsoft Update Catalog when no catalog match', () => {
     render(<DriverDetailDrawer driver={baseDriver} open onOpenChange={() => {}} />);
-    expect(screen.getByText(/No catalog data/i)).toBeInTheDocument();
+    expect(screen.queryByText(/No catalog data/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/Find release notes/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Microsoft Update Catalog/i })).toBeInTheDocument();
   });
 
   it('always renders external lookup links regardless of catalog', () => {

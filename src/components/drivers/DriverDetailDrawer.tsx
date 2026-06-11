@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Driver, DriverInventory } from '@/types/drivers';
+import { buildDriverLinks } from '@/lib/driverLinks';
 import { DriverCriticalityBadge } from './DriverCriticalityBadge';
 import { DriverDevicesTab } from './DriverDevicesTab';
 
@@ -45,8 +46,7 @@ export function DriverDetailDrawer({ driver, open, onOpenChange }: Props) {
   }, [driver?.key]);
 
   if (!driver) return null;
-  const dellSearchUrl = `https://www.dell.com/support/search/results?q=${encodeURIComponent(driver.name)}`;
-  const msUpdateUrl = `https://www.catalog.update.microsoft.com/Search.aspx?q=${encodeURIComponent(driver.name)}`;
+  const links = buildDriverLinks(driver);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -104,7 +104,7 @@ export function DriverDetailDrawer({ driver, open, onOpenChange }: Props) {
             </ul>
           </section>
 
-          {driver.catalog ? (
+          {driver.catalog && (
             <section className="space-y-2">
               <EyebrowLabel>DETAILS FROM DELL CATALOG</EyebrowLabel>
               {driver.catalog.fixes.length > 0 && (
@@ -150,34 +150,22 @@ export function DriverDetailDrawer({ driver, open, onOpenChange }: Props) {
                 </a>
               )}
             </section>
-          ) : (
-            <section className="space-y-2">
-              <EyebrowLabel>CATALOG</EyebrowLabel>
-              <p className="text-sm text-slate">
-                No catalog data for this driver. Use the links below to look up release notes externally.
-              </p>
-            </section>
           )}
 
           <section className="space-y-2">
-            <EyebrowLabel>LOOKUP</EyebrowLabel>
+            <EyebrowLabel>FIND RELEASE NOTES</EyebrowLabel>
             <div className="flex flex-wrap gap-2">
-              <a
-                href={dellSearchUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-sm hover:bg-muted/50"
-              >
-                Search Dell support <ExternalLink className="h-3 w-3" />
-              </a>
-              <a
-                href={msUpdateUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-sm hover:bg-muted/50"
-              >
-                Search Microsoft Update Catalog <ExternalLink className="h-3 w-3" />
-              </a>
+              {links.map((l) => (
+                <a
+                  key={l.url}
+                  href={l.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-sm hover:bg-muted/50"
+                >
+                  {l.label} <ExternalLink className="h-3 w-3" />
+                </a>
+              ))}
             </div>
           </section>
           </TabsContent>
