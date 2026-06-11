@@ -121,3 +121,9 @@ export interface DriverApplicableDevice {
   /** Hardware model (e.g., "Latitude 5440"). Optional — populated from managedDevices when available. */
   model?: string;
 }
+
+/** A link out to find a driver's release notes / changelog */
+export interface DriverLink {
+  label: string;
+  url: string;
+}
