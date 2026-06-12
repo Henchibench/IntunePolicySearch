@@ -22,8 +22,8 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-background">
+      <PillNav />
       <div className="px-6">
-        <PillNav />
         <UtilityRow />
       </div>
 

@@ -50,8 +50,8 @@ export default function GroupLookupPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <PillNav />
       <div className="px-6">
-        <PillNav />
         <UtilityRow />
       </div>
       <main className="mx-auto mt-12 max-w-[1280px] px-6 pb-24 space-y-8">

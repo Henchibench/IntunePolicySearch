@@ -127,8 +127,8 @@ export default function DashboardCompliance() {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-background">
+        <PillNav />
         <div className="px-6">
-          <PillNav />
           <UtilityRow />
         </div>
         <main className="mx-auto mt-12 max-w-[1280px] px-6 pb-24">
@@ -143,8 +143,8 @@ export default function DashboardCompliance() {
 
   return (
     <div className="min-h-screen bg-background">
+      <PillNav />
       <div className="px-6">
-        <PillNav />
         <UtilityRow onRefresh={refresh} isRefreshing={isLoading} />
       </div>
       <main className="mx-auto mt-12 max-w-[1280px] px-6 pb-24 space-y-4">
