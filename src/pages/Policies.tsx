@@ -260,7 +260,7 @@ const Policies = () => {
           )}
 
           {/* Search and Filters Section - Sticky */}
-          <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border pb-6 mb-6">
+          <div className="sticky top-14 z-40 bg-background border-b border-border pb-6 mb-6">
             <div className="space-y-6 pt-6">
               <SearchBar
                 value={searchTerm}

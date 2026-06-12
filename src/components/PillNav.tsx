@@ -25,7 +25,7 @@ export function PillNav() {
   return (
     <nav
       aria-label="Primary"
-      className="flex items-center justify-between gap-8 border-b border-border bg-card px-6"
+      className="sticky top-0 z-50 flex h-14 items-center justify-between gap-8 border-b border-border bg-card px-6"
     >
       <div className="flex items-center gap-8">
         <span className="text-[15px] font-semibold text-foreground">

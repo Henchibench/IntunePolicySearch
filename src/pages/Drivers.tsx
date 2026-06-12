@@ -119,38 +119,38 @@ export default function Drivers() {
           </div>
 
           {!noProfiles && (
-            <DriverFilterBar
-              filters={filters}
-              onChange={setFilters}
-              manufacturers={manufacturers}
-              driverClasses={driverClasses}
-              catalogAvailable={catalog.source !== 'none'}
-            />
-          )}
+            <div className="sticky top-14 z-40 bg-canvas border-b border-border pb-3 space-y-3">
+              <DriverFilterBar
+                filters={filters}
+                onChange={setFilters}
+                manufacturers={manufacturers}
+                driverClasses={driverClasses}
+                catalogAvailable={catalog.source !== 'none'}
+              />
 
-          {!noProfiles && (
-            <div className="flex items-center justify-between">
-              <div role="tablist" className="inline-flex gap-1 rounded-lg bg-muted p-1">
-                {PIVOT_TABS.map((t) => (
-                  <button
-                    key={t.key}
-                    role="tab"
-                    aria-selected={pivot === t.key}
-                    onClick={() => setPivot(t.key)}
-                    className={cn(
-                      'px-3 py-1.5 rounded-md text-sm transition-colors',
-                      pivot === t.key
-                        ? 'bg-background shadow-sm text-foreground'
-                        : 'text-muted-foreground hover:text-foreground',
-                    )}
-                  >
-                    {t.label}
-                  </button>
-                ))}
+              <div className="flex items-center justify-between">
+                <div role="tablist" className="inline-flex gap-1 rounded-lg bg-muted p-1">
+                  {PIVOT_TABS.map((t) => (
+                    <button
+                      key={t.key}
+                      role="tab"
+                      aria-selected={pivot === t.key}
+                      onClick={() => setPivot(t.key)}
+                      className={cn(
+                        'px-3 py-1.5 rounded-md text-sm transition-colors',
+                        pivot === t.key
+                          ? 'bg-background shadow-sm text-foreground'
+                          : 'text-muted-foreground hover:text-foreground',
+                      )}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+                <span className="text-xs tabular-nums text-slate">
+                  {filtered.length} driver{filtered.length !== 1 ? 's' : ''}
+                </span>
               </div>
-              <span className="text-xs tabular-nums text-slate">
-                {filtered.length} driver{filtered.length !== 1 ? 's' : ''}
-              </span>
             </div>
           )}
 
