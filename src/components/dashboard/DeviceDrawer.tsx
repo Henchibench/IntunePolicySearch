@@ -31,7 +31,7 @@ export function DeviceDrawer({ device, open, onOpenChange }: DeviceDrawerProps) 
   const compliancePillClass =
     device.complianceState === "compliant"
       ? "inline-flex items-center rounded-md bg-success/10 px-3 py-1 text-[11.5px] font-semibold text-success"
-      : device.complianceState === "noncompliant" || device.complianceState === "nonCompliant"
+      : device.complianceState === "noncompliant"
       ? "inline-flex items-center rounded-md bg-destructive/10 px-3 py-1 text-[11.5px] font-semibold text-destructive"
       : device.complianceState === "inGracePeriod"
       ? "inline-flex items-center rounded-md bg-warning/10 px-3 py-1 text-[11.5px] font-semibold text-warning"

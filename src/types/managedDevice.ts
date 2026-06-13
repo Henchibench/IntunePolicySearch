@@ -7,6 +7,16 @@ export type ComplianceState =
   | "inGracePeriod"
   | "configManager";
 
+export type PolicyEvaluationState =
+  | "compliant"
+  | "nonCompliant"
+  | "notApplicable"
+  | "remediated"
+  | "error"
+  | "conflict"
+  | "notAssigned"
+  | "unknown";
+
 export interface ManagedDevice {
   id: string;
   deviceName: string;
@@ -27,11 +37,11 @@ export interface ManagedDevice {
 export interface DeviceCompliancePolicyState {
   id: string;
   displayName: string;
-  state: ComplianceState;
+  state: PolicyEvaluationState;
   settingStates?: Array<{
     setting: string;
     settingName?: string;
-    state: "compliant" | "nonCompliant" | "notApplicable" | "remediated" | "error" | "conflict" | "notAssigned" | "unknown";
+    state: PolicyEvaluationState;
     errorDescription?: string;
   }>;
 }
@@ -39,7 +49,7 @@ export interface DeviceCompliancePolicyState {
 export interface DeviceConfigurationState {
   id: string;
   displayName: string;
-  state: "compliant" | "nonCompliant" | "notApplicable" | "remediated" | "error" | "conflict" | "notAssigned" | "unknown";
+  state: PolicyEvaluationState;
   settingStates?: Array<{
     setting: string;
     settingName?: string;

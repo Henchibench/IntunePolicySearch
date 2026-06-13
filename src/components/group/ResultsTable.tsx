@@ -193,7 +193,7 @@ export function ResultsTable({
       };
       for (const f of next) {
         if (Array.isArray(f.value) && (f.id in newFilters)) {
-          (newFilters as Record<string, unknown>)[f.id] = f.value;
+          (newFilters as unknown as Record<string, unknown>)[f.id] = f.value;
         }
       }
       onFiltersChange(newFilters);

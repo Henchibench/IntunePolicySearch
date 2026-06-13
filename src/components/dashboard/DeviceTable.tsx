@@ -59,7 +59,7 @@ export function DeviceTable({ devices, selectedDeviceId, onSelect }: DeviceTable
                     <span className={cn(
                       device.complianceState === "compliant"
                         ? "inline-flex items-center rounded-md bg-success/10 px-2.5 py-0.5 text-[11px] font-semibold text-success"
-                        : device.complianceState === "noncompliant" || device.complianceState === "nonCompliant"
+                        : device.complianceState === "noncompliant"
                         ? "inline-flex items-center rounded-md bg-destructive/10 px-2.5 py-0.5 text-[11px] font-semibold text-destructive"
                         : device.complianceState === "inGracePeriod"
                         ? "inline-flex items-center rounded-md bg-warning/10 px-2.5 py-0.5 text-[11px] font-semibold text-warning"

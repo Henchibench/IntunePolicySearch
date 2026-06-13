@@ -360,19 +360,20 @@ export class GraphService {
     }
     if (policy.settings) {
       policy.settings.forEach(setting => {
-        settings.push(...this.extractFromGraphConfigurationSetting(setting));
+        settings.push(...this.extractFromGraphConfigurationSetting(setting as unknown as Record<string, unknown>));
       });
     }
 
     const transformedPolicy = {
       id: policy.id,
-      name: policy.displayName || (policy as any).name || `Device Configuration ${policy.id}`,
+      name: policy.displayName || `Device Configuration ${policy.id}`,
       description: policy.description || "",
       type: "Device Configuration" as const,
       platform: this.determinePlatform(policy["@odata.type"]),
       lastModified: new Date(policy.lastModifiedDateTime).toLocaleDateString(),
       createdBy: policy.createdBy?.user?.displayName || "Unknown",
       assignedGroups: policy.assignments?.map(a => a.target.groupId || "Unknown") || [],
+      assignments: [],
       settings
     };
 
@@ -409,13 +410,14 @@ export class GraphService {
 
     return {
       id: policy.id,
-      name: policy.displayName || policy.name || `Compliance Policy ${policy.id}`,
+      name: policy.displayName || `Compliance Policy ${policy.id}`,
       description: policy.description || "",
       type: "Compliance Policy",
       platform: this.determinePlatform("compliance"),
       lastModified: new Date(policy.lastModifiedDateTime).toLocaleDateString(),
       createdBy: policy.createdBy?.user?.displayName || "Unknown",
       assignedGroups: policy.assignments?.map(a => a.target.groupId || "Unknown") || [],
+      assignments: [],
       settings
     };
   }
@@ -451,13 +453,14 @@ export class GraphService {
 
     return {
       id: policy.id,
-      name: policy.displayName || policy.name || `App Protection Policy ${policy.id}`,
+      name: policy.displayName || `App Protection Policy ${policy.id}`,
       description: policy.description || "",
       type: "App Protection",
       platform: this.determinePlatform(policy["@odata.type"]),
       lastModified: new Date(policy.lastModifiedDateTime).toLocaleDateString(),
       createdBy: policy.createdBy?.user?.displayName || "Unknown",
       assignedGroups: policy.assignments?.map(a => a.target.groupId || "Unknown") || [],
+      assignments: [],
       settings
     };
   }
@@ -492,13 +495,14 @@ export class GraphService {
 
     const transformedPolicy = {
       id: policy.id,
-      name: policy.displayName || (policy as any).name || `Configuration Policy ${policy.id}`,
+      name: policy.displayName || `Configuration Policy ${policy.id}`,
       description: policy.description || "",
       type: "Configuration Policy" as const,
       platform: this.mapPlatformFromString(policy.platforms),
       lastModified: new Date(policy.lastModifiedDateTime).toLocaleDateString(),
       createdBy: policy.createdBy?.user?.displayName || "Unknown",
       assignedGroups: policy.assignments?.map(a => a.target.groupId || "Unknown") || [],
+      assignments: [],
       settings,
       // Keep raw data for troubleshooting
       rawGraphData: policy
@@ -550,7 +554,7 @@ export class GraphService {
       'experienceBlockTaskSwitcher', 'logonBlockFastUserSwitching'
     ];
 
-    const policyObj = policy as Record<string, unknown>;
+    const policyObj = policy as unknown as Record<string, unknown>;
     
     for (const prop of settingProperties) {
       if (policyObj[prop] !== undefined && policyObj[prop] !== null) {
@@ -1274,6 +1278,7 @@ export class GraphService {
       lastModified: policy.lastModifiedDateTime ? new Date(policy.lastModifiedDateTime).toLocaleDateString() : "Unknown",
       createdBy: policy.createdBy?.user?.displayName || "Unknown",
       assignedGroups: [],
+      assignments: [],
       settings
     };
   }
@@ -1296,6 +1301,7 @@ export class GraphService {
       lastModified: baseline.lastModifiedDateTime ? new Date(baseline.lastModifiedDateTime).toLocaleDateString() : "Unknown",
       createdBy: baseline.createdBy?.user?.displayName || "Unknown",
       assignedGroups: [],
+      assignments: [],
       settings
     };
   }
@@ -1318,6 +1324,7 @@ export class GraphService {
       lastModified: config.lastModifiedDateTime ? new Date(config.lastModifiedDateTime).toLocaleDateString() : "Unknown",
       createdBy: config.createdBy?.user?.displayName || "Unknown",
       assignedGroups: [],
+      assignments: [],
       settings
     };
   }
