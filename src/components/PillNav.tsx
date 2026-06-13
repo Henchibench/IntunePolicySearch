@@ -5,9 +5,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { IconCircleButton } from "@/components/ui/IconCircleButton";
 import { Button } from "@/components/ui/button";
 
-const navItems = [
+const navItems: { to: string; label: string; end?: boolean }[] = [
   { to: "/policies", label: "Policies" },
-  { to: "/dashboard", label: "Dashboard" },
+  // `end` so /dashboard only matches exactly, not the /dashboard/compliance child
+  { to: "/dashboard", label: "Dashboard", end: true },
   { to: "/dashboard/compliance", label: "Compliance" },
   { to: "/audit", label: "Audit" },
   { to: "/drivers", label: "Drivers" },

@@ -44,4 +44,24 @@ describe('PillNav', () => {
     const nav = getByRole('navigation', { name: /primary/i });
     expect(nav.className).toMatch(/\bh-14\b/);
   });
+
+  it('marks only Compliance active on /dashboard/compliance — Dashboard must not also underline', () => {
+    const { getByRole } = render(
+      <MemoryRouter initialEntries={['/dashboard/compliance']}>
+        <PillNav />
+      </MemoryRouter>,
+    );
+    expect(getByRole('link', { name: 'Compliance' }).className).toMatch(/border-primary/);
+    expect(getByRole('link', { name: 'Dashboard' }).className).not.toMatch(/border-primary/);
+  });
+
+  it('marks only Dashboard active on /dashboard', () => {
+    const { getByRole } = render(
+      <MemoryRouter initialEntries={['/dashboard']}>
+        <PillNav />
+      </MemoryRouter>,
+    );
+    expect(getByRole('link', { name: 'Dashboard' }).className).toMatch(/border-primary/);
+    expect(getByRole('link', { name: 'Compliance' }).className).not.toMatch(/border-primary/);
+  });
 });
